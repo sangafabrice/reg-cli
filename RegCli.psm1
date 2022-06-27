@@ -2,6 +2,9 @@
 #Requires -RunAsAdministrator
 
 #Region RegCli class
+
+Enum MachineType { x64; x86 }
+
 Class RegCli {
     # RegCli is not meant to be instantiated
     # and only declares static functions
@@ -10,26 +13,24 @@ Class RegCli {
     Static [string] $AutorunDirectory = "$(
         # Get the autorun directory
         # where the autorun batch script is located
+
         (@{
-            Path = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Command Processor').Autorun
+            LiteralPath = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Command Processor').Autorun
             ErrorAction = 'SilentlyContinue'
         } | ForEach-Object { Get-Item @_ })?.Directory
     )"
 
-    Static [string] $OSArchitecture = $(
+    Static [MachineType] $OSArchitecture = $(
         # Get the OS architecture string
-        If ([Environment]::Is64BitOperatingSystem) { 'x64' } Else { 'x86' }
+
+        If ([Environment]::Is64BitOperatingSystem) { [MachineType]::x64 } Else { [MachineType]::x86 }
     )
 
     Static [void] Get7Zip() {
         # Download 7zip if it is absent
+
         "$PSScriptRoot\7z.exe".Where({ !(Test-Path $_) }) |
-        ForEach-Object {
-            @{
-                Source      = 'https://www.7-zip.org/a/7zr.exe'
-                Destination = $_
-            } | ForEach-Object { Start-BitsTransfer @_ }
-        }
+        ForEach-Object { Start-BitsTransfer 'https://www.7-zip.org/a/7zr.exe' $_ }
     }
 
     Static [void] ExpandInstaller($Path) {
@@ -37,11 +38,14 @@ Class RegCli {
     }
 
     Static [void] ExpandInstaller($InstallerPath, $DestinationPath) {
-        # Extract files from installer executable
-        # to $DestinationPath directory
-        # If $DestinationPath is null, then extract to
-        # the folder which carries the basename of $InstallerPath 
-        Get-Item $InstallerPath |
+        # Extract files from a specified self-extracting executable
+        # installer $InstallerPath to $DestinationPath directory.
+        # Precondition : 
+        # 1. $InstallerPath exists.
+        # 2. $DestinationPath may or may not exist and may be $null.
+        # 3. 7zip is installed.
+
+        Get-Item -LiteralPath $InstallerPath |
         ForEach-Object {
             Invoke-Expression ". '$PSScriptRoot\7z.exe' x -aoa -o'$(
                 If ($Null -ne $DestinationPath) { $DestinationPath }
@@ -50,12 +54,14 @@ Class RegCli {
         }
     }
 
-    Static [void] ExpandChromium($InstallerPath, $ExecutablePath) {
-        # Extract files from chromium installer executable
-        # to $ExecutablePath parent directory
-        $ExeName = $Null
-        $ExeBaseName = $Null
-        $ExeDir = $Null
+    Static [void] ExpandChromiumInstaller([string] $InstallerPath, [string] $ExecutablePath) {
+        # Extracts files from a specified chromium installer $InstallerPath
+        # to the directory in which the application $ExecutablePath is located.
+        # Precondition : 
+        # 1. $InstallerPath exists.
+        # 2. $ExecutablePath may or may not exist.
+
+        $ExeName = $ExeBaseName = $ExeDir = $Null
         ,@($ExecutablePath -split '\\') |
         ForEach-Object {
             $ExeName = $_[-1]
@@ -65,14 +71,14 @@ Class RegCli {
             }
             $Count = $_.Count
             $ExeDir = $(If ($Count -gt 1) { $_[0..($Count - 2)] -join '\' } Else { $PWD })
-            Switch ($(Try { Get-Item $InstallerPath } Catch { })) {
+            Switch ($(Try { Get-Item -LiteralPath $InstallerPath } Catch { })) {
                 { $Null -ne $_ } {
                     [RegCli]::ExpandInstaller($_.FullName)
                     New-Item $ExeDir -ItemType Directory -ErrorAction SilentlyContinue
-                    $ExeDir = (Get-Item $ExeDir).FullName
+                    $ExeDir = (Get-Item -LiteralPath $ExeDir).FullName
                     $UnzipPath = "$($_.Directory)\$($_.BaseName)"
                     Try {
-                        (Get-Item $UnzipPath).FullName |
+                        (Get-Item -LiteralPath $UnzipPath).FullName |
                         ForEach-Object { Push-Location $_ }
                         (Get-Item .\*.7z)[0].FullName |
                         ForEach-Object {
@@ -91,8 +97,9 @@ Class RegCli {
         }
     }
 
-    Static [void] SetChromiumVisualElementsManifest($VisualElementsManifest, $BackgroundColor) {
+    Static [void] SetChromiumVisualElementsManifest([string] $VisualElementsManifest, [string] $BackgroundColor) {
         # Create the VisualElementManifest.xml in chromium app directory
+
         $InstallLocation = $VisualElementsManifest -replace ($VisualElementsManifest -split '\\')[-1] -replace '\\$'
         $ErrorActionPreference = 'SilentlyContinue'
         ,@(Get-ChildItem "$InstallLocation\*Logo.png" -Recurse) |
@@ -118,10 +125,11 @@ Class RegCli {
         }
     }
 
-    Static [void] SetChromiumShortcut($ExecutablePath) {
-        # Create shortcut link to chromium app
+    Static [void] SetChromiumShortcut([string] $ExecutablePath) {
+        # Create shortcut link to chromium app and save it to Start Menu
+
         (New-Object -ComObject 'WScript.Shell').CreateShortcut("${Env:ProgramData}\Microsoft\Windows\Start Menu\Programs\$(
-            (Get-Item $ExecutablePath -ErrorAction SilentlyContinue).VersionInfo.FileDescription
+            (Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue).VersionInfo.FileDescription
         ).lnk") |
         ForEach-Object {
             $_.TargetPath = $ExecutablePath
@@ -129,20 +137,22 @@ Class RegCli {
         }
     }
 
-    Static [string] DownloadSetup([uri] $SetupUrl) {
+    Static [string] DownloadInstaller([uri] $InstallerUrl) {
         # Download resource and save it to %TEMP% directory
+
         Try {
-            $SetupUrl.Segments[-1] -match '((?<BaseName>^.+)(?<Extension>\.[^\.]+$))'
+            $InstallerUrl.Segments[-1] -match '((?<BaseName>^.+)(?<Extension>\.[^\.]+$))'
             $Result = "${Env:TEMP}\$($Matches.BaseName)_$(Get-Date -Format 'yyMMddHHmm')$($Matches.Extension)"
-            Start-BitsTransfer -Source "$SetupUrl" -Destination $Result
+            Start-BitsTransfer -Source "$InstallerUrl" -Destination $Result
             Return $Result
         }
         Catch { Return $Null }
     }
 
-    Static [string] GetExeMachineType($ExecutablePath) {
+    Static [MachineType] GetExeMachineType([string] $ExecutablePath) {
         # Get the machine type of an application
-        Switch ($(Try { (Get-Item $ExecutablePath).FullName } Catch { })) {
+
+        Switch ($(Try { (Get-Item -LiteralPath $ExecutablePath).FullName } Catch { })) {
             { ![string]::IsNullOrEmpty($_) } {
                 $PEHeaderOffset = [Byte[]]::New(2)
                 $PESignature = [Byte[]]::New(4)
@@ -155,27 +165,29 @@ Class RegCli {
                 [void] $FileStream.Read($MachineType, 0, 2)
                 $FileStream.Close()
                 Switch ([System.BitConverter]::ToUInt16($MachineType, 0)){
-                    0x8664  { Return 'x64' }
-                    0x14c   { Return 'x86' }
+                    0x8664  { Return [MachineType]::x64 }
+                    0x14c   { Return [MachineType]::x86 }
                 }
             }
         }
         Return [RegCli]::OSArchitecture
     }
 
-    Static [void] SetBatchRedirect($BatchName, $ExecutablePath) {
+    Static [void] SetBatchRedirect([string] $BatchName, [string] $ExecutablePath) {
         # Create a batch redirect script in Autorun directory
-        $ExeName = ($ExecutablePath -split '\\')[-1]
-        Set-Content "$(
-            Switch ([RegCli]::AutorunDirectory) {
-                { ![string]::IsNullOrEmpty($_) } { $_ }
-                Default { "$PWD" }
-            }
-        )\$BatchName.bat" -Value @"
+
+        Try {
+            $ExeItem = Get-Item -LiteralPath $ExecutablePath -ErrorAction Stop
+            Set-Content "$(
+                Switch ([RegCli]::AutorunDirectory) {
+                    { ![string]::IsNullOrEmpty($_) } { $_ }
+                    Default { "$PWD" }
+                }
+            )\$BatchName.bat" -Value @"
 @Echo OFF
 If Not "%~1"=="--version" (
     If Not "%~1"=="-V" (
-        Start "" /D "$($ExecutablePath -replace $ExeName -replace '\\$')" "$ExeName" %*
+        Start "" /D "$($ExeItem.Directory)" "$($ExeItem.Name)" %*
         GoTo :EOF
     )
 )
@@ -184,6 +196,8 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
     GoTo :EOF
 )
 "@
+        }
+        Catch { }
     }
 }
 #EndRegion
@@ -194,36 +208,105 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 # Since the class cannot be exported with Import-Module
 # Use <using module RegCli> to access the class
 
-Function Get-OsArchitecture { [RegCli]::OSArchitecture }
+Class ValidationUtility {
+    Static [bool] ValidateFileSystem($Path) {
+        Return (Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue).PSDrive.Name
+            -iin @((Get-PSDrive -PSProvider FileSystem).Name)
+    }
 
-Function Get-ExecutableType {
-    Param($Path)
+    Static [bool] ValidatePathString($Path) {
+        $Pattern = '(?<Drive>^.+):'
+        If ($Path -match $Pattern -or $PWD -match $Pattern) {
+            Return $Matches.Drive -iin @((Get-PSDrive -PSProvider FileSystem).Name)
+        }
+        Return $False
+    }
+
+    Static [bool] ValidateSsl($Url) { Return $Url.Scheme -ieq 'https' }
+}
+
+Function Expand-ChromiumInstaller {
+    [CmdletBinding(PositionalBinding=$True)]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $ApplicationPath
+    )
+    [RegCli]::ExpandChromiumInstaller($Path, $ApplicationPath)
+}
+
+Filter Get-ExecutableType {
+    [CmdletBinding()]
+    [OutputType([MachineType])]
+    Param(
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $Path
+    )
     [RegCli]::GetExeMachineType($Path)
 }
 
-Function Get-Setup {
-    Param($SetupUrl)
-    [RegCli]::DownloadSetup($SetupUrl)
-}
-
-Function Expand-Chromium {
-    Param($Path, $ExePath)
-    [RegCli]::ExpandChromium($Path, $ExePath)
-}
-
-Function Set-ChromiumVisualElementsManifest {
-    Param($InstallLocation, $BackgroundColor)
-    [RegCli]::SetChromiumVisualElementsManifest($InstallLocation, $BackgroundColor)
-}
-
-Function Set-ChromiumShortcut {
-    Param($ExePath)
-    [RegCli]::SetChromiumShortcut($ExePath)
+Filter Save-Installer {
+    [CmdletBinding()]
+    [OutputType([String])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateSsl($_) })]
+        [uri] $Url
+    )
+    [RegCli]::DownloadInstaller($Url)
 }
 
 Function Set-BatchRedirect {
-    Param($BatchName, $TargetPath)
-    [RegCli]::SetBatchRedirect($BatchName, $TargetPath)
+    [CmdletBinding(PositionalBinding=$True)]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [string] $BatchName,
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [Alias('Path')]
+        [string] $ApplicationPath
+    )
+    [RegCli]::SetBatchRedirect($BatchName, $ApplicationPath)
+}
+
+Filter Set-ChromiumShortcut {
+    [CmdletBinding()]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path
+    )
+    [RegCli]::SetChromiumShortcut($Path)
+}
+
+Filter Set-ChromiumVisualElementsManifest {
+    [CmdletBinding(PositionalBinding=$True)]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $Path,
+        [AllowEmptyString()]
+        [AllowNull()]
+        [string] $BackgroundColor
+    )
+    [RegCli]::SetChromiumVisualElementsManifest($Path, $BackgroundColor)
 }
 
 #EndRegion
