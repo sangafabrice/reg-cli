@@ -1,6 +1,6 @@
 {
-    "version": "0.0.1",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Initial deployment ready script."
+        "Initial Avast Secure updater script."
     ]
 }
