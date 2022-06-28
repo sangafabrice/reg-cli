@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'AvastSecure'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
-    IconUri = ''
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
