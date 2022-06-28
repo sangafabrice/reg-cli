@@ -1,6 +1,7 @@
 $DevDependencies = @{
     ProgramName = '_'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
+    IconUri = ''
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -32,7 +33,7 @@ Function New-UpdaterScript {
             Tags = @('Tag')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = "$GithubRepo/tree/$(git branch --show-current)"
-            IconUri = ''
+            IconUri = $DevDependencies.IconUri
             ReleaseNotes = $_.releaseNotes
         }
     } | ForEach-Object { New-ScriptFileInfo @_ -Force }
