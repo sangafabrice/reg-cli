@@ -1,6 +1,6 @@
 {
-    "version": "1.0.2",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Deployment ready RegCli module."
+        "Initial deployment ready script."
     ]
 }
