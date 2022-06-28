@@ -1,5 +1,6 @@
 $DevDependencies = @{
-    ProgramName = '_'
+    ProgramName = 'AvastSecure'
+    Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -21,7 +22,7 @@ Function New-UpdaterScript {
         @{
             Path = $HeaderPath
             Version = $_.version
-            GUID = '0f0234b8-2357-4909-a0b2-094a02e96be4'
+            GUID = $DevDependencies.Guid
             Author = 'Fabrice Sanga'
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
