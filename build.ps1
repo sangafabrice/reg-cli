@@ -203,45 +203,6 @@ Filter Push-RCModule {
     }
 }
 
-Filter New-RCRelease {
-    <#
-    .SYNOPSIS
-        Create new module release on GitHub
-    .NOTES
-        Precondition:
-        1. The current branch is main
-        2. gh must be installed
-        3. Module version tag is listed on Github
-        4. The release tag is not listed on Github
-    #>
-
-    Param($Files)
-
-    Push-Location $PSScriptRoot
-    Try {
-        If ((git branch --show-current) -ne 'main') { Throw 'BranchNotMain' }
-        If ((where.exe gh.exe).Count -eq 0) { Throw 'GithubCliNotFoundOnPath' }
-        $Manifest = & $DevDependencies.Manifest
-        Switch ("v$($Manifest.ModuleVersion)") {
-            {$_ -inotin @(git ls-remote --tags origin |
-            ForEach-Object { ($_ -split '/')[-1] })} { Throw 'TagNotListedOnGithub' }
-            {$_ -in @(gh release list |
-            ConvertFrom-String | ForEach-Object { $_.P1 })} { Throw 'ReleaseTagExistsOnGitHub' }
-            Default {
-                gh release create $_ $Files --notes @"
-- [x] $(((Get-Content .\Readme.md -TotalCount 2 |
-Where-Object {$_ -like '*`[Test Coverage`]*'}) -split ' ',3)[2])
-$($Manifest.PrivateData.PSData.ReleaseNotes -split "`n" |
-ForEach-Object { "- [x] $_" } |
-Out-String)
-"@
-            }
-        }
-    }
-    Catch { "ERROR: $($_.Exception.Message)" }
-    Pop-Location
-}
-
 Filter Deploy-RCModule {
     <#
     .SYNOPSIS
@@ -256,7 +217,6 @@ Filter Deploy-RCModule {
             & $_
         }
         Push-RCModule
-        New-RCRelease
         Publish-RCModule
     }
     Catch { "ERROR: $($_.Exception.Message)" }
