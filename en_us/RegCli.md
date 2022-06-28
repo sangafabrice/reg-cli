@@ -1,31 +1,31 @@
 ﻿---
 Module Name: RegCli
-Module Guid: 00000000-0000-0000-0000-000000000000
-Download Help Link: {{ Update Download Link }}
-Help Version: {{ Please enter version of help manually (X.X.X.X) format }}
+Module Guid: 9d980765-e8a9-4dd6-b7b0-9142a7a6e704
+Download Help Link: 
+Help Version: 1.0.0.0
 Locale: en-US
 ---
 
 # RegCli Module
 ## Description
-{{ Fill in the Description }}
+Set of helper functions for updating applications.
 
 ## RegCli Cmdlets
 ### [Expand-ChromiumInstaller](Expand-ChromiumInstaller.md)
-{{ Fill in the Description }}
+Extracts files from a specified chromium installer (exe) file.
 
 ### [Set-BatchRedirect](Set-BatchRedirect.md)
-{{ Fill in the Description }}
+Set the content of the batch redirect to a specified application.
 
 ### [Get-ExecutableType](Get-ExecutableType.md)
-{{ Fill in the Description }}
+Gets the machine type of a binary file.
 
 ### [Save-Installer](Save-Installer.md)
-{{ Fill in the Description }}
+Downloads a specified installer.
 
 ### [Set-ChromiumShortcut](Set-ChromiumShortcut.md)
-{{ Fill in the Description }}
+Save a specified chromium application shortcut to Start Menu.
 
 ### [Set-ChromiumVisualElementsManifest](Set-ChromiumVisualElementsManifest.md)
-{{ Fill in the Description }}
+Sets the content of the VisualElementsManifest.xml file.
 
