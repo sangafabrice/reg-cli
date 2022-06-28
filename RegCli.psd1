@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '1.0.2'
+ModuleVersion = '1.0.3'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -20,7 +20,7 @@ PrivateData = @{
         LicenseUri = 'https://github.com/sangafabrice/reg-cli/blob/main/LICENSE.md'
         ProjectUri = 'https://github.com/sangafabrice/reg-cli'
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
-        ReleaseNotes = 'Deployment ready RegCli module.'
+        ReleaseNotes = 'Correct line continuation.'
     }
 }
 }

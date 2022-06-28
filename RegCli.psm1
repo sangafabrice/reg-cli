@@ -210,8 +210,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
 Class ValidationUtility {
     Static [bool] ValidateFileSystem($Path) {
-        Return (Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue).PSDrive.Name
-            -iin @((Get-PSDrive -PSProvider FileSystem).Name)
+        Return (Get-Item -LiteralPath $Path).PSDrive.Name -iin @((Get-PSDrive -PSProvider FileSystem).Name)
     }
 
     Static [bool] ValidatePathString($Path) {
