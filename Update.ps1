@@ -44,7 +44,8 @@ Switch (
             Save-Installer "$($_.Link)" |
             ForEach-Object {
                 If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
-                    Remove-Item "$SaveTo\*" -Exclude (Get-Item $PSCommandPath).Name
+                    (Get-Item "$SaveTo\*").Where({ $_.VersionInfo.FileDescription -ieq 'Avast Secure Browser Installer' }) |
+                    Remove-Item
                     Move-Item $_ -Destination $Installer
                 }
             }
