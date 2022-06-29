@@ -87,8 +87,17 @@ Class RegCli {
                         }
                         Compress-Archive $ExeDir -DestinationPath "${Env:TEMP}\$($ExeBaseName)_$(Get-Date -Format 'yyMMddHHmm').zip"
                         Stop-Process -Name $($ExeBaseName) -Force -ErrorAction SilentlyContinue
-                        Remove-Item "$ExeDir\*" -Recurse
-                        Move-Item "$((Get-ChildItem $ExeName -Recurse).Directory)\*" $ExeDir
+                        Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue |
+                        Select-Object -ExpandProperty VersionInfo |
+                        Select-Object ProductName,ProductVersion |
+                        ForEach-Object {
+                            $ProductPattern = "*$($_.ProductName -replace ' ','*')*"
+                            (Get-Item "$ExeDir\*" |
+                            Where-Object { $_.VersionInfo.ProductName -like $ProductPattern }) +
+                            (Get-Item "$ExeDir\$($_.ProductVersion)") |
+                            Remove-Item -Recurse
+                        }
+                        Move-Item "$((Get-ChildItem $ExeName -Recurse).Directory)\*" $ExeDir -ErrorAction SilentlyContinue
                         Pop-Location
                         Remove-Item $UnzipPath -Recurse
                     } Catch { }
