@@ -47,7 +47,8 @@ Switch ($(
             Save-Installer "$($_.Link.Where({ "$_" -like 'https://*' }, 'First'))" |
             ForEach-Object {
                 If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
-                    Remove-Item "$SaveTo\*" -Exclude (Get-Item $PSCommandPath).Name
+                    (Get-Item "$SaveTo\*").Where({ $_.VersionInfo.FileDescription -ieq 'Google Chrome Installer' }) |
+                    Remove-Item
                     Move-Item $_ -Destination $Installer
                 }
             }
