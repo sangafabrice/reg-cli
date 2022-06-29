@@ -1,6 +1,6 @@
 {
-    "version": "1.0.3",
+    "version": "1.1.0",
     "releaseNotes": [
-        "Correct line continuation."
+        "Restrict removed items to program files only in chromium installation directory."
     ]
 }
