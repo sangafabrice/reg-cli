@@ -2,6 +2,7 @@ $DevDependencies = @{
     ProgramName = 'AvastSecure'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
+    Tags = @('avast','secure','chromium','omaha','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -30,7 +31,7 @@ Function New-UpdaterScript {
             Description = 'Description'
             RequiredModules = @('DownloadInfo','RegCli')
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
-            Tags = @('Tag')
+            Tags = $DevDependencies.Tags
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = "$GithubRepo/tree/$(git branch --show-current)"
             IconUri = $DevDependencies.IconUri
