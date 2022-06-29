@@ -65,8 +65,7 @@ Function Publish-UpdaterScript {
         Try {
             Publish-Script @_
             Write-Host "$((Get-Item $_.Path).Name) published"
-        }
-        Catch { }
+        } Catch { }
         Remove-Item $_.Path -Exclude Update.ps1
     }
 }
