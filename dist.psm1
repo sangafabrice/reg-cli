@@ -62,8 +62,10 @@ Function Publish-UpdaterScript {
             }
         NuGetApiKey = $Env:NUGET_API_KEY
     } | ForEach-Object { 
-        Publish-Script @_
-        Write-Host "$((Get-Item $_.Path).Name) published"
+        Try {
+            Publish-Script @_
+            Write-Host "$((Get-Item $_.Path).Name) published"
+        } Catch { }
         Remove-Item $_.Path -Exclude Update.ps1
     }
 }
