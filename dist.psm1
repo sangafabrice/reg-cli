@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'AvastSecure'
-    Description = 'The script updates Avast Secure browser.'
-    Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
-    Tags = @('avast','secure','chromium','omaha','update','browser')
+    ProgramName = 'GoogleChrome'
+    Description = 'The script updates Google Chrome Legacy browser.'
+    Guid = '456d8a16-2f21-409a-91a1-b2bcb22353e3'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/4a3f99c43c1c2529ebb27f5a6b68b4c2efa5d4eb/icon.svg'
+    Tags = @('google','chrome','chromium','omaha','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
