@@ -1,5 +1,6 @@
 $DevDependencies = @{
     ProgramName = '_'
+    Description = 'Description'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
     IconUri = ''
     Tags = @('Tag')
@@ -28,7 +29,7 @@ Function New-UpdaterScript {
             Author = 'Fabrice Sanga'
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
-            Description = 'Description'
+            Description = $DevDependencies.Description
             RequiredModules = @('DownloadInfo','RegCli')
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
