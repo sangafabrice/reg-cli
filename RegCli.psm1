@@ -161,6 +161,8 @@ Class RegCli {
     Static [MachineType] GetExeMachineType([string] $ExecutablePath) {
         # Get the machine type of an application
 
+        (Get-Item $ExecutablePath -ErrorAction SilentlyContinue).Where({ $_.LinkType -ieq 'SymbolicLink' }) |
+        ForEach-Object { $Script:ExecutablePath = $_.LinkTarget }
         Switch ($(Try { (Get-Item -LiteralPath $ExecutablePath).FullName } Catch { })) {
             { ![string]::IsNullOrEmpty($_) } {
                 $PEHeaderOffset = [Byte[]]::New(2)
