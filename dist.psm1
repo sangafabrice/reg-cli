@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Yq'
-    Description = 'The script updates Yq command-line tool.'
-    Guid = 'f4a83d8d-b115-4a67-9a48-9b3a933e01da'
+    ProgramName = 'YoutubeDl'
+    Description = 'The script updates Youtube-Dl command-line tool.'
+    Guid = '0a48fe2c-ba16-468e-a43b-a2a235000580'
     IconUri = ''
-    Tags = @('yq','cli','github','update')
+    Tags = @('youtube-dl','cli','github','update', 'youtube')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
