@@ -16,7 +16,7 @@ Param (
             } | ForEach-Object { Get-Item @_ }
         ).FullName -ine $PSScriptRoot
     })] [string]
-    $InstallLocation = "${Env:ProgramData}\GoogleChrome",
+    $InstallLocation = "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\yq.exe",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
         (Get-Item -LiteralPath $_).PSDrive.Name -iin 
@@ -25,44 +25,47 @@ Param (
     $SaveTo = $PSScriptRoot
 )
 
-$BaseNameLocation = "$InstallLocation\chrome"
-Switch ($(
-    "$(Get-ExecutableType "$BaseNameLocation.exe")" |
-    ForEach-Object {
-        Get-DownloadInfo -PropertyList @{
-            UpdateServiceURL = 'https://update.googleapis.com/service/update2'
-            ApplicationID    = '{8A69D345-D564-463c-AFF1-A69D9E530F96}'
-            OwnerBrand       = "$(Switch ($_) { 'x64' { 'YTUH' } Default { 'GGLS' } })"
-            ApplicationSpec  = "$(Switch ($_) { 'x64' { 'x64-stable-statsdef_1' } Default { 'stable-arch_x86-statsdef_1' } })"
-        } -From Omaha
+$ExeName = "yq_windows_$(Switch (Get-ExecutableType $InstallLocation) { 'x64' { 'amd64' } Default { '386' } }).exe"
+Switch (
+    Get-DownloadInfo -PropertyList @{
+        RepositoryId = 'mikefarah/yq'
+        AssetPattern = "$ExeName$|checksums.*$"
     }
-)) {
+) {
     {
-        @($_.Version,$_.Link,$_.Checksum) |
+        @($_.Version,$_.Link) |
         ForEach-Object { $_ -notin @($Null, '') }
     } {
+        $SelectLink = {
+            Param($Obj, $FileName)
+            $Obj.Link.Url.Where({ "$_" -like "*$FileName" })
+        }
+        $RqstContent = {
+            Param($Obj, $FileName)
+            ((Invoke-WebRequest "$(& $SelectLink $Obj $FileName)").Content |
+            ForEach-Object { [char] $_ }) -join '' -split "`n"
+        }
+        $ShaIndex = "P$([array]::IndexOf((& $RqstContent $_ 'checksums_hashes_order'),'SHA-512') + 2)"
         $Installer = "$SaveTo\$($_.Version).exe"
-        $Checksum = $_.Checksum
+        $Checksum = $(& $RqstContent $_ 'checksums' |
+            ConvertFrom-String |
+            Select-Object P1,$ShaIndex |
+            Where-Object P1 -Like $ExeName).$ShaIndex
         If (!(Test-Path $Installer)) {
-            Save-Installer "$($_.Link.Where({ "$_" -like 'https://*' }, 'First'))" |
-            ForEach-Object {
-                If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
-                    (Get-Item "$SaveTo\*").Where({ $_.VersionInfo.FileDescription -ieq 'Google Chrome Installer' }) |
-                    Remove-Item
+            Save-Installer "$(& $SelectLink $_ $ExeName)" |
+            ForEach-Object { 
+                If ($Checksum -ieq (Get-FileHash $_ SHA512).Hash) {
+                    Try { Remove-Item "$SaveTo\v$(((. $InstallLocation --version) -split ' ')[-1]).exe" -Force } Catch { }
                     Move-Item $_ -Destination $Installer
-                }
+                } 
             }
         }
-        If (([version] $_.Version) -gt $(Try { [version] $(
-            @{
-                LiteralPath = "$BaseNameLocation.exe"
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-ChildItem @_ }
-        ).VersionInfo.ProductVersion } Catch { })) {
-            Expand-ChromiumInstaller $Installer "$BaseNameLocation.exe"
-        }
+        @{
+            Path = $InstallLocation
+            ItemType = 'SymbolicLink'
+            Value = $Installer
+            ErrorAction = 'SilentlyContinue'
+            Force = $True
+        } | ForEach-Object { New-Item @_ }
     }
 }
-Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#5F6368'
-Set-ChromiumShortcut "$BaseNameLocation.exe"
-Set-BatchRedirect 'chrome' "$BaseNameLocation.exe"

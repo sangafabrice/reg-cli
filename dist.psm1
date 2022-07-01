@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'GoogleChrome'
-    Description = 'The script updates Google Chrome Legacy browser.'
-    Guid = '456d8a16-2f21-409a-91a1-b2bcb22353e3'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/4a3f99c43c1c2529ebb27f5a6b68b4c2efa5d4eb/icon.svg'
-    Tags = @('google','chrome','chromium','omaha','update','browser')
+    ProgramName = 'Yq'
+    Description = 'The script updates Yq command-line tool.'
+    Guid = 'f4a83d8d-b115-4a67-9a48-9b3a933e01da'
+    IconUri = ''
+    Tags = @('yq','cli','github','update')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
