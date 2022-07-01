@@ -1,6 +1,6 @@
 {
-    "version": "1.1.0",
+    "version": "1.2.0",
     "releaseNotes": [
-        "Restrict removed items to program files only in chromium installation directory."
+        "Add retrieving machine type of a symlink target path."
     ]
 }
