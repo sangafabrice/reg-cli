@@ -1,6 +1,6 @@
 {
-    "version": "1.1.0",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Restrict removed items to chromium installer."
+        "Fix comment based help."
     ]
 }

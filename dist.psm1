@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'AvastSecure'
-    Description = 'The script updates Avast Secure browser.'
-    Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
-    Tags = @('avast','secure','chromium','omaha','update','browser')
+    ProgramName = 'Brave'
+    Description = 'The script installs or updates Brave browser on Windows.'
+    Guid = '6f3e4cee-964b-41fd-b0fb-ef6f758800aa'
+    IconUri = ''
+    Tags = @('brave','chromium','omaha','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -30,7 +30,10 @@ Function New-UpdaterScript {
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
             Description = $DevDependencies.Description
-            RequiredModules = @('DownloadInfo','RegCli')
+            RequiredModules = @(@{
+                ModuleName = 'DownloadInfo'
+                ModuleVersion = '3.2.0'
+            },'RegCli')
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
@@ -39,7 +42,7 @@ Function New-UpdaterScript {
             ReleaseNotes = $_.releaseNotes
         }
     } | ForEach-Object { New-ScriptFileInfo @_ -Force }
-    ((Get-Content $HeaderPath).Where({$_ -like 'Param()*'}, 'Until') +
+    ((Get-Content $HeaderPath).Where({$_ -like "`<`# "}, 'Until') +
     (Get-Content .\Update.ps1)) -join "`n" | Out-String
     Remove-Item $HeaderPath
     Pop-Location
