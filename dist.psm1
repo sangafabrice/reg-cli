@@ -1,6 +1,6 @@
 $DevDependencies = @{
     ProgramName = 'AvastSecure'
-    Description = 'The script updates Avast Secure browser.'
+    Description = 'The script installs or updates Avast Secure browser on Windows.'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
     Tags = @('avast','secure','chromium','omaha','update','browser')
@@ -39,7 +39,7 @@ Function New-UpdaterScript {
             ReleaseNotes = $_.releaseNotes
         }
     } | ForEach-Object { New-ScriptFileInfo @_ -Force }
-    ((Get-Content $HeaderPath).Where({$_ -like 'Param()*'}, 'Until') +
+    ((Get-Content $HeaderPath).Where({$_ -like "`<`# "}, 'Until') +
     (Get-Content .\Update.ps1)) -join "`n" | Out-String
     Remove-Item $HeaderPath
     Pop-Location
