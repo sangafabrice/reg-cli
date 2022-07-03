@@ -1,3 +1,4 @@
+[CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
@@ -38,32 +39,42 @@ Switch (
         @($_.Version,$_.Link,$_.Checksum) |
         ForEach-Object { $_ -notin @($Null, '') }
     } {
-        $SaveToContent = Get-Item "$SaveTo\*"
         $Version = [version]$_.Version
+        Write-Verbose "Brave browser $Version installation starts..."
+        $SaveToContent = Get-ChildItem $SaveTo
         $Installer = $SaveToContent.Where({ [version]$_.VersionInfo.ProductVersion -eq $Version }).FullName ??
             "$SaveTo\$($_.Version).exe"
         $Checksum = $_.Checksum
         If (!(Test-Path $Installer)) {
+            Write-Verbose 'Download Brave browser installer...'
             Save-Installer "$($_.Link)" |
             ForEach-Object {
                 If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
+                    Write-Verbose 'Hashes match and delete outdated installers...'
                     $SaveToContent.Where({ $_.VersionInfo.FileDescription -ieq 'Brave Installer' }) |
                     Remove-Item
                     Move-Item $_ -Destination $Installer
                 }
             }
         }
-        If (([version] $_.Version) -gt $(Try { [version] $(
-            @{
-                LiteralPath = "$ExecutablePath"
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-ChildItem @_ }
-        ).VersionInfo.ProductVersion } Catch { })) { Expand-ChromiumInstaller $Installer "$ExecutablePath" }
+        $IsCurrentInstallOutdated = {
+            $Version -gt $(Try { [version] $(
+                @{
+                    LiteralPath = "$ExecutablePath"
+                    ErrorAction = 'SilentlyContinue'
+                } | ForEach-Object { Get-Item @_ }
+            ).VersionInfo.ProductVersion } Catch { })
+        }
+        If (& $IsCurrentInstallOutdated) {
+            Write-Verbose 'Current install is outdated or Brave is not installed...'
+            Expand-ChromiumInstaller $Installer "$ExecutablePath" 
+        }
     }
 }
 Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
 Set-ChromiumShortcut "$ExecutablePath"
 Set-BatchRedirect 'brave' "$ExecutablePath"
+If (!(& $IsCurrentInstallOutdated)) { Write-Verbose "Brave browser $Version installation complete." }
 
 <#
 .SYNOPSIS

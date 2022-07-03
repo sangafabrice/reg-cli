@@ -1,6 +1,6 @@
 {
-    "version": "0.0.2",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Fix comment based help."
+        "Add verbose."
     ]
 }
