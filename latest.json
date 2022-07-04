@@ -1,6 +1,7 @@
 {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "releaseNotes": [
-        "Add verbose."
+        "Update related to RegCli 2.0.2 update.",
+        "Add retrieving update info from saveTo folder in case an error is thrown in Get-DownloadInfo"
     ]
 }

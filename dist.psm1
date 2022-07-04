@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Brave'
     Description = 'The script installs or updates Brave browser on Windows.'
     Guid = '6f3e4cee-964b-41fd-b0fb-ef6f758800aa'
-    IconUri = ''
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/9a67d08c436e151098b887296b58a85d6753a0d1/icon.png'
     Tags = @('brave','chromium','omaha','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
@@ -33,7 +33,10 @@ Function New-UpdaterScript {
             RequiredModules = @(@{
                 ModuleName = 'DownloadInfo'
                 ModuleVersion = '3.2.0'
-            },'RegCli')
+            },@{
+                ModuleName = 'RegCli'
+                ModuleVersion = '2.0.2'
+            })
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
