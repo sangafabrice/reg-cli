@@ -312,8 +312,8 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
-                    Write-Verbose 'Delete outdated installers...'
                     $Installer = Get-Item (Get-InstallerPath)
+                    Write-Verbose 'Delete outdated installers...'
                     (Get-ChildItem $Installer.Directory).
                     Where({ $_.VersionInfo.FileDescription -ieq $Installer.VersionInfo.FileDescription }) |
                     Remove-Item -Exclude $Installer.Name
