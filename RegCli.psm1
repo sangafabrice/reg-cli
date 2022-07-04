@@ -232,7 +232,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                         }
                     } ($VersionString -replace '[^0-9\._\-]' -replace '[_\-]','.')) -replace '^\.' -replace '\.$')
                 }
-                Catch { }
+                Catch { $Null }
             )
     
             $InstallerPath = (Get-ChildItem $SaveTo).
@@ -240,30 +240,79 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 Where({ [version] $_.VersionInfo.ProductVersion -eq $Version }).FullName ??
                 "$SaveTo\$VersionString.exe"
     
-            Function Get-InstallerVersion { Return $Script:Version }
-    
-            Function Get-InstallerPath { Return $Script:InstallerPath }
-    
+            <#
+            .SYNOPSIS
+                Gets the installer version.
+            #>
+            Function Get-InstallerVersion {
+                [CmdletBinding()]
+                [OutputType([version])]
+                Param ()
+                
+                Return $Script:Version
+            }
+            
+            <#
+            .SYNOPSIS
+                Gets the installer path.
+            #>
+            Function Get-InstallerPath {
+                [CmdletBinding()]
+                [OutputType([string])]
+                Param ()
+                
+                Return $Script:InstallerPath
+            }
+            
+            <#
+            .SYNOPSIS
+                Saves the installer to the installation path.
+            #>
             Function Start-InstallerDownload {
+                [CmdletBinding()]
+                [OutputType([System.Void])]
                 Param (
+                    [Parameter(Mandatory)]
+                    [ValidateNotNullOrEmpty()]
+                    [Alias('Url')]
                     [string] $InstallerUrl,
+                    [Parameter(Mandatory)]
+                    [ValidateNotNullOrEmpty()]
+                    [ValidateScript({ $_.Length -in @(64, 128) })]
+                    [Alias('Checksum')]
                     [string] $InstallerChecksum
                 )
     
                 If (!(Test-Path (Get-InstallerPath))) {
+                    Write-Verbose 'Download installer...'
                     (Save-Installer $InstallerUrl).
                     Where({ 
                         $InstallerChecksum -ieq (Get-FileHash $_ $(
                         Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
                     }) |
-                    Select-Object @{ Name = 'Path'; Expression = { $_ } } |
+                    Select-Object @{
+                        Name = 'Path';
+                        Expression = {
+                            If (![string]::IsNullOrEmpty($_)) { Write-Verbose 'Hashes match...' }
+                            Return $_
+                        }
+                    } |
                     Move-Item -Destination (Get-InstallerPath)
                 }
             }
-    
+            
+            <#
+            .SYNOPSIS
+                Removes outdated installers.
+            #>
             Function Remove-InstallerOutdated {
+                [CmdletBinding()]
+                [OutputType([System.Void])]
+                Param ()
+
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
+                    Write-Verbose 'Delete outdated installers...'
                     $Installer = Get-Item (Get-InstallerPath)
                     (Get-ChildItem $Installer.Directory).
                     Where({ $_.VersionInfo.FileDescription -ieq $Installer.VersionInfo.FileDescription }) |
@@ -272,7 +321,15 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 Catch { }
             }
     
+            <#
+            .SYNOPSIS
+                Tests whether the current install is outdated.
+            #>
             Function Test-InstallOutdated {
+                [CmdletBinding()]
+                [OutputType([bool])]
+                Param ()
+
                 (Get-InstallerVersion) -gt $(Try { [version] $(
                     @{
                         LiteralPath = $InstallPath

@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '2.0.0'
+ModuleVersion = '2.0.1'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -20,7 +20,7 @@ PrivateData = @{
         LicenseUri = 'https://github.com/sangafabrice/reg-cli/blob/main/LICENSE.md'
         ProjectUri = 'https://github.com/sangafabrice/reg-cli'
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
-        ReleaseNotes = 'Add New-RegCliUpdate that encapsulates the update process that is not software specific.'
+        ReleaseNotes = 'Add advanced features to module loaded by New-RegCliUpdate.'
     }
 }
 }
