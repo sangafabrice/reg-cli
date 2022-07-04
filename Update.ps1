@@ -1,3 +1,4 @@
+[CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
@@ -25,44 +26,87 @@ Param (
     $SaveTo = $PSScriptRoot
 )
 
-$BaseNameLocation = "$InstallLocation\chrome"
-Switch ($(
-    "$(Get-ExecutableType "$BaseNameLocation.exe")" |
-    ForEach-Object {
+& {
+    $BaseNameLocation = "$InstallLocation\chrome"
+    $NameLocation = "$BaseNameLocation.exe"
+    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
+    Write-Verbose 'Retrieve install or update information...'
+    $MachineType = "$(Get-ExecutableType $NameLocation)"
+    $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{
             UpdateServiceURL = 'https://update.googleapis.com/service/update2'
             ApplicationID    = '{8A69D345-D564-463c-AFF1-A69D9E530F96}'
-            OwnerBrand       = "$(Switch ($_) { 'x64' { 'YTUH' } Default { 'GGLS' } })"
-            ApplicationSpec  = "$(Switch ($_) { 'x64' { 'x64-stable-statsdef_1' } Default { 'stable-arch_x86-statsdef_1' } })"
-        } -From Omaha
-    }
-)) {
-    {
-        @($_.Version,$_.Link,$_.Checksum) |
-        ForEach-Object { $_ -notin @($Null, '') }
-    } {
-        $Installer = "$SaveTo\$($_.Version).exe"
-        $Checksum = $_.Checksum
-        If (!(Test-Path $Installer)) {
-            Save-Installer "$($_.Link.Where({ "$_" -like 'https://*' }, 'First'))" |
-            ForEach-Object {
-                If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
-                    (Get-Item "$SaveTo\*").Where({ $_.VersionInfo.FileDescription -ieq 'Google Chrome Installer' }) |
-                    Remove-Item
-                    Move-Item $_ -Destination $Installer
-                }
-            }
+            OwnerBrand       = "$(Switch ($MachineType) { 'x64' { 'YTUH' } Default { 'GGLS' } })"
+            ApplicationSpec  = "$(Switch ($MachineType) { 'x64' { 'x64-stable-statsdef_1' } Default { 'stable-arch_x86-statsdef_1' } })"
+        } -From Omaha |
+        Where-Object {
+            @($_.Version,$_.Link,$_.Checksum) |
+            ForEach-Object { $_ -notin @($Null, '') }
         }
-        If (([version] $_.Version) -gt $(Try { [version] $(
-            @{
-                LiteralPath = "$BaseNameLocation.exe"
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-ChildItem @_ }
-        ).VersionInfo.ProductVersion } Catch { })) {
-            Expand-ChromiumInstaller $Installer "$BaseNameLocation.exe"
-        }
+    $InstallerVersion = $UpdateInfo.Version
+    $SoftwareName = 'Google Chrome'
+    $InstallerDescription = "$SoftwareName Installer"
+    If ($UpdateInfo.Count -le 0) {
+        $InstallerVersion = "$(
+            Get-ChildItem $SaveTo |
+            Select-Object VersionInfo -ExpandProperty VersionInfo |
+            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
+            ForEach-Object { [version] $_.ProductVersion } |
+            Sort-Object -Descending |
+            Select-Object -First 1
+        )"
     }
+    Try {
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
+        Import-Module -Verbose:$False -Force
+        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool}
+        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
+        If (Test-InstallOutdated) {
+            Write-Verbose 'Current install is outdated or not installed...'
+            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation
+        }
+        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
+        Set-ChromiumShortcut $NameLocation
+        Set-BatchRedirect 'chrome' $NameLocation
+        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+    } 
+    Catch { }
 }
-Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#5F6368'
-Set-ChromiumShortcut "$BaseNameLocation.exe"
-Set-BatchRedirect 'chrome' "$BaseNameLocation.exe"
+
+<#
+.SYNOPSIS
+    Updates Google Chrome browser software.
+.DESCRIPTION
+    The script installs or updates Google Chrome browser on Windows.
+.NOTES
+    Required: at least Powershell Core 7.
+.PARAMETER InstallLocation
+    Path to the installation directory.
+    It is restricted to file system paths.
+    It does not necessary exists.
+    It defaults to %ProgramData%\GoogleChrome.
+.PARAMETER SaveTo
+    Path to the directory of the downloaded installer.
+    It is an existing file system path.
+    It defaults to the script directory.
+.EXAMPLE
+    Get-ChildItem C:\ProgramData\GoogleChrome -ErrorAction SilentlyContinue
+
+    PS > .\UpdateGoogleChrome.ps1 -InstallLocation C:\ProgramData\GoogleChrome -SaveTo .
+
+    PS > Get-ChildItem C:\ProgramData\GoogleChrome | Select-Object Name
+    Name
+    ----
+    103.0.5060.66
+    chrome_proxy.exe
+    chrome.exe
+    chrome.VisualElementsManifest.xml
+
+    PS > Get-ChildItem C:\ProgramData\GoogleChrome | Select-Object Name
+    Name
+    ----
+    103.0.5060.66.exe
+    UpdateGoogleChrome.ps1
+
+    Install Google Chrome browser to 'C:\ProgramData\GoogleChrome' and save its setup installer to the current directory.
+#>

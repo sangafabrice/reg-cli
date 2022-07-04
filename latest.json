@@ -1,6 +1,7 @@
 {
-    "version": "0.0.1",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Initial Google Chrome Legacy updater."
+        "Update related to RegCli 2.0.2 update.",
+        "Add retrieving update info from saveTo folder in case an error is thrown in Get-DownloadInfo"
     ]
 }
