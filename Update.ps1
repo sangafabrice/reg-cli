@@ -26,55 +26,50 @@ Param (
     $SaveTo = $PSScriptRoot
 )
 
-$ExecutablePath = "$InstallLocation\brave.exe"
-Switch (
-    Get-DownloadInfo -PropertyList @{
-        UpdateServiceURL = 'https://updates.bravesoftware.com/service/update2'
-        ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
-        ApplicationSpec  = "$(Get-ExecutableType "$ExecutablePath")-rel"
-        Protocol         = '3.0'
-    } -From Omaha
-) {
-    {
-        @($_.Version,$_.Link,$_.Checksum) |
-        ForEach-Object { $_ -notin @($Null, '') }
-    } {
-        $Version = [version]$_.Version
-        Write-Verbose "Brave browser $Version installation starts..."
-        $SaveToContent = Get-ChildItem $SaveTo
-        $Installer = $SaveToContent.Where({ [version]$_.VersionInfo.ProductVersion -eq $Version }).FullName ??
-            "$SaveTo\$($_.Version).exe"
-        $Checksum = $_.Checksum
-        If (!(Test-Path $Installer)) {
-            Write-Verbose 'Download Brave browser installer...'
-            Save-Installer "$($_.Link)" |
-            ForEach-Object {
-                If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
-                    Write-Verbose 'Hashes match and delete outdated installers...'
-                    $SaveToContent.Where({ $_.VersionInfo.FileDescription -ieq 'Brave Installer' }) |
-                    Remove-Item
-                    Move-Item $_ -Destination $Installer
-                }
-            }
+& {
+    $NameLocation = "$InstallLocation\brave.exe"
+    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
+    Write-Verbose 'Retrieve install or update information...'
+    $UpdateInfo = 
+        Get-DownloadInfo -PropertyList @{
+            UpdateServiceURL = 'https://updates.bravesoftware.com/service/update2'
+            ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
+            ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
+            Protocol         = '3.0'
+        } -From Omaha |
+        Where-Object {
+            @($_.Version,$_.Link,$_.Checksum) |
+            ForEach-Object { $_ -notin @($Null, '') }
         }
-        $IsCurrentInstallOutdated = {
-            $Version -gt $(Try { [version] $(
-                @{
-                    LiteralPath = "$ExecutablePath"
-                    ErrorAction = 'SilentlyContinue'
-                } | ForEach-Object { Get-Item @_ }
-            ).VersionInfo.ProductVersion } Catch { })
-        }
-        If (& $IsCurrentInstallOutdated) {
-            Write-Verbose 'Current install is outdated or Brave is not installed...'
-            Expand-ChromiumInstaller $Installer "$ExecutablePath" 
-        }
+    $InstallerVersion = $UpdateInfo.Version
+    $SoftwareName = 'Brave'
+    $InstallerDescription = "$SoftwareName Installer"
+    If ($UpdateInfo.Count -le 0) {
+        $InstallerVersion = "$(
+            Get-ChildItem $SaveTo |
+            Select-Object VersionInfo -ExpandProperty VersionInfo |
+            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
+            ForEach-Object { [version] $_.ProductVersion } |
+            Sort-Object -Descending |
+            Select-Object -First 1
+        )"
     }
+    Try {
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
+        Import-Module -Verbose:$False -Force
+        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link)" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool}
+        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
+        If (Test-InstallOutdated) {
+            Write-Verbose 'Current install is outdated or not installed...'
+            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation 
+        }
+        Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
+        Set-ChromiumShortcut $NameLocation
+        Set-BatchRedirect 'brave' $NameLocation
+        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+    } 
+    Catch { }
 }
-Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
-Set-ChromiumShortcut "$ExecutablePath"
-Set-BatchRedirect 'brave' "$ExecutablePath"
-If (!(& $IsCurrentInstallOutdated)) { Write-Verbose "Brave browser $Version installation complete." }
 
 <#
 .SYNOPSIS
