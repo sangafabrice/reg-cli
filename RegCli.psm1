@@ -210,6 +210,78 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
         }
         Catch { }
     }
+    
+    Static [System.Management.Automation.PSModuleInfo] NewUpdate([string] $ExecutablePath, [string] $InstallerDirectory,
+        [string] $VersionString, [string] $InstallerDescription) {
+        # Load a dynamic module of helper functions for non-software specific tasks
+
+        Return New-Module {
+            Param (
+                [string] $InstallPath,
+                [string] $SaveTo,
+                [string] $VersionString,
+                [string] $InstallerDescription
+            )
+    
+            $Version = $(
+                Try {
+                    [version] ((& {
+                        Param ($VerStr)
+                        Switch ($VerStr -replace '\.\.','.') {
+                            Default { If ($_ -eq $VerStr) { Return $_ } Else { & $MyInvocation.MyCommand.ScriptBlock $_ } }
+                        }
+                    } ($VersionString -replace '[^0-9\._\-]' -replace '[_\-]','.')) -replace '^\.' -replace '\.$')
+                }
+                Catch { }
+            )
+    
+            $InstallerPath = (Get-ChildItem $SaveTo).
+                Where({ $_.VersionInfo.FileDescription -ieq $InstallerDescription }).
+                Where({ [version] $_.VersionInfo.ProductVersion -eq $Version }).FullName ??
+                "$SaveTo\$VersionString.exe"
+    
+            Function Get-InstallerVersion { Return $Script:Version }
+    
+            Function Get-InstallerPath { Return $Script:InstallerPath }
+    
+            Function Start-InstallerDownload {
+                Param (
+                    [string] $InstallerUrl,
+                    [string] $InstallerChecksum
+                )
+    
+                If (!(Test-Path (Get-InstallerPath))) {
+                    (Save-Installer $InstallerUrl).
+                    Where({ 
+                        $InstallerChecksum -ieq (Get-FileHash $_ $(
+                        Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
+                    }) |
+                    Select-Object @{ Name = 'Path'; Expression = { $_ } } |
+                    Move-Item -Destination (Get-InstallerPath)
+                }
+            }
+    
+            Function Remove-InstallerOutdated {
+                Try {
+                    If ([string]::IsNullOrEmpty($VersionString)) { Throw }
+                    $Installer = Get-Item (Get-InstallerPath)
+                    (Get-ChildItem $Installer.Directory).
+                    Where({ $_.VersionInfo.FileDescription -ieq $Installer.VersionInfo.FileDescription }) |
+                    Remove-Item -Exclude $Installer.Name
+                }
+                Catch { }
+            }
+    
+            Function Test-InstallOutdated {
+                (Get-InstallerVersion) -gt $(Try { [version] $(
+                    @{
+                        LiteralPath = $InstallPath
+                        ErrorAction = 'SilentlyContinue'
+                    } | ForEach-Object { Get-Item @_ }
+                ).VersionInfo.ProductVersion } Catch { })
+            }
+        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription
+    }
 }
 #EndRegion
 
@@ -317,6 +389,28 @@ Filter Set-ChromiumVisualElementsManifest {
         [string] $BackgroundColor
     )
     [RegCli]::SetChromiumVisualElementsManifest($Path, $BackgroundColor)
+}
+
+Function New-RegCliUpdate {
+    [CmdletBinding(PositionalBinding=$True)]
+    [OutputType([System.Management.Automation.PSModuleInfo])]
+    Param (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $SaveTo,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $Version,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $Description
+    )
+    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description)
 }
 
 #EndRegion
