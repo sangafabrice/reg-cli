@@ -1,6 +1,6 @@
 {
-    "version": "2.0.0",
+    "version": "2.0.1",
     "releaseNotes": [
-        "Add New-RegCliUpdate that encapsulates the update process that is not software specific."
+        "Add advanced features to module loaded by New-RegCliUpdate."
     ]
 }
