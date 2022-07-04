@@ -26,59 +26,52 @@ Param (
     $SaveTo = $PSScriptRoot
 )
 
-$BaseNameLocation = "$InstallLocation\AvastBrowser"
-Write-Verbose 'Retrieve install or update information...'
-Switch (
-    Get-DownloadInfo -PropertyList @{
-        UpdateServiceURL = 'https://update.avastbrowser.com/service/update2'
-        ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
-        OwnerBrand       = '2101'
-        OSArch           = Get-ExecutableType "$BaseNameLocation.exe"
-    } -From Omaha
-) {
-    {
-        @($_.Version,$_.Link,$_.Checksum) |
-        ForEach-Object { $_ -notin @($Null, '') }
-    } {
-        $Version = [version]$_.Version
-        Write-Verbose "Avast Secure browser $Version installation starts..."
-        $SaveToContent = (Get-ChildItem $SaveTo).Where({ $_.VersionInfo.FileDescription -ieq 'Avast Secure Browser Installer' })
-        $Installer = $SaveToContent.Where({ [version]$_.VersionInfo.ProductVersion -eq $Version }).FullName ??
-            "$SaveTo\$($_.Version).exe"
-        $Checksum = $_.Checksum
-        If (!(Test-Path $Installer)) {
-            Write-Verbose 'Download Avast Secure browser installer...'
-            Save-Installer "$($_.Link)" |
-            ForEach-Object {
-                If ($Checksum -ieq (Get-FileHash $_ SHA256).Hash) {
-                    Write-Verbose 'Hashes match...'
-                    Move-Item $_ -Destination $Installer
-                }
-            }
+& {
+    $BaseNameLocation = "$InstallLocation\AvastBrowser"
+    $NameLocation = "$BaseNameLocation.exe"
+    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
+    Write-Verbose 'Retrieve install or update information...'
+    $UpdateInfo = 
+        Get-DownloadInfo -PropertyList @{
+            UpdateServiceURL = 'https://update.avastbrowser.com/service/update2'
+            ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
+            OwnerBrand       = '2101'
+            OSArch           = Get-ExecutableType $NameLocation
+        } -From Omaha |
+        Where-Object {
+            @($_.Version,$_.Link,$_.Checksum) |
+            ForEach-Object { $_ -notin @($Null, '') }
         }
-        If (Test-Path $Installer) {
-            Write-Verbose 'Delete outdated installers...'
-            $SaveToContent | Remove-Item -Exclude (Get-Item $Installer).Name
-        }
-        $IsCurrentInstallOutdated = {
-            $Version -gt $(Try { [version] $(
-                @{
-                    LiteralPath = "$BaseNameLocation.exe"
-                    ErrorAction = 'SilentlyContinue'
-                } | ForEach-Object { Get-Item @_ }
-            ).VersionInfo.ProductVersion } Catch { })
-        }
-        If (& $IsCurrentInstallOutdated) {
-            Write-Verbose 'Current Secure install is outdated or it is not installed...'
-            Expand-ChromiumInstaller $Installer "$BaseNameLocation.exe"
+    $InstallerVersion = $UpdateInfo.Version
+    $SoftwareName = 'Avast Secure Browser'
+    $InstallerDescription = "$SoftwareName Installer"
+    If ($UpdateInfo.Count -le 0) {
+        $InstallerVersion = "$(
+            Get-ChildItem $SaveTo |
+            Select-Object VersionInfo -ExpandProperty VersionInfo |
+            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
+            ForEach-Object { [version] $_.ProductVersion } |
+            Sort-Object -Descending |
+            Select-Object -First 1
+        )"
+    }
+    Try {
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
+        Import-Module -Verbose:$False -Force
+        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link)" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool}
+        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
+        If (Test-InstallOutdated) {
+            Write-Verbose 'Current install is outdated or not installed...'
+            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation
             Remove-Item "${BaseNameLocation}Uninstall.exe" -Force
         }
-    }
+        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
+        Set-ChromiumShortcut $NameLocation
+        Set-BatchRedirect 'secure' $NameLocation
+        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+    } 
+    Catch { }
 }
-Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
-Set-ChromiumShortcut "$BaseNameLocation.exe"
-Set-BatchRedirect 'secure' "$BaseNameLocation.exe"
-If (!(& $IsCurrentInstallOutdated)) { Write-Verbose "Avast Secure browser $Version installation complete." }
 
 <#
 .SYNOPSIS

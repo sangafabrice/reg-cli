@@ -1,7 +1,8 @@
 {
-    "version": "2.0.0",
+    "version": "3.0.0",
     "releaseNotes": [
-        "Add verbosity.",
-        "Exclude latest installer from outdated installer items removal."
+        "Update related to RegCli 2.0.2 update.",
+        "Change code format.",
+        "Add retrieving update info from saveTo folder in case an error is thrown in Get-DownloadInfo"
     ]
 }
