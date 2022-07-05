@@ -58,7 +58,7 @@ Param (
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link)" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool}
+        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link)" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         If (Test-InstallOutdated) {
             Write-Verbose 'Current install is outdated or not installed...'
@@ -104,7 +104,7 @@ Param (
     browser_proxy.exe
     master_preferences
 
-    PS > Get-ChildItem C:\ProgramData\AvastSecure | Select-Object Name
+    PS > Get-ChildItem | Select-Object Name
     Name
     ----
     102.1.17190.115.exe
