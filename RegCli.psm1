@@ -237,6 +237,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
     
             $InstallerPath = (Get-ChildItem $SaveTo).
                 Where({ $_.VersionInfo.FileDescription -ieq $InstallerDescription }).
+                Where({ $_.LinkType -ine 'SymbolicLink' }, 'First').
                 Where({ [version] $_.VersionInfo.ProductVersion -eq $Version }).FullName ??
                 "$SaveTo\$VersionString.exe"
     
@@ -312,7 +313,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
-                    $Installer = Get-Item (Get-InstallerPath)
+                    $Installer = Get-Item (Get-InstallerPath) -ErrorAction Stop
                     Write-Verbose 'Delete outdated installers...'
                     (Get-ChildItem $Installer.Directory).
                     Where({ $_.VersionInfo.FileDescription -ieq $Installer.VersionInfo.FileDescription }) |
