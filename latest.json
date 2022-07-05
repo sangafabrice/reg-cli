@@ -1,6 +1,7 @@
 {
-    "version": "0.0.1",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Initial youtube-dl updater."
+        "Add handling for InstallLocation and SaveTo directories are the same.",
+        "Add compatibility with RegCli 2.0.3."
     ]
 }
