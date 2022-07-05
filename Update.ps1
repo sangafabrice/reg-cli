@@ -59,7 +59,7 @@ Param (
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool}
+        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         If (Test-InstallOutdated) {
             Write-Verbose 'Current install is outdated or not installed...'
@@ -102,7 +102,7 @@ Param (
     chrome.exe
     chrome.VisualElementsManifest.xml
 
-    PS > Get-ChildItem C:\ProgramData\GoogleChrome | Select-Object Name
+    PS > Get-ChildItem | Select-Object Name
     Name
     ----
     103.0.5060.66.exe
