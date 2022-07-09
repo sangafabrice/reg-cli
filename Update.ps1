@@ -17,7 +17,7 @@ Param (
             } | ForEach-Object { Get-Item @_ }
         ).FullName -ine $PSScriptRoot
     })] [string]
-    $InstallLocation = "${Env:ProgramData}\Vivaldi",
+    $InstallLocation = "${Env:ProgramData}\Blisk",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
         (Get-Item -LiteralPath $_).PSDrive.Name -iin 
@@ -27,17 +27,23 @@ Param (
 )
 
 & {
-    $BaseNameLocation = "$InstallLocation\vivaldi"
-    $NameLocation = "$BaseNameLocation.exe"
+    $NameLocation = "$InstallLocation\blisk.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         $(Try {
-            (Invoke-WebRequest 'https://vivaldi.com/download/' -Verbose:$False).Links.href -like '*.exe' | 
+            @{
+                Uri = 'https://blisk.io/download/?os=win'
+                UserAgent = 'NSISDL/1.2 (Mozilla)'
+                MaximumRedirection = 0
+                SkipHttpErrorCheck = $True
+                ErrorAction = 'SilentlyContinue'
+                Verbose = $False
+            } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location } |
             Select-Object @{
                 Name = 'Version'
                 Expression = {
-                    [void] ($_ -match "Vivaldi\.(?<Version>(\d+\.){3}\d+)$(If((Get-ExecutableType $NameLocation) -eq 'x64'){ '\.x64' })\.exe$")
+                    [void] ($_ -match "BliskInstaller_(?<Version>(\d+\.){3}\d+)\.exe$")
                     [version] $Matches.Version
                 }
             },@{
@@ -53,7 +59,7 @@ Param (
             ForEach-Object { $_ -notin @($Null, '') }
         }
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Vivaldi'
+    $SoftwareName = 'Blisk'
     $InstallerDescription = "$SoftwareName Installer"
     If ($UpdateInfo.Count -le 0) {
         $InstallerVersion = "$(
@@ -74,9 +80,9 @@ Param (
             Write-Verbose 'Current install is outdated or not installed...'
             Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation
         }
-        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#EF3939'
+        Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
         Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'vivaldi' $NameLocation
+        Set-BatchRedirect 'blisk' $NameLocation
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
     } 
     Catch { }
@@ -84,39 +90,38 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Vivaldi browser software.
+    Updates Blisk browser software.
 .DESCRIPTION
-    The script installs or updates Vivaldi browser on Windows.
+    The script installs or updates Blisk browser on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Vivaldi.
+    It defaults to %ProgramData%\Blisk.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Vivaldi -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Blisk -ErrorAction SilentlyContinue
 
-    PS > .\UpdateVivaldi.ps1 -InstallLocation C:\ProgramData\Vivaldi -SaveTo .
+    PS > .\UpdateBlisk.ps1 -InstallLocation C:\ProgramData\Blisk -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Vivaldi | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\Blisk | Select-Object Name
     Name
     ----
-    5.3.2679.68
-    update_notifier.exe
-    vivaldi.exe
-    vivaldi.VisualElementsManifest.xml
-    vivaldi_proxy.exe
+    18.0.193.167
+    blisk.exe
+    chrome.VisualElementsManifest.xml
+    chrome_proxy.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    5.3.2679.68.exe
-    UpdateVivaldi.ps1
+    18.0.193.167.exe
+    UpdateBlisk.ps1
 
-    Install Vivaldi browser to 'C:\ProgramData\Vivaldi' and save its setup installer to the current directory.
+    Install Blisk browser to 'C:\ProgramData\Blisk' and save its setup installer to the current directory.
 #>

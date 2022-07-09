@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Vivaldi'
-    Description = 'The script installs or updates Vivaldi browser on Windows.'
+    ProgramName = 'Blisk'
+    Description = 'The script installs or updates Blisk browser on Windows.'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/88e8345bfd93c03273280405759b79dae697a7f0/icon.png'
-    Tags = @('vivaldi','chromium','update','browser')
+    Tags = @('blisk','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
