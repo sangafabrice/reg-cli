@@ -1,6 +1,6 @@
 {
-    "version": "2.0.4",
+    "version": "2.1.0",
     "releaseNotes": [
-        "Fix: Symlink target does not copy to ExecutablePath."
+        "Add digital signature verification of installers."
     ]
 }
