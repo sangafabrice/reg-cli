@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'AvastSecure'
-    Description = 'The script installs or updates Avast Secure browser on Windows.'
+    ProgramName = 'Vivaldi'
+    Description = 'The script installs or updates Vivaldi browser on Windows.'
     Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
-    Tags = @('avast','secure','chromium','omaha','update','browser')
+    Tags = @('vivaldi','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
