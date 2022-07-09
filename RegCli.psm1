@@ -280,7 +280,6 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     [ValidateNotNullOrEmpty()]
                     [Alias('Url')]
                     [string] $InstallerUrl,
-                    [Parameter(Mandatory)]
                     [ValidateNotNullOrEmpty()]
                     [ValidateScript({ $_.Length -in @(64, 128) })]
                     [Alias('Checksum')]
@@ -289,15 +288,22 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
     
                 If (!(Test-Path (Get-InstallerPath))) {
                     Write-Verbose 'Download installer...'
+                    $IsChecksumPresent = $PSBoundParameters.ContainsKey('InstallerChecksum')
                     (Save-Installer $InstallerUrl).
                     Where({ 
-                        $InstallerChecksum -ieq (Get-FileHash $_ $(
-                        Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
+                        If ($IsChecksumPresent) {
+                            $InstallerChecksum -ieq (Get-FileHash $_ $(
+                            Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
+                        } Else { (Get-AuthenticodeSignature $_).Status -ieq 'Valid' }
                     }) |
                     Select-Object @{
                         Name = 'Path';
                         Expression = {
-                            If (![string]::IsNullOrEmpty($_)) { Write-Verbose 'Hashes match...' }
+                            If (![string]::IsNullOrEmpty($_)) {
+                                If ($IsChecksumPresent) {
+                                    Write-Verbose 'Hashes match...'
+                                } Else { Write-Verbose 'Signature verified...' }
+                            }
                             Return $_
                         }
                     } |
