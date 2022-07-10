@@ -1,6 +1,7 @@
 {
-    "version": "2.1.0",
+    "version": "2.2.0",
     "releaseNotes": [
-        "Add digital signature verification of installers."
+        "Add SSL Validation Skipping.",
+        "Allow renaming the downloaded resource in %TEMP%."
     ]
 }

@@ -149,8 +149,14 @@ Class RegCli {
     Static [string] DownloadInstaller([uri] $InstallerUrl) {
         # Download resource and save it to %TEMP% directory
 
+        Return [RegCli]::DownloadInstaller($InstallerUrl, $InstallerUrl.Segments[-1])
+    }
+
+    Static [string] DownloadInstaller([uri] $InstallerUrl, [string] $InstallerName) {
+        # Download resource and save it to %TEMP% directory
+
         Try {
-            $InstallerUrl.Segments[-1] -match '((?<BaseName>^.+)(?<Extension>\.[^\.]+$))'
+            $InstallerName -match '((?<BaseName>^.+)(?<Extension>\.[^\.]+$))'
             $Result = "${Env:TEMP}\$($Matches.BaseName)_$(Get-Date -Format 'yyMMddHHmm')$($Matches.Extension)"
             Start-BitsTransfer -Source "$InstallerUrl" -Destination $Result
             Return $Result
@@ -283,13 +289,30 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     [ValidateNotNullOrEmpty()]
                     [ValidateScript({ $_.Length -in @(64, 128) })]
                     [Alias('Checksum')]
-                    [string] $InstallerChecksum
+                    [string] $InstallerChecksum,
+                    [AllowNull()]
+                    [AllowEmptyString()]
+                    [Alias('Name')]
+                    [string] $InstallerName,
+                    [switch] $Force
                 )
     
                 If (!(Test-Path (Get-InstallerPath))) {
                     Write-Verbose 'Download installer...'
                     $IsChecksumPresent = $PSBoundParameters.ContainsKey('InstallerChecksum')
-                    (Save-Installer $InstallerUrl).
+                    $SaveInstallerArgs = @{ Url = [uri] $InstallerUrl }
+                    If ($PSBoundParameters.ContainsKey('InstallerName') -and
+                        ![string]::IsNullOrEmpty($InstallerName)) {
+                        $SaveInstallerArgs.FileName = $InstallerName
+                    }
+                    Switch ($PSBoundParameters) {
+                        {
+                            $_.ContainsKey('InstallerName') -and
+                            ![string]::IsNullOrEmpty($InstallerName)
+                        } { $SaveInstallerArgs.FileName = $InstallerName }
+                        { $Force -eq $True } { $SaveInstallerArgs.SkipSslValidation = $True }
+                    }
+                    (Save-Installer @SaveInstallerArgs).
                     Where({ 
                         If ($IsChecksumPresent) {
                             $InstallerChecksum -ieq (Get-FileHash $_ $(
@@ -402,16 +425,37 @@ Filter Get-ExecutableType {
     [RegCli]::GetExeMachineType($Path)
 }
 
-Filter Save-Installer {
+Function Save-Installer {
     [CmdletBinding()]
     [OutputType([String])]
     Param(
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [ValidationUtility]::ValidateSsl($_) })]
-        [uri] $Url
+        [uri] $Url,
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $FileName
     )
-    [RegCli]::DownloadInstaller($Url)
+    DynamicParam {
+        If (![ValidationUtility]::ValidateSsl($Url)) {
+            $AttributeCollection = [System.Collections.ObjectModel.Collection[System.Attribute]]::New()
+            $AttributeCollection.Add([System.Management.Automation.ParameterAttribute] @{ Mandatory = $False })
+            $ParamDictionary = [System.Management.Automation.RuntimeDefinedParameterDictionary]::New()
+            $ParamDictionary.Add('SkipSslValidation',[System.Management.Automation.RuntimeDefinedParameter]::New('SkipSslValidation','switch',$AttributeCollection))
+            $ParamDictionary
+        }
+    }
+    Process {
+        If (!($PSBoundParameters.ContainsKey('SkipSslValidation') -or
+        [ValidationUtility]::ValidateSsl($_))) { Throw 'The URL is not allowed.' }
+        If ($PSBoundParameters.ContainsKey('FileName') -and
+            ![string]::IsNullOrEmpty($FileName)) {
+            [RegCli]::DownloadInstaller($Url, $FileName)
+        } Else { [RegCli]::DownloadInstaller($Url) }
+    }
+    End { }
 }
 
 Function Set-BatchRedirect {
