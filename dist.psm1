@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'MSEdge'
-    Description = 'The script installs or updates Microsoft Edge browser on Windows.'
+    ProgramName = 'Opera'
+    Description = 'The script installs or updates Opera browser on Windows.'
     Guid = '711fbaea-637f-4424-99e6-0a3c06e62874'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/363ae3d7fb7b37a4bd4f523465361d000b8fc831/icon.png'
-    Tags = @('edge','microsoft','chromium','update','browser')
+    Tags = @('opera','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
