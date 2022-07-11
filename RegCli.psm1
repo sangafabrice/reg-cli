@@ -48,7 +48,7 @@ Class RegCli {
         Get-Item -LiteralPath $InstallerPath |
         ForEach-Object {
             Invoke-Expression ". '$PSScriptRoot\7z.exe' x -aoa -o'$(
-                If ($Null -ne $DestinationPath) { $DestinationPath }
+                If (![string]::IsNullOrEmpty($DestinationPath)) { $DestinationPath }
                 Else { "$($_.Directory)\$($_.BaseName)" }
             )' '$($_.FullName)'"
         }
@@ -413,6 +413,23 @@ Class ValidationUtility {
     }
 
     Static [bool] ValidateSsl($Url) { Return $Url.Scheme -ieq 'https' }
+}
+
+Function Expand-Installer {
+    [CmdletBinding()]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [AllowEmptyString()]
+        [AllowNull()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $Destination
+    )
+    If (!$PSBoundParameters.ContainsKey('Destination')) { $Destination = $Null }
+    [RegCli]::ExpandInstaller($Path, $Destination)
 }
 
 Function Expand-ChromiumInstaller {
