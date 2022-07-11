@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'Vivaldi'
     Description = 'The script installs or updates Vivaldi browser on Windows.'
-    Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
+    Guid = 'f15674db-9841-4822-b368-50354c387101'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/88e8345bfd93c03273280405759b79dae697a7f0/icon.png'
     Tags = @('vivaldi','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
@@ -32,7 +32,7 @@ Function New-UpdaterScript {
             Description = $DevDependencies.Description
             RequiredModules = @{
                 ModuleName = 'RegCli'
-                ModuleVersion = '2.1.0'
+                ModuleVersion = '2.3.2'
             }
             ExternalModuleDependencies = 'RegCli'
             Tags = $DevDependencies.Tags
