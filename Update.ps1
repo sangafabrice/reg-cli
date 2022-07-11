@@ -68,7 +68,7 @@ Param (
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload $UpdateInfo.Link $UpdateInfo.Checksum -Force -Verbose:$VerbosePreferenceBool }
+        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload $UpdateInfo.Link $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         If (Test-InstallOutdated) {
             Write-Verbose 'Current install is outdated or not installed...'
