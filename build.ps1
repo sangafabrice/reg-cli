@@ -222,6 +222,39 @@ Filter Deploy-RCModule {
     Catch { "ERROR: $($_.Exception.Message)" }
 }
 
+Function Initialize-RCHelp {
+    <#
+    .SYNOPSIS
+        Generate RegCli help document to a temporary location
+    .NOTES
+        Precondition: PlatyPS is installed
+    #>
+
+    Begin {
+        $PlatyPsModule = Get-Module | Where-Object Name -eq 'PlatyPS'
+        Import-Module PlatyPS -RequiredVersion $DevDependencies.PlatyPS -Force
+    }
+    Process {
+        Push-Location $PSScriptRoot
+        Import-Module RegCli -Force
+        @{
+            Module = 'RegCli'
+            OutputFolder = '.\en_us_1'
+            AlphabeticParamsOrder = $true
+            WithModulePage = $true
+            ExcludeDontShow = $true
+            Encoding = [System.Text.Encoding]::UTF8
+        } | ForEach-Object { New-MarkdownHelp @_ }
+        Pop-Location
+    }
+    End {
+        Remove-Module PlatyPS -Force
+        If ($PlatyPsModule.Count -gt 0) {
+            Import-Module PlatyPS -RequiredVersion $PlatyPsModule.Version -Force
+        }
+    }
+}
+
 Function Update-RCHelp {
     <#
     .SYNOPSIS
