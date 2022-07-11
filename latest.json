@@ -1,7 +1,6 @@
 {
-    "version": "2.3.0",
+    "version": "2.3.1",
     "releaseNotes": [
-        "Fix working directory does not appear in shortcut link.",
-        "Add function to edit taskbar shortcuts."
+        "Add function to expand installers."
     ]
 }
