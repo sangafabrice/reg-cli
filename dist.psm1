@@ -1,8 +1,8 @@
 $DevDependencies = @{
     ProgramName = 'Opera'
     Description = 'The script installs or updates Opera browser on Windows.'
-    Guid = '711fbaea-637f-4424-99e6-0a3c06e62874'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/363ae3d7fb7b37a4bd4f523465361d000b8fc831/icon.png'
+    Guid = '18f65546-088c-4ef1-bc92-513cbb3bfcf9'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/642e5e98a5620f1841db0694588e3417f9c89535/icon.png'
     Tags = @('opera','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
@@ -32,7 +32,7 @@ Function New-UpdaterScript {
             Description = $DevDependencies.Description
             RequiredModules = @{
                 ModuleName = 'RegCli'
-                ModuleVersion = '2.3.0'
+                ModuleVersion = '2.3.1'
             }
             ExternalModuleDependencies = 'RegCli'
             Tags = $DevDependencies.Tags
