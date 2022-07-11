@@ -32,7 +32,7 @@ Function New-UpdaterScript {
             Description = $DevDependencies.Description
             RequiredModules = @{
                 ModuleName = 'RegCli'
-                ModuleVersion = '2.3.0'
+                ModuleVersion = '2.3.2'
             }
             ExternalModuleDependencies = 'RegCli'
             Tags = $DevDependencies.Tags
