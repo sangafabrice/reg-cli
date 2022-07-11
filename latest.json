@@ -1,7 +1,7 @@
 {
-    "version": "2.2.0",
+    "version": "2.3.0",
     "releaseNotes": [
-        "Add SSL Validation Skipping.",
-        "Allow renaming the downloaded resource in %TEMP%."
+        "Fix working directory does not appear in shortcut link.",
+        "Add function to edit taskbar shortcuts."
     ]
 }

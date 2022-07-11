@@ -137,12 +137,30 @@ Class RegCli {
     Static [void] SetChromiumShortcut([string] $ExecutablePath) {
         # Create shortcut link to chromium app and save it to Start Menu
 
-        (New-Object -ComObject 'WScript.Shell').CreateShortcut("${Env:ProgramData}\Microsoft\Windows\Start Menu\Programs\$(
-            (Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue).VersionInfo.FileDescription
-        ).lnk") |
+        $ExeItem = Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue
+        (New-Object -ComObject 'WScript.Shell').
+        CreateShortcut("${Env:ProgramData}\Microsoft\Windows\Start Menu\Programs\$($ExeItem.VersionInfo.FileDescription).lnk") |
         ForEach-Object {
-            $_.TargetPath = $ExecutablePath
+            $_.TargetPath = $ExeItem.FullName
+            $_.WorkingDirectory = $ExeItem.Directory.FullName
             $_.Save()
+        }
+    }
+
+    Static [void] ResetTaskbarShortcutTargetPath([string] $ExecutablePath) {
+        # Reset target path of a shortcut link only if it exists
+
+        $ExeItem = Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue
+        $WsShell = New-Object -ComObject 'WScript.Shell'
+        Get-ChildItem "${Env:APPDATA}\Microsoft\Internet Explorer\Quick Launch\*" -Recurse -Force |
+        Where-Object Name -Like '*.lnk' |
+        ForEach-Object { $WsShell.CreateShortcut($_.FullName) } |
+        ForEach-Object {
+            If ($_.TargetPath -like "*\$($ExeItem.Name)") {
+                $_.TargetPath = $ExeItem.FullName
+                $_.WorkingDirectory = $ExeItem.Directory.FullName
+                $_.Save()
+            }
         }
     }
 
@@ -485,6 +503,18 @@ Filter Set-ChromiumShortcut {
         [string] $Path
     )
     [RegCli]::SetChromiumShortcut($Path)
+}
+
+Filter Edit-TaskbarShortcut {
+    [CmdletBinding()]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path
+    )
+    [RegCli]::ResetTaskbarShortcutTargetPath($Path)
 }
 
 Filter Set-ChromiumVisualElementsManifest {
