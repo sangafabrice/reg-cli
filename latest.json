@@ -1,6 +1,6 @@
 {
-    "version": "3.0.1",
+    "version": "3.0.2",
     "releaseNotes": [
-        "Correct typo in comment-help"
+        "Force the script to load RegCli 2.3.2"
     ]
 }
