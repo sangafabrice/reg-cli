@@ -484,7 +484,7 @@ Function Save-Installer {
     }
     Process {
         If (!($PSBoundParameters.ContainsKey('SkipSslValidation') -or
-        [ValidationUtility]::ValidateSsl($_))) { Throw 'The URL is not allowed.' }
+        [ValidationUtility]::ValidateSsl($Url))) { Throw 'The URL is not allowed.' }
         If ($PSBoundParameters.ContainsKey('FileName') -and
             ![string]::IsNullOrEmpty($FileName)) {
             [RegCli]::DownloadInstaller($Url, $FileName)
