@@ -35,7 +35,7 @@ Function New-UpdaterScript {
                 ModuleVersion = '3.2.0'
             },@{
                 ModuleName = 'RegCli'
-                ModuleVersion = '2.0.3'
+                ModuleVersion = '2.3.2'
             })
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
