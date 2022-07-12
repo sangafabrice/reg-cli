@@ -1,6 +1,6 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "releaseNotes": [
-        "Remove unwanted variable OSArch."
+        "Force the script to load RegCli 2.3.2"
     ]
 }
