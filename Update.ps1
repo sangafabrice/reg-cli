@@ -17,7 +17,7 @@ Param (
             } | ForEach-Object { Get-Item @_ }
         ).FullName -ine $PSScriptRoot
     })] [string]
-    $InstallLocation = "${Env:ProgramData}\Opera",
+    $InstallLocation = "${Env:ProgramData}\Firefox",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({
         (Get-Item -LiteralPath $_).PSDrive.Name -iin 
@@ -27,55 +27,92 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\launcher.exe"
+    $NameLocation = "$InstallLocation\firefox.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         $(Try {
-            $UriBase = 'https://get.geo.opera.com/pub/opera/desktop/'
-            (Invoke-WebRequest $UriBase -Verbose:$False).Links.href -notlike '../' |
-            ForEach-Object { [version]($_ -replace '/') } |
-            Sort-Object -Descending -Unique |
+            $UriBase = 'https://releases.mozilla.org/pub/firefox/releases/'
+            (Invoke-WebRequest $UriBase -Verbose:$False).Links.href |
+            ForEach-Object {
+                [void] ($_ -match '/(?<Version>[0-9\.]+)/$')
+                [version] $Matches.Version
+            } |
+            Sort-Object -Descending |
             Select-Object @{
-                Name = 'Version'
-                Expression = { "$_" }
-            },@{
                 Name = 'Link'
-                Expression = { "$UriBase$_/win/Opera_$($_)_Setup$(If((Get-ExecutableType $NameLocation) -eq 'x64'){ '_x64' }).exe" }
-            } -First 1 |
-            Select-Object Version,Link,@{
-                Name = 'Checksum';
-                Expression = { "$(Invoke-WebRequest "$($_.Link).sha256sum" -Verbose:$False)" }
-            }
+                Expression = {
+                    $Culture = Get-Culture
+                    $Lang = $Culture.TwoLetterISOLanguageName
+                    $UriBase = "$UriBase$_"
+                    $OSArch = $(Switch (Get-ExecutableType $NameLocation) { 'x64' { 'win64' } 'x86' { 'win32' } })
+                    $LangInstallers = 
+                        "$(Invoke-WebRequest "$UriBase/SHA512SUMS" -Verbose:$False)" -split "`n" |
+                        ForEach-Object {
+                            ,@($_ -split ' ',2) |
+                            ForEach-Object {
+                                [pscustomobject] @{
+                                    Checksum = $_[0]
+                                    Resource = "$($_[1])".Trim()
+                                }
+                            } |
+                            Where-Object Resource -Like "$OSArch/*.exe"
+                        }
+                    $GroupInstaller = $LangInstallers | Where-Object Resource -Like "$OSArch/$Lang*.exe"
+                    Switch ($GroupInstaller.Count) {
+                        0 { $GroupInstaller = $LangInstallers | Where-Object Resource -Like "$OSArch/en-US/*" }
+                        { $_ -gt 1 } {
+                            [void] ($Culture.Name -match '\-(?<Country>[A-Z]{2})$')
+                            $TempLine = $GroupInstaller | Where-Object Resource -Like "$OSArch/$Lang-$($Matches.Country)/*"
+                            If ([string]::IsNullOrEmpty($TempLine)) {
+                                If ($Lang -ieq 'en') { $TempLine = $GroupInstaller | Where-Object Resource -Like "$OSArch/en-US/*" }
+                                Else { $TempLine = $GroupInstaller[0] }
+                            }
+                            $GroupInstaller = $TempLine
+                        }
+                    }
+                    $GroupInstaller.Resource = "$UriBase/$($GroupInstaller.Resource)"
+                    $GroupInstaller 
+                } 
+            },@{
+                Name = 'Version'
+                Expression = { $_ }
+            } |
+            Select-Object Version,@{
+                Name = 'Link'
+                Expression = { $_.Link.Resource }
+            },@{
+                Name = 'Checksum'
+                Expression = { $_.Link.Checksum }
+            } -First 1
         } Catch { }) |
         Where-Object {
             @($_.Version,$_.Link,$_.Checksum) |
             ForEach-Object { $_ -notin @($Null, '') }
         }
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Opera'
-    $InstallerDescription = "$SoftwareName Installer"
+    $SoftwareName = 'Firefox'
     If ($UpdateInfo.Count -le 0) {
         $InstallerVersion = "$(
             Get-ChildItem $SaveTo |
             Select-Object VersionInfo -ExpandProperty VersionInfo |
-            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
+            Where-Object { $_.FileDescription -ieq $SoftwareName } |
             ForEach-Object { [version] $_.ProductVersion } |
             Sort-Object -Descending |
             Select-Object -First 1
         )"
     }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
         Import-Module -Verbose:$False -Force
         If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload $UpdateInfo.Link $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         If (Test-InstallOutdated) {
             Write-Verbose 'Current install is outdated or not installed...'
-            Expand-Installer (Get-InstallerPath) $InstallLocation
+            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation
         }
         Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'opera' $NameLocation
+        Set-BatchRedirect 'firefox' $NameLocation
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
     } 
     Catch { }
