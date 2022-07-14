@@ -80,7 +80,8 @@ Class RegCli {
                     Try {
                         (Get-Item -LiteralPath $UnzipPath).FullName |
                         ForEach-Object { Push-Location $_ }
-                        (Get-Item .\*.7z)[0].FullName |
+                        (Get-Item .\*.7z | Select-Object -First 1).FullName |
+                        Where-Object { ![string]::IsNullOrEmpty($_) } |
                         ForEach-Object {
                             [RegCli]::ExpandInstaller($_)
                             Remove-Item $_
