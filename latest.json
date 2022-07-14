@@ -1,6 +1,6 @@
 {
-    "version": "2.3.2",
+    "version": "2.3.3",
     "releaseNotes": [
-        "Fix SSL validated url does not download."
+        "Extend function capabilities: Expand-ChromiumInstaller does not fail when no 7z file is found."
     ]
 }
