@@ -120,39 +120,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Opera browser software.
+    Updates Mozilla Firefox browser software.
 .DESCRIPTION
-    The script installs or updates Opera browser on Windows.
+    The script installs or updates Mozilla Firefox browser on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Opera.
+    It defaults to %ProgramData%\MozillaFirefox.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Opera -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\MozillaFirefox -ErrorAction SilentlyContinue
 
-    PS > .\UpdateOpera.ps1 -InstallLocation C:\ProgramData\Opera -SaveTo .
+    PS > .\UpdateMozillaFirefox.ps1 -InstallLocation C:\ProgramData\MozillaFirefox -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Opera | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\MozillaFirefox | Select-Object Name -First 5
     Name
     ----
-    Assets
-    localization
-    MEIPreload
-    resources
-    89.0.4447.38.manifest
+    browser
+    defaults
+    fonts
+    gmp-clearkey
+    uninstall
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    89.0.4447.38.exe
-    UpdateOpera.ps1
+    102.0.1.exe
+    UpdateMozillaFirefox.ps1
 
-    Install Opera browser to 'C:\ProgramData\Opera' and save its setup installer to the current directory.
+    Install Mozilla Firefox browser to 'C:\ProgramData\MozillaFirefox' and save its setup installer to the current directory.
 #>

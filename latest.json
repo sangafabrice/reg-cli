@@ -1,6 +1,6 @@
 {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Initial Mozilla Firefox updater."
+        "Fix comment based help."
     ]
 }
