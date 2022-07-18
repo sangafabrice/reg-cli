@@ -1,28 +1,12 @@
 [CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (& {
-            Param($Path)
-            $Pattern = '(?<Drive>^.+):'
-            If ($Path -match $Pattern -or $PWD -match $Pattern) {
-                Return $Matches.Drive -iin @((Get-PSDrive -PSProvider FileSystem).Name)
-            }
-            Return $False
-        } $_) -and
-        $(
-            @{
-                LiteralPath = $_
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-Item @_ }
-        ).FullName -ine $PSScriptRoot
-    })] [string]
+    [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
+    [string]
     $InstallLocation = "${Env:ProgramData}\MSEdge",
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (Get-Item -LiteralPath $_).PSDrive.Name -iin 
-        @((Get-PSDrive -PSProvider FileSystem).Name)
-    })] [string]
+    [ValidateScript({ Test-InstallerLocation $_ })]
+    [string]
     $SaveTo = $PSScriptRoot
 )
 
@@ -32,48 +16,7 @@ Param (
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        $(Try {
-            $UriBasis = "https://msedge.api.cdp.microsoft.com/api/v1.1/contents/Browser/namespaces/Default/names/msedge-stable-win-$(Get-ExecutableType $NameLocation)/versions/"
-            $WebRequestArgs = {
-                Param($ActionString)
-                Return @{
-                    Uri = "$UriBasis$ActionString"
-                    UserAgent = 'winhttp'
-                    Method = 'POST'
-                    Body = '{"targetingAttributes":{}}'
-                    Headers = @{ 'Content-Type' = 'application/json' }
-                    Verbose = $False
-                }
-            }
-            & $WebRequestArgs 'latest?action=select' |
-            ForEach-Object { 
-                Invoke-WebRequest @_ |
-                ConvertFrom-Json |
-                ForEach-Object {
-                    $Version = $_.ContentId.Version
-                    & $WebRequestArgs "$Version/files?action=GenerateDownloadInfo" |
-                    ForEach-Object { 
-                        (Invoke-WebRequest @_).Content |
-                        ConvertFrom-Json |
-                        Select-Object @{
-                            Name = 'Size'
-                            Expression = { $_.SizeInBytes }
-                        },@{
-                            Name = 'Version'
-                            Expression = { $Version }
-                        },@{
-                            Name = 'Name'
-                            Expression = { $_.FileId }
-                        },@{
-                            Name = 'Link'
-                            Expression = { $_.Url }
-                        } |
-                        Sort-Object -Property Size -Descending |
-                        Select-Object Version,Link,Name -First 1
-                    }
-                }
-            }
-        } Catch { }) |
+        Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From MSEdge |
         Where-Object {
             @($_.Version,$_.Link,$_.Name) |
             ForEach-Object { $_ -notin @($Null, '') }
@@ -84,9 +27,10 @@ Param (
     If ($UpdateInfo.Count -le 0) {
         $InstallerVersion = "$(
             Get-ChildItem $SaveTo |
-            Select-Object VersionInfo -ExpandProperty VersionInfo |
-            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
-            ForEach-Object { [version] $_.ProductVersion } |
+            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
+            Select-Object -ExpandProperty VersionInfo |
+            Where-Object FileDescription -IEQ $InstallerDescription |
+            ForEach-Object { $_.FileVersionRaw } |
             Sort-Object -Descending |
             Select-Object -First 1
         )"
@@ -94,14 +38,10 @@ Param (
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) {
-            Start-InstallerDownload $UpdateInfo.Link -Name $UpdateInfo.Name -Force -Verbose:$VerbosePreferenceBool
-        }
+        Switch ($UpdateInfo) { {$_.Count -gt 0}
+        { Start-InstallerDownload $_.Link -Name $_.Name -Force -Verbose:$VerbosePreferenceBool } }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        If (Test-InstallOutdated) {
-            Write-Verbose 'Current install is outdated or not installed...'
-            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation
-        }
+        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#173A73'
         Set-ChromiumShortcut $NameLocation
         Edit-TaskbarShortcut $NameLocation
@@ -114,7 +54,7 @@ Param (
             Force = $True
         } | ForEach-Object { Set-ItemProperty @_ }
         #EndRegion
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
 }
