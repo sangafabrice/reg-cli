@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'MozillaFirefox'
-    Description = 'The script installs or updates Mozilla Firefox browser on Windows.'
-    Guid = '6d9b52c5-9b60-48e1-a0c1-e5c62d5bb660'
+    ProgramName = 'FirefoxDevEdition'
+    Description = 'The script installs or updates Mozilla Firefox Developer Edition browser on Windows.'
+    Guid = '2b9f3f36-3644-44ab-aa3e-0febd015fae5'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fa46f4d6bb7df0d1d507d8a9f2d0e0f60f2bc454/icon.png'
-    Tags = @('firefox','update','browser')
+    Tags = @('firefox', 'dev-edition','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -31,8 +31,11 @@ Function New-UpdaterScript {
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
             Description = $DevDependencies.Description
             RequiredModules = @{
+                ModuleName = 'DownloadInfo'
+                ModuleVersion = '4.0.0'
+            },@{
                 ModuleName = 'RegCli'
-                ModuleVersion = '2.3.3'
+                ModuleVersion = '2.4.0'
             }
             ExternalModuleDependencies = 'RegCli'
             Tags = $DevDependencies.Tags
