@@ -1,28 +1,12 @@
 [CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (& {
-            Param($Path)
-            $Pattern = '(?<Drive>^.+):'
-            If ($Path -match $Pattern -or $PWD -match $Pattern) {
-                Return $Matches.Drive -iin @((Get-PSDrive -PSProvider FileSystem).Name)
-            }
-            Return $False
-        } $_) -and
-        $(
-            @{
-                LiteralPath = $_
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-Item @_ }
-        ).FullName -ine $PSScriptRoot
-    })] [string]
+    [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
+    [string]
     $InstallLocation = "${Env:ProgramData}\Brave",
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (Get-Item -LiteralPath $_).PSDrive.Name -iin 
-        @((Get-PSDrive -PSProvider FileSystem).Name)
-    })] [string]
+    [ValidateScript({ Test-InstallerLocation $_ })]
+    [string]
     $SaveTo = $PSScriptRoot
 )
 
@@ -47,9 +31,10 @@ Param (
     If ($UpdateInfo.Count -le 0) {
         $InstallerVersion = "$(
             Get-ChildItem $SaveTo |
-            Select-Object VersionInfo -ExpandProperty VersionInfo |
-            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
-            ForEach-Object { [version] $_.ProductVersion } |
+            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
+            Select-Object -ExpandProperty VersionInfo |
+            Where-Object FileDescription -IEQ $InstallerDescription |
+            ForEach-Object { $_.FileVersionRaw } |
             Sort-Object -Descending |
             Select-Object -First 1
         )"
@@ -57,16 +42,13 @@ Param (
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link)" $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
+        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        If (Test-InstallOutdated) {
-            Write-Verbose 'Current install is outdated or not installed...'
-            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation 
-        }
+        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
         Set-ChromiumShortcut $NameLocation
         Set-BatchRedirect 'brave' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
 }
