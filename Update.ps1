@@ -1,28 +1,12 @@
 [CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (& {
-            Param($Path)
-            $Pattern = '(?<Drive>^.+):'
-            If ($Path -match $Pattern -or $PWD -match $Pattern) {
-                Return $Matches.Drive -iin @((Get-PSDrive -PSProvider FileSystem).Name)
-            }
-            Return $False
-        } $_) -and
-        $(
-            @{
-                LiteralPath = $_
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-Item @_ }
-        ).FullName -ine $PSScriptRoot
-    })] [string]
+    [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
+    [string]
     $InstallLocation = "${Env:ProgramData}\Firefox",
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (Get-Item -LiteralPath $_).PSDrive.Name -iin 
-        @((Get-PSDrive -PSProvider FileSystem).Name)
-    })] [string]
+    [ValidateScript({ Test-InstallerLocation $_ })]
+    [string]
     $SaveTo = $PSScriptRoot
 )
 
@@ -31,91 +15,43 @@ Param (
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        $(Try {
-            $UriBase = 'https://releases.mozilla.org/pub/firefox/releases/'
-            (Invoke-WebRequest $UriBase -Verbose:$False).Links.href |
-            ForEach-Object {
-                [void] ($_ -match '/(?<Version>[0-9\.]+)/$')
-                [version] $Matches.Version
-            } |
-            Sort-Object -Descending |
-            Select-Object @{
-                Name = 'Link'
-                Expression = {
-                    $Culture = Get-Culture
-                    $Lang = $Culture.TwoLetterISOLanguageName
-                    $UriBase = "$UriBase$_"
-                    $OSArch = $(Switch (Get-ExecutableType $NameLocation) { 'x64' { 'win64' } 'x86' { 'win32' } })
-                    $LangInstallers = 
-                        "$(Invoke-WebRequest "$UriBase/SHA512SUMS" -Verbose:$False)" -split "`n" |
-                        ForEach-Object {
-                            ,@($_ -split ' ',2) |
-                            ForEach-Object {
-                                [pscustomobject] @{
-                                    Checksum = $_[0]
-                                    Resource = "$($_[1])".Trim()
-                                }
-                            } |
-                            Where-Object Resource -Like "$OSArch/*.exe"
-                        }
-                    $GroupInstaller = $LangInstallers | Where-Object Resource -Like "$OSArch/$Lang*.exe"
-                    Switch ($GroupInstaller.Count) {
-                        0 { $GroupInstaller = $LangInstallers | Where-Object Resource -Like "$OSArch/en-US/*" }
-                        { $_ -gt 1 } {
-                            [void] ($Culture.Name -match '\-(?<Country>[A-Z]{2})$')
-                            $TempLine = $GroupInstaller | Where-Object Resource -Like "$OSArch/$Lang-$($Matches.Country)/*"
-                            If ([string]::IsNullOrEmpty($TempLine)) {
-                                If ($Lang -ieq 'en') { $TempLine = $GroupInstaller | Where-Object Resource -Like "$OSArch/en-US/*" }
-                                Else { $TempLine = $GroupInstaller[0] }
-                            }
-                            $GroupInstaller = $TempLine
-                        }
-                    }
-                    $GroupInstaller.Resource = "$UriBase/$($GroupInstaller.Resource)"
-                    $GroupInstaller 
-                } 
-            },@{
-                Name = 'Version'
-                Expression = { $_ }
-            } |
-            Select-Object Version,@{
-                Name = 'Link'
-                Expression = { $_.Link.Resource }
-            },@{
-                Name = 'Checksum'
-                Expression = { $_.Link.Checksum }
-            } -First 1
-        } Catch { }) |
+        Get-DownloadInfo -PropertyList @{
+            RepositoryId = 'firefox'
+            OSArch = (Get-ExecutableType $NameLocation)
+            VersionDelim = $Null
+        } -From Mozilla |
         Where-Object {
             @($_.Version,$_.Link,$_.Checksum) |
             ForEach-Object { $_ -notin @($Null, '') }
         }
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Firefox'
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
+    $UpdateInfoCountZero = $UpdateInfo.Count -le 0
+    If ($UpdateInfoCountZero) {
+        $InstallerVersion = "$((
             Get-ChildItem $SaveTo |
-            Select-Object VersionInfo -ExpandProperty VersionInfo |
-            Where-Object { $_.FileDescription -ieq $SoftwareName } |
-            ForEach-Object { [version] $_.ProductVersion } |
-            Sort-Object -Descending |
+            Where-Object { $_.VersionInfo.FileDescription -ieq $SoftwareName } |
+            Get-AuthenticodeSignatureEx |
+            Sort-Object -Descending -Property SigningTime |
             Select-Object -First 1
-        )"
+        ).SigningTime)"
     }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
+        $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
+        $VersionPreInstall = & $GetExeVersion
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName -UseTimeStamp:$UpdateInfoCountZero |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload $UpdateInfo.Link $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
+        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        If (Test-InstallOutdated) {
-            Write-Verbose 'Current install is outdated or not installed...'
-            Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation
-        }
+        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumShortcut $NameLocation
         Set-BatchRedirect 'firefox' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+        $VersionPostInstall = & $GetExeVersion
+        If ($VersionPostInstall -gt $VersionPreInstall) {
+            Write-Verbose "$SoftwareName $((Get-InstallerVersion) ?? $VersionPostInstall) installation complete."
+        }
     } 
-    Catch { }
+    Catch { $_ }
 }
 
 <#

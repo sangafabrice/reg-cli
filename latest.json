@@ -1,6 +1,8 @@
 {
-    "version": "0.0.2",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Fix comment based help."
+        "Add Get-DownloadInfo for Mozilla Firefox.",
+        "Add parameters validators in ValidateScript Attribute.",
+        "Use timestamp when no download info is available."
     ]
 }
