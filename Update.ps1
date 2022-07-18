@@ -15,7 +15,11 @@ Param (
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From FirefoxDev |
+        Get-DownloadInfo -PropertyList @{
+            RepositoryId = 'devedition'
+            OSArch = (Get-ExecutableType $NameLocation)
+            VersionDelim = 'b'
+        } -From Mozilla |
         Where-Object {
             @($_.Version,$_.Link,$_.Checksum) |
             ForEach-Object { $_ -notin @($Null, '') }
@@ -38,7 +42,7 @@ Param (
         $VersionPreInstall = & $GetExeVersion
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription -UseTimeStamp:$UpdateInfoCountZero |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload $UpdateInfo.Link $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
+        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumShortcut $NameLocation

@@ -1,6 +1,7 @@
 {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Initial version of Mozilla Firefox Dev Edition updater."
+        "Use Mozilla option to download info",
+        "Change RegCli version to 3.0.0"
     ]
 }
