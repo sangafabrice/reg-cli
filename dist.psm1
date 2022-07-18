@@ -30,10 +30,13 @@ Function New-UpdaterScript {
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
             Description = $DevDependencies.Description
-            RequiredModules = @{
+            RequiredModules = @(@{
+                ModuleName = 'DownloadInfo'
+                ModuleVersion = '4.0.0'
+            },@{
                 ModuleName = 'RegCli'
-                ModuleVersion = '2.3.2'
-            }
+                ModuleVersion = '3.0.0'
+            })
             ExternalModuleDependencies = 'RegCli'
             Tags = $DevDependencies.Tags
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
