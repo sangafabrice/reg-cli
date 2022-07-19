@@ -1,6 +1,7 @@
 {
-    "version": "0.0.2",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Force the script to load RegCli 2.3.2"
+        "Force the script to load RegCli 3.0.0.",
+        "Use chromium installation to install software."
     ]
 }

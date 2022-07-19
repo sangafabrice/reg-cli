@@ -1,28 +1,12 @@
 [CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (& {
-            Param($Path)
-            $Pattern = '(?<Drive>^.+):'
-            If ($Path -match $Pattern -or $PWD -match $Pattern) {
-                Return $Matches.Drive -iin @((Get-PSDrive -PSProvider FileSystem).Name)
-            }
-            Return $False
-        } $_) -and
-        $(
-            @{
-                LiteralPath = $_
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-Item @_ }
-        ).FullName -ine $PSScriptRoot
-    })] [string]
+    [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
+    [string]
     $InstallLocation = "${Env:ProgramData}\Opera",
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (Get-Item -LiteralPath $_).PSDrive.Name -iin 
-        @((Get-PSDrive -PSProvider FileSystem).Name)
-    })] [string]
+    [ValidateScript({ Test-InstallerLocation $_ })]
+    [string]
     $SaveTo = $PSScriptRoot
 )
 
@@ -31,23 +15,11 @@ Param (
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        $(Try {
-            $UriBase = 'https://get.geo.opera.com/pub/opera/desktop/'
-            (Invoke-WebRequest $UriBase -Verbose:$False).Links.href -notlike '../' |
-            ForEach-Object { [version]($_ -replace '/') } |
-            Sort-Object -Descending -Unique |
-            Select-Object @{
-                Name = 'Version'
-                Expression = { "$_" }
-            },@{
-                Name = 'Link'
-                Expression = { "$UriBase$_/win/Opera_$($_)_Setup$(If((Get-ExecutableType $NameLocation) -eq 'x64'){ '_x64' }).exe" }
-            } -First 1 |
-            Select-Object Version,Link,@{
-                Name = 'Checksum';
-                Expression = { "$(Invoke-WebRequest "$($_.Link).sha256sum" -Verbose:$False)" }
-            }
-        } Catch { }) |
+        Get-DownloadInfo -PropertyList @{
+            RepositoryID = 'opera/desktop'
+            OSArch = (Get-ExecutableType $NameLocation)
+            FormatedName = 'Opera'
+        } -From Opera |
         Where-Object {
             @($_.Version,$_.Link,$_.Checksum) |
             ForEach-Object { $_ -notin @($Null, '') }
@@ -58,9 +30,10 @@ Param (
     If ($UpdateInfo.Count -le 0) {
         $InstallerVersion = "$(
             Get-ChildItem $SaveTo |
-            Select-Object VersionInfo -ExpandProperty VersionInfo |
-            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
-            ForEach-Object { [version] $_.ProductVersion } |
+            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
+            Select-Object -ExpandProperty VersionInfo |
+            Where-Object FileDescription -IEQ $InstallerDescription |
+            ForEach-Object { $_.FileVersionRaw } |
             Sort-Object -Descending |
             Select-Object -First 1
         )"
@@ -68,15 +41,12 @@ Param (
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload $UpdateInfo.Link $UpdateInfo.Checksum -Verbose:$VerbosePreferenceBool }
+        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        If (Test-InstallOutdated) {
-            Write-Verbose 'Current install is outdated or not installed...'
-            Expand-Installer (Get-InstallerPath) $InstallLocation
-        }
+        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumShortcut $NameLocation
         Set-BatchRedirect 'opera' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
 }
