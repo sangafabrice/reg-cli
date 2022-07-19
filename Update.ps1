@@ -1,28 +1,12 @@
 [CmdletBinding()]
 Param (
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (& {
-            Param($Path)
-            $Pattern = '(?<Drive>^.+):'
-            If ($Path -match $Pattern -or $PWD -match $Pattern) {
-                Return $Matches.Drive -iin @((Get-PSDrive -PSProvider FileSystem).Name)
-            }
-            Return $False
-        } $_) -and
-        $(
-            @{
-                LiteralPath = $_
-                ErrorAction = 'SilentlyContinue'
-            } | ForEach-Object { Get-Item @_ }
-        ).FullName -ine $PSScriptRoot
-    })] [string]
+    [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
+    [string]
     $InstallLocation = "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\youtube-dl.exe",
     [ValidateNotNullOrEmpty()]
-    [ValidateScript({
-        (Get-Item -LiteralPath $_).PSDrive.Name -iin 
-        @((Get-PSDrive -PSProvider FileSystem).Name)
-    })] [string]
+    [ValidateScript({ Test-InstallerLocation $_ })]
+    [string]
     $SaveTo = $PSScriptRoot
 )
 
@@ -43,9 +27,10 @@ Param (
     If ($UpdateInfo.Count -le 0) {
         $InstallerVersion = "$(
             Get-ChildItem $SaveTo |
-            Select-Object VersionInfo -ExpandProperty VersionInfo |
-            Where-Object { $_.FileDescription -ieq $InstallerDescription } |
-            ForEach-Object { [version] $_.ProductVersion } |
+            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
+            Select-Object -ExpandProperty VersionInfo |
+            Where-Object FileDescription -IEQ $InstallerDescription |
+            ForEach-Object { $_.FileVersionRaw } |
             Sort-Object -Descending |
             Select-Object -First 1
         )"
@@ -53,13 +38,14 @@ Param (
     Try {
         New-RegCliUpdate $InstallLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) {
-            Start-InstallerDownload "$($UpdateInfo.Link.Where({ $_.Url -like '*.exe' }).Url)" "$(
-                (((Invoke-WebRequest "$($UpdateInfo.Link.Where({$_.Url -like '*512SUMS'}).Url)" -Verbose:$False).Content |
+        Switch ($UpdateInfo) {
+        {$_.Count -gt 0} {
+            Start-InstallerDownload "$($_.Link.Where({ $_.Url -like '*.exe' }).Url)" "$(
+                (((Invoke-WebRequest "$($_.Link.Where({$_.Url -like '*512SUMS'}).Url)" -Verbose:$False).Content |
                 ForEach-Object { [char] $_ }) -join '' -split "`n" |
                 ConvertFrom-String).Where({$_.P2 -ieq 'youtube-dl.exe'}).P1
             )" -Verbose:$VerbosePreferenceBool
-        }
+        } }
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         $TestInstall = $False
         $InstallDirectory = $InstallLocation -replace '(\\|/)[^\\/]+$'
