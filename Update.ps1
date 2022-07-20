@@ -14,30 +14,15 @@ Param (
     $NameLocation = "$InstallLocation\blisk.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{} -From Blisk |
-        Where-Object {
-            @($_.Version,$_.Link) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+    $UpdateInfo = Get-DownloadInfo -PropertyList @{} -From Blisk | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Blisk'
     $InstallerDescription = "$SoftwareName Installer"
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
-            Get-ChildItem $SaveTo |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
-            Select-Object -ExpandProperty VersionInfo |
-            Where-Object FileDescription -IEQ $InstallerDescription |
-            ForEach-Object { $_.FileVersionRaw } |
-            Sort-Object -Descending |
-            Select-Object -First 1
-        )"
-    }
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) { Start-InstallerDownload "$($UpdateInfo.Link)" -Verbose:$VerbosePreferenceBool }
+        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
