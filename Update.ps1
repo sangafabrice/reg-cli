@@ -18,34 +18,28 @@ Param (
         Get-DownloadInfo -PropertyList @{
             RepositoryId = 'mikefarah/yq'
             AssetPattern = "$ExeName$|checksums.*$"
-        } |
-        Where-Object {
-            @($_.Version,$_.Link) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        } | Select-NonEmptyObject
     $InstallerDescription = 'Yq data format processor'
-    If ($UpdateInfo.Count -le 0) { Return }
+    If (!$UpdateInfo) { Return }
     Try {
         New-RegCliUpdate $InstallLocation $SaveTo $UpdateInfo.Version $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        If ($UpdateInfo.Count -gt 0) {
-            $SelectLink = {
-                Param($Obj, $FileName)
-                $Obj.Link.Url.Where({ "$_" -like "*$FileName" })
-            }
-            $RqstContent = {
-                Param($Obj, $FileName)
-                ((Invoke-WebRequest "$(& $SelectLink $Obj $FileName)" -Verbose:$False).Content |
-                ForEach-Object { [char] $_ }) -join '' -split "`n"
-            }
-            $ShaIndex = "P$([array]::IndexOf((& $RqstContent $UpdateInfo 'checksums_hashes_order'),'SHA-512') + 2)"
-            Start-InstallerDownload "$(& $SelectLink $UpdateInfo $ExeName)" "$(
-                $(& $RqstContent $UpdateInfo 'checksums' |
-                ConvertFrom-String |
-                Select-Object P1,$ShaIndex |
-                Where-Object P1 -Like $ExeName).$ShaIndex
-            )" -Verbose:$VerbosePreferenceBool
+        $SelectLink = {
+            Param($Obj, $FileName)
+            $Obj.Link.Url.Where({ "$_" -like "*$FileName" })
         }
+        $RqstContent = {
+            Param($Obj, $FileName)
+            ((Invoke-WebRequest "$(& $SelectLink $Obj $FileName)" -Verbose:$False).Content |
+            ForEach-Object { [char] $_ }) -join '' -split "`n"
+        }
+        $ShaIndex = "P$([array]::IndexOf((& $RqstContent $UpdateInfo 'checksums_hashes_order'),'SHA-512') + 2)"
+        Start-InstallerDownload "$(& $SelectLink $UpdateInfo $ExeName)" "$(
+            $(& $RqstContent $UpdateInfo 'checksums' |
+            ConvertFrom-String |
+            Select-Object P1,$ShaIndex |
+            Where-Object P1 -Like $ExeName).$ShaIndex
+        )" -Verbose:$VerbosePreferenceBool
         Try { 
             Remove-Item "$SaveTo\v$(
                 @(((. $InstallLocation --version) -split ' ')[-1]).
@@ -54,31 +48,7 @@ Param (
             ).exe" -ErrorAction SilentlyContinue -Force
         } Catch { }
         $TestInstall = $False
-        $InstallDirectory = $InstallLocation -replace '(\\|/)[^\\/]+$'
-        If ([string]::IsNullOrEmpty($InstallDirectory)) { $InstallDirectory = $PWD }
-        If ("$((Get-Item $InstallDirectory -ErrorAction SilentlyContinue).FullName)" -ieq (Get-Item $SaveTo).FullName) {
-            # If $InstallLocation directory is equal to $SaveTo
-            @{
-                NewName = & {
-                    [void] ($InstallLocation -match '(?<ExeName>[^\\/]+$)')
-                    $Matches.ExeName
-                }
-                LiteralPath = Get-InstallerPath
-                ErrorAction = 'SilentlyContinue'
-                Force = $True
-            } | ForEach-Object { Rename-Item @_ }
-            $TestInstall = Test-Path $InstallLocation
-        } Else {
-            New-Item $InstallDirectory -ItemType Directory -Force | Out-Null
-            @{
-                Path = $InstallLocation
-                ItemType = 'SymbolicLink'
-                Value = Get-InstallerPath
-                ErrorAction = 'SilentlyContinue'
-                Force = $True
-            } | ForEach-Object { New-Item @_ | Out-Null }
-            $TestInstall = (Get-Item (Get-Item $InstallLocation).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
-        }
+        Set-ConsoleSymlink ([ref] $TestInstall)
         If ($TestInstall) { Write-Verbose "$InstallerDescription $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
