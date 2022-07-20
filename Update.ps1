@@ -22,12 +22,11 @@ Param (
         } -From Mozilla | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Firefox'
-    $UpdateInfoCountZero = $UpdateInfo.Count -le 0
     If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerPublishDate $SaveTo $SoftwareName)" }
     Try {
         $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
         $VersionPreInstall = & $GetExeVersion
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName -UseTimeStamp:$UpdateInfoCountZero |
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName -UseTimeStamp:$(!$UpdateInfo) |
         Import-Module -Verbose:$False -Force
         $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
