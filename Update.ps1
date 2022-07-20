@@ -20,29 +20,15 @@ Param (
             ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
             ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
             Protocol         = '3.0'
-        } -From Omaha |
-        Where-Object {
-            @($_.Version,$_.Link,$_.Checksum) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        } -From Omaha | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Brave'
     $InstallerDescription = "$SoftwareName Installer"
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
-            Get-ChildItem $SaveTo |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
-            Select-Object -ExpandProperty VersionInfo |
-            Where-Object FileDescription -IEQ $InstallerDescription |
-            ForEach-Object { $_.FileVersionRaw } |
-            Sort-Object -Descending |
-            Select-Object -First 1
-        )"
-    }
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
+        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
