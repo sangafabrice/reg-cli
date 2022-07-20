@@ -25,11 +25,11 @@ Param (
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Avast Secure Browser'
     $InstallerDescription = "$SoftwareName Installer"
-    If ($UpdateInfo.Count -le 0) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
+        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Remove-Item "${BaseNameLocation}Uninstall.exe" -Force -ErrorAction SilentlyContinue
