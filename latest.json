@@ -1,6 +1,10 @@
 {
-    "version": "2.3.3",
+    "version": "3.0.0",
     "releaseNotes": [
-        "Extend function capabilities: Expand-ChromiumInstaller does not fail when no 7z file is found."
+        "Extend function capabilities: Expand-ChromiumInstaller includes version comparison of current install and installing update.",
+        "Add Get-AuthenticodeSignatureEx that extends Get-AuthenticodeSignature by adding SigningTime property.",
+        "Add functions for validation script in Updater script",
+        "Add non-null object selection function",
+        "Add a function to get the latest saved installer version"
     ]
 }
