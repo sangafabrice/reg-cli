@@ -42,7 +42,7 @@ Class RegCli {
         # installer $InstallerPath to $DestinationPath directory.
         # Precondition : 
         # 1. $InstallerPath exists.
-        # 2. $DestinationPath may or may not exist and may be $null.
+        # 2. $DestinationPath may or may not exist and may be $Null.
         # 3. 7zip is installed.
 
         Get-Item -LiteralPath $InstallerPath |
@@ -86,19 +86,18 @@ Class RegCli {
                             [RegCli]::ExpandInstaller($_)
                             Remove-Item $_
                         }
-                        Compress-Archive $ExeDir -DestinationPath "${Env:TEMP}\$($ExeBaseName)_$(Get-Date -Format 'yyMMddHHmm').zip"
-                        Stop-Process -Name $($ExeBaseName) -Force -ErrorAction SilentlyContinue
-                        Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue |
-                        Select-Object -ExpandProperty VersionInfo |
-                        Select-Object ProductName,ProductVersion |
-                        ForEach-Object {
-                            $ProductPattern = "*$($_.ProductName -replace ' ','*')*"
-                            (Get-Item "$ExeDir\*" |
-                            Where-Object { $_.VersionInfo.ProductName -like $ProductPattern }) +
-                            (Get-Item "$ExeDir\$($_.ProductVersion)") |
+                        $UnzippedExeName =
+                            Get-ChildItem $ExeName -Recurse -ErrorAction SilentlyContinue |
+                            Select-Object -First 1
+                        $Executable = Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue
+                        If ($UnzippedExeName.VersionInfo.FileVersionRaw -gt $Executable.VersionInfo.FileVersionRaw) {
+                            Write-Verbose 'Current install is outdated or not installed...'
+                            Compress-Archive $ExeDir -DestinationPath "${Env:TEMP}\$($ExeBaseName)_$(Get-Date -Format 'yyMMddHHmm').zip"
+                            Stop-Process -Name $($ExeBaseName) -Force -ErrorAction SilentlyContinue
+                            Get-ChildItem $ExeDir -ErrorAction SilentlyContinue |
                             Remove-Item -Recurse
-                        }
-                        Move-Item "$((Get-ChildItem $ExeName -Recurse).Directory)\*" $ExeDir -ErrorAction SilentlyContinue
+                            Move-Item "$($UnzippedExeName.Directory)\*" $ExeDir -ErrorAction SilentlyContinue
+                        } Else { Write-Verbose 'A newer or the same version is already installed.' }
                         Pop-Location
                         Remove-Item $UnzipPath -Recurse
                     } Catch { }
@@ -239,8 +238,32 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
         Catch { }
     }
     
+    Static [version] GetSavedInstallerVersion([string] $InstallerDirectory, [string] $InstallerDescription) {
+        Return $(
+            Get-ChildItem $InstallerDirectory |
+            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
+            Select-Object -ExpandProperty VersionInfo |
+            Where-Object FileDescription -IEQ $InstallerDescription |
+            ForEach-Object { $_.FileVersionRaw } |
+            Sort-Object -Descending |
+            Select-Object -First 1
+        )
+    }
+
+    Static [datetime] GetSavedInstallerPublishDate([string] $InstallerDirectory, [string] $InstallerDescription) {
+        Return $(
+            (
+                Get-ChildItem $InstallerDirectory |
+                Where-Object { $_.VersionInfo.FileDescription -ieq $InstallerDescription } |
+                Get-AuthenticodeSignatureEx |
+                Sort-Object -Descending -Property SigningTime |
+                Select-Object -First 1
+            ).SigningTime
+        )
+    }
+
     Static [System.Management.Automation.PSModuleInfo] NewUpdate([string] $ExecutablePath, [string] $InstallerDirectory,
-        [string] $VersionString, [string] $InstallerDescription) {
+        [string] $VersionString, [string] $InstallerDescription, [switch] $UseTimeStamp) {
         # Load a dynamic module of helper functions for non-software specific tasks
 
         Return New-Module {
@@ -248,27 +271,39 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [string] $InstallPath,
                 [string] $SaveTo,
                 [string] $VersionString,
-                [string] $InstallerDescription
+                [string] $InstallerDescription,
+                [switch] $UseTimeStamp
             )
-    
-            $Version = $(
-                Try {
-                    [version] ((& {
-                        Param ($VerStr)
-                        Switch ($VerStr -replace '\.\.','.') {
-                            Default { If ($_ -eq $VerStr) { Return $_ } Else { & $MyInvocation.MyCommand.ScriptBlock $_ } }
-                        }
-                    } ($VersionString -replace '[^0-9\._\-]' -replace '[_\-]','.')) -replace '^\.' -replace '\.$')
+
+            If ($UseTimeStamp) {
+                Switch ([datetime] $VersionString) {
+                    { $Null -ne $_ } {
+                        $Version = $Null
+                        $InstallerPath = (Get-ChildItem $SaveTo).
+                            Where({ $_.VersionInfo.FileDescription -ieq $InstallerDescription }).
+                            Where({ ($_ | Get-AuthenticodeSignatureEx).SigningTime -eq $VersionString }).FullName
+                    }
                 }
-                Catch { $Null }
-            )
-    
-            $InstallerPath = (Get-ChildItem $SaveTo).
-                Where({ $_.VersionInfo.FileDescription -ieq $InstallerDescription }).
-                Where({ $_.LinkType -ine 'SymbolicLink' }, 'First').
-                Where({ [version] $_.VersionInfo.ProductVersion -eq $Version }).FullName ??
-                "$SaveTo\$VersionString.exe"
-    
+            } Else {
+                Switch ($VersionString) {
+                    { $Null -ne $_ } {
+                        $Version = $(Try {
+                            [version] ((& {
+                                Param ($VerStr)
+                                Switch ($VerStr -replace '\.\.','.') {
+                                    Default { If ($_ -eq $VerStr) { Return $_ } Else { & $MyInvocation.MyCommand.ScriptBlock $_ } }
+                                }
+                            } ($_ -replace '[^0-9\.]','.')) -replace '^\.' -replace '\.$')
+                        } Catch { $Null })
+                        $InstallerPath = (Get-ChildItem $SaveTo).
+                            Where({ $_.VersionInfo.FileDescription -ieq $InstallerDescription }).
+                            Where({ $_.LinkType -ine 'SymbolicLink' }).
+                            Where({ $_.VersionInfo.FileVersionRaw -eq $Version }, 'First').FullName ??
+                            "$SaveTo\$_.exe"
+                    }
+                }
+            }
+            
             <#
             .SYNOPSIS
                 Gets the installer version.
@@ -301,14 +336,16 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [CmdletBinding()]
                 [OutputType([System.Void])]
                 Param (
-                    [Parameter(Mandatory)]
+                    [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
                     [ValidateNotNullOrEmpty()]
-                    [Alias('Url')]
+                    [Alias('Url','Link')]
                     [string] $InstallerUrl,
+                    [Parameter(ValueFromPipelineByPropertyName)]
                     [ValidateNotNullOrEmpty()]
                     [ValidateScript({ $_.Length -in @(64, 128) })]
                     [Alias('Checksum')]
                     [string] $InstallerChecksum,
+                    [Parameter(ValueFromPipelineByPropertyName)]
                     [AllowNull()]
                     [AllowEmptyString()]
                     [Alias('Name')]
@@ -382,14 +419,45 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [OutputType([bool])]
                 Param ()
 
-                (Get-InstallerVersion) -gt $(Try { [version] $(
+                (Get-InstallerVersion) -gt $(Try { $(
                     @{
                         LiteralPath = $InstallPath
                         ErrorAction = 'SilentlyContinue'
                     } | ForEach-Object { Get-Item @_ }
-                ).VersionInfo.ProductVersion } Catch { })
+                ).VersionInfo.FileVersionRaw } Catch { })
             }
-        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription
+
+            Function Set-ConsoleSymlink {
+                [CmdletBinding()]
+                [OutputType([System.Void])]
+                Param ([ref] $InstallStatus)
+                $InstallDirectory = $InstallPath -replace '(\\|/)[^\\/]+$'
+                If ([string]::IsNullOrEmpty($InstallDirectory)) { $InstallDirectory = $PWD }
+                If ("$((Get-Item $InstallDirectory -ErrorAction SilentlyContinue).FullName)" -ieq (Get-Item $SaveTo).FullName) {
+                    # If $InstallPath directory is equal to $SaveTo
+                    @{
+                        NewName = & {
+                            [void] ($InstallPath -match '(?<ExeName>[^\\/]+$)')
+                            $Matches.ExeName
+                        }
+                        LiteralPath = Get-InstallerPath
+                        ErrorAction = 'SilentlyContinue'
+                        Force = $True
+                    } | ForEach-Object { Rename-Item @_ }
+                    $InstallStatus.Value = Test-Path $InstallPath
+                } Else {
+                    New-Item $InstallDirectory -ItemType Directory -Force | Out-Null
+                    @{
+                        Path = $InstallPath
+                        ItemType = 'SymbolicLink'
+                        Value = Get-InstallerPath
+                        ErrorAction = 'SilentlyContinue'
+                        Force = $True
+                    } | ForEach-Object { New-Item @_ | Out-Null }
+                    $InstallStatus.Value = (Get-Item (Get-Item $InstallPath).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
+                }
+            }
+        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseTimeStamp
     }
 }
 #EndRegion
@@ -567,9 +635,177 @@ Function New-RegCliUpdate {
         [string] $Version,
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
+        [string] $Description,
+        [switch] $UseTimeStamp
+    )
+    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseTimeStamp)
+}
+
+Filter Test-InstallLocation {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $Path,
+        [ValidateScript({ $_ | ForEach-Object { [ValidationUtility]::ValidatePathString($_) } })]
+        [string[]] $Exclude
+    )
+    If($Exclude.Count -le 0) { Return $True }
+    (Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue).FullName -inotin $Exclude
+}
+
+Filter Test-InstallerLocation {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path
+    )
+    Return $True
+}
+
+Filter Get-SavedInstallerVersion {
+    [CmdletBinding()]
+    [OutputType([version])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string] $Description
     )
-    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description)
+    [RegCli]::GetSavedInstallerVersion($Path, $Description)
+}
+
+Filter Get-SavedInstallerPublishDate {
+    [CmdletBinding()]
+    [OutputType([datetime])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $Description
+    )
+    [RegCli]::GetSavedInstallerPublishDate($Path, $Description)
+}
+
+Filter Select-NonEmptyObject {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [ValidateNotNullOrEmpty()]
+        [pscustomobject] $Object
+    )
+    Switch ({
+        Where-Object { 
+            ($Object | Get-Member -MemberType NoteProperty).Name |
+            ForEach-Object { $Object.$_ } |
+            ForEach-Object { $_ -notin $null,'' }
+        }
+    }.GetSteppablePipeline()) {
+    { $Null -ne $_ } {
+        $_.Begin($true)
+        $_.Process($Object)
+        $_.End()
+        $_.Dispose()
+    } }
+}
+
+# https://www.sysadmins.lv/blog-en/retrieve-timestamp-attribute-from-digital-signature.aspx
+Function Get-AuthenticodeSignatureEx {
+    <#
+    .ForwardHelpTargetName Get-AuthenticodeSignature
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [string[]] $FilePath
+    )
+    Begin {
+        $Signature = @"
+            [DllImport("crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            public static extern bool CryptQueryObject(
+                int dwObjectType,
+                [MarshalAs(UnmanagedType.LPWStr)]string pvObject,
+                int dwExpectedContentTypeFlags,
+                int dwExpectedFormatTypeFlags,
+                int dwFlags,
+                ref int PdwMsgAndCertEncodingType,
+                ref int PdwContentType,
+                ref int PdwFormatType,
+                ref IntPtr phCertStore,
+                ref IntPtr phMsg,
+                ref IntPtr ppvContext
+            );
+            [DllImport("crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            public static extern bool CryptMsgGetParam(
+                IntPtr hCryptMsg,
+                int dwParamType,
+                int dwIndex,
+                byte[] pvData,
+                ref int pcbData
+            );
+            [DllImport("crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            public static extern bool CryptMsgClose(IntPtr hCryptMsg);
+            [DllImport("crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            public static extern bool CertCloseStore(IntPtr hCertStore, int dwFlags);
+"@
+        Add-Type -AssemblyName System.Security
+        Add-Type -MemberDefinition $Signature -Namespace PKI -Name Crypt32
+    }
+    Process {
+        Get-AuthenticodeSignature @PSBoundParameters |
+        ForEach-Object {
+            $Output = $_
+            If ($Null -ne $Output.SignerCertificate) {
+                $PdwMsgAndCertEncodingType =  0
+                $PdwContentType =  0
+                $PdwFormatType =  0
+                [IntPtr] $PhCertStore = [IntPtr]::Zero
+                [IntPtr] $PhMsg = [IntPtr]::Zero
+                [IntPtr] $PpvContext = [IntPtr]::Zero
+                [void] [PKI.Crypt32]::CryptQueryObject(
+                    1,
+                    $Output.Path,
+                    16382,
+                    14,
+                    $Null,
+                    [ref] $PdwMsgAndCertEncodingType,
+                    [ref] $PdwContentType,
+                    [ref] $PdwFormatType,
+                    [ref] $PhCertStore,
+                    [ref] $PhMsg,
+                    [ref] $PpvContext
+                )
+                $PcbData = 0
+                [void] [PKI.Crypt32]::CryptMsgGetParam($PhMsg, 29, 0, $Null, [ref] $PcbData)
+                $PvData = New-Object byte[] -ArgumentList $PcbData
+                [void] [PKI.Crypt32]::CryptMsgGetParam($PhMsg, 29, 0, $PvData, [ref] $PcbData)
+                $SignedCms = New-Object Security.Cryptography.Pkcs.SignedCms
+                $SignedCms.Decode($PvData)
+                Foreach ($Infos In $SignedCms.SignerInfos) {
+                    Foreach ($CounterSignerInfos In $Infos.CounterSignerInfos) {
+                        $STime = ($CounterSignerInfos.SignedAttributes |
+                        Where-Object { $_.Oid.Value -eq '1.2.840.113549.1.9.5' }).Values |
+                        Where-Object { $Null -ne $_.SigningTime }
+                    }
+                }
+                $Output | Add-Member -MemberType NoteProperty -Name SigningTime -Value $STime.SigningTime.ToLocalTime() -PassThru -Force
+                [void][PKI.Crypt32]::CryptMsgClose($PhMsg)
+                [void][PKI.Crypt32]::CertCloseStore($PhCertStore, 0)
+            } Else { $Output }
+        }
+    }
+    End { }
 }
 
 #EndRegion
