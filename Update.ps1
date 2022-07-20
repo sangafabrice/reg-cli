@@ -17,62 +17,29 @@ Param (
         Get-DownloadInfo -PropertyList @{
             RepositoryId = 'ytdl-org/youtube-dl'
             AssetPattern = 'youtube-dl.exe$|SHA2-512SUMS$'
-        } |
-        Where-Object {
-            @($_.Version,$_.Link) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $InstallerDescription = 'YouTube video downloader'
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
-            Get-ChildItem $SaveTo |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
-            Select-Object -ExpandProperty VersionInfo |
-            Where-Object FileDescription -IEQ $InstallerDescription |
-            ForEach-Object { $_.FileVersionRaw } |
-            Sort-Object -Descending |
-            Select-Object -First 1
-        )"
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
+    Else {
+        $GetURL = {
+            Param($Pattern)
+            "$($UpdateInfo.Link.Where({ $_.Url -like $Pattern }).Url)"
+        }
+        $UpdateInfo = Add-Member -InputObject $UpdateInfo -MemberType NoteProperty -Name Checksum -Value "$(
+            (((Invoke-WebRequest (& $GetURL '*512SUMS') -Verbose:$False).Content |
+            ForEach-Object { [char] $_ }) -join '' -split "`n" |
+            ConvertFrom-String).Where({$_.P2 -ieq 'youtube-dl.exe'}).P1
+        )" -Passthru
+        $UpdateInfo.Link = & $GetURL '*.exe'
     }
     Try {
         New-RegCliUpdate $InstallLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        Switch ($UpdateInfo) {
-        {$_.Count -gt 0} {
-            Start-InstallerDownload "$($_.Link.Where({ $_.Url -like '*.exe' }).Url)" "$(
-                (((Invoke-WebRequest "$($_.Link.Where({$_.Url -like '*512SUMS'}).Url)" -Verbose:$False).Content |
-                ForEach-Object { [char] $_ }) -join '' -split "`n" |
-                ConvertFrom-String).Where({$_.P2 -ieq 'youtube-dl.exe'}).P1
-            )" -Verbose:$VerbosePreferenceBool
-        } }
+        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         $TestInstall = $False
-        $InstallDirectory = $InstallLocation -replace '(\\|/)[^\\/]+$'
-        If ([string]::IsNullOrEmpty($InstallDirectory)) { $InstallDirectory = $PWD }
-        If ("$((Get-Item $InstallDirectory -ErrorAction SilentlyContinue).FullName)" -ieq (Get-Item $SaveTo).FullName) {
-            # If $InstallLocation directory is equal to $SaveTo
-            @{
-                NewName = & {
-                    [void] ($InstallLocation -match '(?<ExeName>[^\\/]+$)')
-                    $Matches.ExeName
-                }
-                LiteralPath = Get-InstallerPath
-                ErrorAction = 'SilentlyContinue'
-                Force = $True
-            } | ForEach-Object { Rename-Item @_ }
-            $TestInstall = Test-Path $InstallLocation
-        } Else {
-            New-Item $InstallDirectory -ItemType Directory -Force | Out-Null
-            @{
-                Path = $InstallLocation
-                ItemType = 'SymbolicLink'
-                Value = Get-InstallerPath
-                ErrorAction = 'SilentlyContinue'
-                Force = $True
-            } | ForEach-Object { New-Item @_ | Out-Null }
-            $TestInstall = (Get-Item (Get-Item $InstallLocation).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
-        }
+        Set-ConsoleSymlink ([ref] $TestInstall)
         If ($TestInstall) { Write-Verbose "$InstallerDescription $InstallerVersion installation complete." }
     } 
     Catch { }
