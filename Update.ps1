@@ -21,25 +21,11 @@ Param (
             ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
             OwnerBrand       = '2101'
             OSArch           = Get-ExecutableType $NameLocation
-        } -From Omaha |
-        Where-Object {
-            @($_.Version,$_.Link,$_.Checksum) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        } -From Omaha | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Avast Secure Browser'
     $InstallerDescription = "$SoftwareName Installer"
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
-            Get-ChildItem $SaveTo |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
-            Select-Object -ExpandProperty VersionInfo |
-            Where-Object FileDescription -IEQ $InstallerDescription |
-            ForEach-Object { $_.FileVersionRaw } |
-            Sort-Object -Descending |
-            Select-Object -First 1
-        )"
-    }
+    If ($UpdateInfo.Count -le 0) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
