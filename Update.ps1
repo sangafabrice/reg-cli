@@ -17,29 +17,15 @@ Param (
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From MSEdge |
-        Where-Object {
-            @($_.Version,$_.Link,$_.Name) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Microsoft Edge'
     $InstallerDescription = "$SoftwareName Installer"
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
-            Get-ChildItem $SaveTo |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
-            Select-Object -ExpandProperty VersionInfo |
-            Where-Object FileDescription -IEQ $InstallerDescription |
-            ForEach-Object { $_.FileVersionRaw } |
-            Sort-Object -Descending |
-            Select-Object -First 1
-        )"
-    }
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        Switch ($UpdateInfo) { {$_.Count -gt 0}
-        { Start-InstallerDownload $_.Link -Name $_.Name -Force -Verbose:$VerbosePreferenceBool } }
+        $UpdateInfo | Start-InstallerDownload -Force -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#173A73'
