@@ -22,29 +22,16 @@ Param (
             ApplicationID    = '{8A69D345-D564-463c-AFF1-A69D9E530F96}'
             OwnerBrand       = "$(Switch ($MachineType) { 'x64' { 'YTUH' } Default { 'GGLS' } })"
             ApplicationSpec  = "$(Switch ($MachineType) { 'x64' { 'x64-stable-statsdef_1' } Default { 'stable-arch_x86-statsdef_1' } })"
-        } -From Omaha |
-        Where-Object {
-            @($_.Version,$_.Link,$_.Checksum) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        } -From Omaha | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Google Chrome'
     $InstallerDescription = "$SoftwareName Installer"
-    If ($UpdateInfo.Count -le 0) {
-        $InstallerVersion = "$(
-            Get-ChildItem $SaveTo |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] } |
-            Select-Object -ExpandProperty VersionInfo |
-            Where-Object FileDescription -IEQ $InstallerDescription |
-            ForEach-Object { $_.FileVersionRaw } |
-            Sort-Object -Descending |
-            Select-Object -First 1
-        )"
-    }
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
+    Else { $UpdateInfo.Link = "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
-        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload "$($_.Link.Where({ "$_" -like 'https://*' }, 'First'))" $_.Checksum -Verbose:$VerbosePreferenceBool } }
+        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
