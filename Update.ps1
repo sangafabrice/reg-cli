@@ -19,29 +19,17 @@ Param (
             RepositoryId = 'firefox'
             OSArch = (Get-ExecutableType $NameLocation)
             VersionDelim = $Null
-        } -From Mozilla |
-        Where-Object {
-            @($_.Version,$_.Link,$_.Checksum) |
-            ForEach-Object { $_ -notin @($Null, '') }
-        }
+        } -From Mozilla | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $SoftwareName = 'Firefox'
     $UpdateInfoCountZero = $UpdateInfo.Count -le 0
-    If ($UpdateInfoCountZero) {
-        $InstallerVersion = "$((
-            Get-ChildItem $SaveTo |
-            Where-Object { $_.VersionInfo.FileDescription -ieq $SoftwareName } |
-            Get-AuthenticodeSignatureEx |
-            Sort-Object -Descending -Property SigningTime |
-            Select-Object -First 1
-        ).SigningTime)"
-    }
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerPublishDate $SaveTo $SoftwareName)" }
     Try {
         $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
         $VersionPreInstall = & $GetExeVersion
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName -UseTimeStamp:$UpdateInfoCountZero |
         Import-Module -Verbose:$False -Force
-        Switch ($UpdateInfo) { {$_.Count -gt 0} { Start-InstallerDownload $_.Link $_.Checksum -Verbose:$VerbosePreferenceBool } }
+        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-ChromiumShortcut $NameLocation
@@ -51,7 +39,7 @@ Param (
             Write-Verbose "$SoftwareName $((Get-InstallerVersion) ?? $VersionPostInstall) installation complete."
         }
     } 
-    Catch { $_ }
+    Catch { }
 }
 
 <#
