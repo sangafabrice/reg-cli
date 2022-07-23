@@ -1,8 +1,6 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "releaseNotes": [
-        "Add Get-DownloadInfo for Mozilla Firefox.",
-        "Add parameters validators in ValidateScript Attribute.",
-        "Use timestamp when no download info is available."
+        "Force the script to load RegCli 3.0.1"
     ]
 }
