@@ -1,7 +1,6 @@
 {
-    "version": "0.0.2",
+    "version": "0.0.3",
     "releaseNotes": [
-        "Use Mozilla option to download info",
-        "Change RegCli version to 3.0.0"
+        "Force the script to load RegCli 3.0.1"
     ]
 }
