@@ -698,26 +698,39 @@ Filter Get-SavedInstallerPublishDate {
     [RegCli]::GetSavedInstallerPublishDate($Path, $Description)
 }
 
-Filter Select-NonEmptyObject {
+Function Select-NonEmptyObject {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
         [pscustomobject] $Object
     )
-    Switch ({
-        Where-Object { 
-            ($Object | Get-Member -MemberType NoteProperty).Name |
-            ForEach-Object { $Object.$_ } |
-            ForEach-Object { $_ -notin $null,'' }
+    Begin {
+        $TestPropertyIsNotEmpty = {
+            Param($o)
+            @(($o | Get-Member -MemberType NoteProperty).Name) |
+            ForEach-Object {
+                If ([string]::IsNullOrEmpty(($o.$_ |
+                    Get-Member -MemberType NoteProperty -ErrorAction SilentlyContinue))) {
+                    ![string]::IsNullOrEmpty($o.$_)
+                } Else { & $MyInvocation.MyCommand.ScriptBlock $o.$_ }
+            }
         }
-    }.GetSteppablePipeline()) {
-    { $Null -ne $_ } {
-        $_.Begin($true)
-        $_.Process($Object)
-        $_.End()
-        $_.Dispose()
-    } }
+    }
+    Process {
+        Switch ({
+            Where-Object { 
+                If ((& $TestPropertyIsNotEmpty $Object).Where({ !$_ }, 'First').Count -gt 0) { Return $False }
+                Return $True
+            }
+        }.GetSteppablePipeline()) {
+        { $Null -ne $_ } {
+            $_.Begin($true)
+            $_.Process($Object)
+            $_.End()
+            $_.Dispose()
+        } }
+    }
 }
 
 # https://www.sysadmins.lv/blog-en/retrieve-timestamp-attribute-from-digital-signature.aspx
