@@ -30,8 +30,7 @@ Param (
         }
         $RqstContent = {
             Param($Obj, $FileName)
-            ((Invoke-WebRequest "$(& $SelectLink $Obj $FileName)" -Verbose:$False).Content |
-            ForEach-Object { [char] $_ }) -join '' -split "`n"
+            "$(Invoke-WebRequest "$(& $SelectLink $Obj $FileName)" -Verbose:$False)" -split "`n"
         }
         $ShaIndex = "P$([array]::IndexOf((& $RqstContent $UpdateInfo 'checksums_hashes_order'),'SHA-512') + 2)"
         Start-InstallerDownload "$(& $SelectLink $UpdateInfo $ExeName)" "$(
