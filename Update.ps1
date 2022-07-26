@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\AvastSecure",
+    $InstallLocation = "${Env:ProgramData}\Insomnia",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,31 +11,36 @@ Param (
 )
 
 & {
-    $BaseNameLocation = "$InstallLocation\AvastBrowser"
-    $NameLocation = "$BaseNameLocation.exe"
+    $NameLocation = "$InstallLocation\insomnia.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            UpdateServiceURL = 'https://update.avastbrowser.com/service/update2'
-            ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
-            OwnerBrand       = '2101'
-            OSArch           = Get-ExecutableType $NameLocation
-        } -From Omaha | Select-NonEmptyObject
+        @{
+            Uri = 'https://updates.insomnia.rest/downloads/windows/latest'
+            MaximumRedirection = 0
+            SkipHttpErrorCheck = $True
+            ErrorAction = 'SilentlyContinue'
+        } | ForEach-Object { Invoke-WebRequest @_ -Verbose:$False } |
+        Where-Object StatusCode -EQ 302 |
+        ForEach-Object { $_.Headers.Location } |
+        Select-Object @{
+            Name = 'Version'
+            Expression = { ([uri] $_).Segments?[-2] -replace '/$' }
+        },@{
+            Name = 'Link'
+            Expression = { $_ }
+        } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Avast Secure Browser'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
+    $SoftwareName = 'Insomnia'
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $SoftwareName)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
         Import-Module -Verbose:$False -Force
         $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Remove-Item "${BaseNameLocation}Uninstall.exe" -Force -ErrorAction SilentlyContinue
-        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'secure' $NameLocation
+        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
+        Set-SquirrelShortcut $NameLocation
+        Set-BatchRedirect 'insomnia' $NameLocation
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
@@ -43,40 +48,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Avast Secure browser software.
+    Updates Insomnia software.
 .DESCRIPTION
-    The script installs or updates Avast Secure browser on Windows.
+    The script installs or updates Insomnia on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\AvastSecure.
+    It defaults to %ProgramData%\Insomnia.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\AvastSecure -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Insomnia -ErrorAction SilentlyContinue
 
-    PS > .\UpdateAvastSecure.ps1 -InstallLocation C:\ProgramData\AvastSecure -SaveTo .
+    PS > .\UpdateInsomnia.ps1 -InstallLocation C:\ProgramData\Insomnia -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\AvastSecure | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\Insomnia | Select-Object Name
     Name
     ----
-    102.1.17190.115
-    AvastBrowser.exe
-    AvastBrowser.VisualElementsManifest.xml
-    AvastBrowserQHelper.exe
-    browser_proxy.exe
-    master_preferences
+    locales
+    resources
+    swiftshader
+    chrome_100_percent.pak
+    chrome_200_percent.pak
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    102.1.17190.115.exe
-    UpdateAvastSecure.ps1
+    core@2022.4.2.exe
+    UpdateInsomnia.ps1
 
-    Install Avast Secure browser to 'C:\ProgramData\AvastSecure' and save its setup installer to the current directory.
+    Install Insomnia to 'C:\ProgramData\Insomnia' and save its setup installer to the current directory.
 #>

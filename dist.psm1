@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'AvastSecure'
-    Description = 'The script installs or updates Avast Secure browser on Windows.'
-    Guid = '0f0234b8-2357-4909-a0b2-094a02e96be4'
+    ProgramName = 'Insomnia'
+    Description = 'The script installs or updates Insomnia on Windows.'
+    Guid = '92930614-a637-4d84-ad30-47533df93e79'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
-    Tags = @('avast','secure','chromium','omaha','update','browser')
+    Tags = @('insomnia','nuget-package','update','http-client')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -35,7 +35,7 @@ Function New-UpdaterScript {
                 ModuleVersion = '4.0.0'
             },@{
                 ModuleName = 'RegCli'
-                ModuleVersion = '3.0.1'
+                ModuleVersion = '4.0.0'
             })
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
