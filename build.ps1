@@ -36,7 +36,10 @@ Filter New-RCManifest {
             )
             CmdletsToExport = @()
             VariablesToExport = @()
-            AliasesToExport = @()
+            AliasesToExport = @(
+                (Get-Content ".\$ModuleName.psm1").Where({ $_ -like 'Set-Alias*' }) |
+                ForEach-Object { ($_ -split ' ')[2] }
+            )
             FileList = @("en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1")
             Tags = @('Update','Chromium','RegCli')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
