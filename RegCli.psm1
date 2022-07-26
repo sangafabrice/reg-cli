@@ -26,18 +26,11 @@ Class RegCli {
         If ([Environment]::Is64BitOperatingSystem) { [MachineType]::x64 } Else { [MachineType]::x86 }
     )
 
-    Static [void] Get7Zip() {
-        # Download 7zip if it is absent
-
-        "$PSScriptRoot\7z.exe".Where({ !(Test-Path $_) }) |
-        ForEach-Object { Start-BitsTransfer 'https://www.7-zip.org/a/7zr.exe' $_ }
-    }
-
-    Static [void] ExpandInstaller($Path) {
+    Static [void] ExpandInstaller([string] $Path) {
         [RegCli]::ExpandInstaller($Path, $Null)
     }
 
-    Static [void] ExpandInstaller($InstallerPath, $DestinationPath) {
+    Static [void] ExpandInstaller([string] $InstallerPath, [string] $DestinationPath) {
         # Extract files from a specified self-extracting executable
         # installer $InstallerPath to $DestinationPath directory.
         # Precondition : 
@@ -45,17 +38,33 @@ Class RegCli {
         # 2. $DestinationPath may or may not exist and may be $Null.
         # 3. 7zip is installed.
 
-        Get-Item -LiteralPath $InstallerPath |
-        ForEach-Object {
-            Invoke-Expression ". '$PSScriptRoot\7z.exe' x -aoa -o'$(
-                If (![string]::IsNullOrEmpty($DestinationPath)) { $DestinationPath }
-                Else { "$($_.Directory)\$($_.BaseName)" }
-            )' '$($_.FullName)'"
+        $CurrentDir = $PWD
+        Set-Location $PSScriptRoot
+        Try {
+            Get-Item -LiteralPath $InstallerPath |
+            ForEach-Object {
+                If ([string]::IsNullOrEmpty($DestinationPath)) { $DestinationPath = "$($_.Directory)\$($_.BaseName)" }
+                $InstallerPath = $_.FullName
+                "$PSScriptRoot\7z.exe".Where({ !(Test-Path $_) }) |
+                ForEach-Object { Start-BitsTransfer 'https://www.7-zip.org/a/7zr.exe' $_ }
+                .\7z.exe x -aoa -o"$DestinationPath" "$InstallerPath" 2> $Null
+                If (!$?) {
+                    "$PSScriptRoot\7za.exe".Where({ !(Test-Path $_) }) |
+                    ForEach-Object {
+                        $ZipPath = "${Env:TEMP}\7zExtra"
+                        Start-BitsTransfer 'https://www.7-zip.org/a/7z2201-extra.7z' "$ZipPath.7z"
+                        [RegCli]::ExpandInstaller("$ZipPath.7z")
+                        Move-Item -Path "$ZipPath\$(If([Environment]::Is64BitOperatingSystem){ 'x64\' })7za.exe" -Destination $_
+                    }
+                    .\7za.exe x -aoa -o"$DestinationPath" "$InstallerPath" 2> $Null
+                }
+            }
         }
+        Finally { Set-Location $CurrentDir }
     }
 
-    Static [void] ExpandChromiumInstaller([string] $InstallerPath, [string] $ExecutablePath) {
-        # Extracts files from a specified chromium installer $InstallerPath
+    Static [void] ExpandTypeInstaller([string] $InstallerPath, [string] $ExecutablePath, [string] $ArchivePattern) {
+        # Extracts files from a specified Type installer $InstallerPath
         # to the directory in which the application $ExecutablePath is located.
         # Precondition : 
         # 1. $InstallerPath exists.
@@ -80,7 +89,7 @@ Class RegCli {
                     Try {
                         (Get-Item -LiteralPath $UnzipPath).FullName |
                         ForEach-Object { Push-Location $_ }
-                        (Get-Item .\*.7z | Select-Object -First 1).FullName |
+                        (Get-Item ".\$ArchivePattern" | Select-Object -First 1).FullName |
                         Where-Object { ![string]::IsNullOrEmpty($_) } |
                         ForEach-Object {
                             [RegCli]::ExpandInstaller($_)
@@ -263,7 +272,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
     }
 
     Static [System.Management.Automation.PSModuleInfo] NewUpdate([string] $ExecutablePath, [string] $InstallerDirectory,
-        [string] $VersionString, [string] $InstallerDescription, [switch] $UseTimeStamp) {
+        [string] $VersionString, [string] $InstallerDescription, [switch] $UseTimeStamp, [string] $InstallerExtension = '.exe') {
         # Load a dynamic module of helper functions for non-software specific tasks
 
         Return New-Module {
@@ -272,7 +281,8 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [string] $SaveTo,
                 [string] $VersionString,
                 [string] $InstallerDescription,
-                [switch] $UseTimeStamp
+                [switch] $UseTimeStamp,
+                [string] $InstallerExtension
             )
 
             If ($UseTimeStamp) {
@@ -299,7 +309,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                             Where({ $_.VersionInfo.FileDescription -ieq $InstallerDescription }).
                             Where({ $_.LinkType -ine 'SymbolicLink' }).
                             Where({ $_.VersionInfo.FileVersionRaw -eq $Version }, 'First').FullName ??
-                            "$SaveTo\$_.exe"
+                            "$SaveTo\$_$InstallerExtension"
                     }
                 }
             }
@@ -457,7 +467,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     $InstallStatus.Value = (Get-Item (Get-Item $InstallPath).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
                 }
             }
-        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseTimeStamp
+        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseTimeStamp,$InstallerExtension
     }
 }
 #EndRegion
@@ -514,7 +524,23 @@ Function Expand-ChromiumInstaller {
         [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
         [string] $ApplicationPath
     )
-    [RegCli]::ExpandChromiumInstaller($Path, $ApplicationPath)
+    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.7z')
+}
+
+Function Expand-SquirrelInstaller {
+    [CmdletBinding(PositionalBinding=$True)]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $ApplicationPath
+    )
+    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.nupkg')
 }
 
 Filter Get-ExecutableType {
@@ -590,6 +616,7 @@ Filter Set-ChromiumShortcut {
     )
     [RegCli]::SetChromiumShortcut($Path)
 }
+Set-Alias -Name Set-SquirrelShortcut -Value Set-ChromiumShortcut
 
 Filter Edit-TaskbarShortcut {
     [CmdletBinding()]
@@ -636,9 +663,11 @@ Function New-RegCliUpdate {
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string] $Description,
-        [switch] $UseTimeStamp
+        [switch] $UseTimeStamp,
+        [ValidateNotNullOrEmpty()]
+        [string] $Extension = '.exe'
     )
-    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseTimeStamp)
+    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseTimeStamp, $Extension)
 }
 
 Filter Test-InstallLocation {
@@ -820,12 +849,5 @@ Function Get-AuthenticodeSignatureEx {
     }
     End { }
 }
-
-#EndRegion
-
-#Region Module initialization tasks
-
-# Download 7zip if it is absent
-[RegCli]::Get7Zip()
 
 #EndRegion
