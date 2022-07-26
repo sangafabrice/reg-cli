@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Insomnia'
     Description = 'The script installs or updates Insomnia on Windows.'
     Guid = '92930614-a637-4d84-ad30-47533df93e79'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/cd02e683d9e5d27f6910c79f1c0e121c4aa72b0a/icon.png'
     Tags = @('insomnia','nuget-package','update','http-client')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
