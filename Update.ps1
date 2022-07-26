@@ -27,8 +27,7 @@ Param (
             "$($UpdateInfo.Link.Where({ $_.Url -like $Pattern }).Url)"
         }
         $UpdateInfo = Add-Member -InputObject $UpdateInfo -MemberType NoteProperty -Name Checksum -Value "$(
-            (((Invoke-WebRequest (& $GetURL '*512SUMS') -Verbose:$False).Content |
-            ForEach-Object { [char] $_ }) -join '' -split "`n" |
+            ("$(Invoke-WebRequest (& $GetURL '*512SUMS') -Verbose:$False)" -split "`n" |
             ConvertFrom-String).Where({$_.P2 -ieq 'youtube-dl.exe'}).P1
         )" -Passthru
         $UpdateInfo.Link = & $GetURL '*.exe'
