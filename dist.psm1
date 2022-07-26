@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Insomnia'
-    Description = 'The script installs or updates Insomnia on Windows.'
-    Guid = '92930614-a637-4d84-ad30-47533df93e79'
+    ProgramName = 'Postman'
+    Description = 'The script installs or updates Postman on Windows.'
+    Guid = '2f1b305e-e034-4c55-ac95-b296474098b7'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/choco-packages/f3f1c1aba27e253461cc4ddd677a68c3cace0e0b/icon.png'
-    Tags = @('insomnia','nuget-package','update','http-client')
+    Tags = @('postman','nuget-package','update','http-client')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
