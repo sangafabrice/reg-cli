@@ -1,6 +1,10 @@
 {
-    "version": "3.0.1",
+    "version": "4.0.0",
     "releaseNotes": [
-        "Fix non-null object selection function"
+        "Add function to install embedded nuget packages.",
+        "Remove 7zip intallation at the end of Module and do it at installer expansion time.",
+        "Add shortcuts creation of application installed using nuget packages.",
+        "Add 7za for expanding nuget packages.",
+        "Add ability to change extension of inner archive to expand."
     ]
 }
