@@ -2,8 +2,8 @@ $DevDependencies = @{
     ProgramName = 'Teams'
     Description = 'The script installs or updates Microsoft Teams on Windows.'
     Guid = 'c2a51a32-766b-4fa3-8912-5dea2caef931'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/4035da19b9d87f32003ddc6bad3d16d8f50796aa/icon.png'
-    Tags = @('teams','nuget-package','update','http-client')
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fb13d0066e1b7bdfe7059e93926ab8e85ade2482/icon.png'
+    Tags = @('teams','nuget-package','update','communication')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
