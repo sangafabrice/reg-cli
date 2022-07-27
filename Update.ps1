@@ -66,13 +66,13 @@ Param (
     locales
     resources
     swiftshader
-    chrome_100_percent.pak
-    chrome_200_percent.pak
+    api-ms-win-core-console-l1-1-0.dll
+    api-ms-win-core-console-l1-2-0.dll
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    9.25.2.exe
+    1.5.00.17656.exe
     UpdateTeams.ps1
 
     Install Teams to 'C:\ProgramData\Teams' and save its setup installer to the current directory.
