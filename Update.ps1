@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Insomnia",
+    $InstallLocation = "${Env:ProgramData}\Postman",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,27 +11,37 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\insomnia.exe"
+    $NameLocation = "$InstallLocation\postman.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         @{
-            Uri = 'https://updates.insomnia.rest/downloads/windows/latest'
-            MaximumRedirection = 0
-            SkipHttpErrorCheck = $True
+            Uri = "https://dl.pstmn.io/download/latest/win$(Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } })"
+            Method = 'HEAD'
             ErrorAction = 'SilentlyContinue'
-        } | ForEach-Object { Invoke-WebRequest @_ -Verbose:$False } |
-        Where-Object StatusCode -EQ 302 |
-        ForEach-Object { $_.Headers.Location } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { ([uri] $_).Segments?[-2] -replace '/$' }
-        },@{
+        } | Select-Object @{
             Name = 'Link'
-            Expression = { $_ }
-        } | Select-NonEmptyObject
+            Expression = { $_.Uri }
+        },@{
+            Name = 'Resource'
+            Expression = {
+                Invoke-WebRequest @_ -Verbose:$False |
+                ForEach-Object { ($_.Headers.'Content-Disposition' -split '=')[-1] } |
+                Select-Object @{
+                    Name = 'Version'
+                    Expression = { 
+                        [void] ($_ -match '\-(?<Version>(\d+\.)+\d+)\-')
+                        $Matches.Version
+                    }
+                },@{
+                    Name = 'Name'
+                    Expression = { $_ }
+                }
+            }
+        } | Select-Object Link -ExpandProperty Resource |
+        Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Insomnia'
+    $SoftwareName = 'Postman'
     If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $SoftwareName)" }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
@@ -40,7 +50,7 @@ Param (
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'insomnia' $NameLocation
+        Set-BatchRedirect 'postman' $NameLocation
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
@@ -48,26 +58,26 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Insomnia software.
+    Updates Postman software.
 .DESCRIPTION
-    The script installs or updates Insomnia on Windows.
+    The script installs or updates Postman on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Insomnia.
+    It defaults to %ProgramData%\Postman.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Insomnia -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Postman -ErrorAction SilentlyContinue
 
-    PS > .\UpdateInsomnia.ps1 -InstallLocation C:\ProgramData\Insomnia -SaveTo .
+    PS > .\UpdatePostman.ps1 -InstallLocation C:\ProgramData\Postman -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Insomnia | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\Postman | Select-Object Name -First 5
     Name
     ----
     locales
@@ -79,8 +89,8 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    core@2022.4.2.exe
-    UpdateInsomnia.ps1
+    9.25.2.exe
+    UpdatePostman.ps1
 
-    Install Insomnia to 'C:\ProgramData\Insomnia' and save its setup installer to the current directory.
+    Install Postman to 'C:\ProgramData\Postman' and save its setup installer to the current directory.
 #>
