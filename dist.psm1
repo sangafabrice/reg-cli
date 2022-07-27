@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Postman'
-    Description = 'The script installs or updates Postman on Windows.'
-    Guid = '2f1b305e-e034-4c55-ac95-b296474098b7'
+    ProgramName = 'Teams'
+    Description = 'The script installs or updates Microsoft Teams on Windows.'
+    Guid = 'c2a51a32-766b-4fa3-8912-5dea2caef931'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/4035da19b9d87f32003ddc6bad3d16d8f50796aa/icon.png'
-    Tags = @('postman','nuget-package','update','http-client')
+    Tags = @('teams','nuget-package','update','http-client')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
