@@ -1,10 +1,6 @@
 {
-    "version": "4.0.0",
+    "version": "4.0.1",
     "releaseNotes": [
-        "Add function to install embedded nuget packages.",
-        "Remove 7zip intallation at the end of Module and do it at installer expansion time.",
-        "Add shortcuts creation of application installed using nuget packages.",
-        "Add 7za for expanding nuget packages.",
-        "Add ability to change extension of inner archive to expand."
+        "Use ProductName property of VersionInfo to create shortcut if FileDescription is empty or null."
     ]
 }

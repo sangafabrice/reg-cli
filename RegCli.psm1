@@ -148,7 +148,13 @@ Class RegCli {
 
         $ExeItem = Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue
         (New-Object -ComObject 'WScript.Shell').
-        CreateShortcut("${Env:ProgramData}\Microsoft\Windows\Start Menu\Programs\$($ExeItem.VersionInfo.FileDescription).lnk") |
+        CreateShortcut("${Env:ProgramData}\Microsoft\Windows\Start Menu\Programs\$(
+            $ExeItem.VersionInfo |
+            ForEach-Object {
+                $Description = $_.FileDescription
+                $Description ? ($Description):($_.ProductName)
+            }
+        ).lnk") |
         ForEach-Object {
             $_.TargetPath = $ExeItem.FullName
             $_.WorkingDirectory = $ExeItem.Directory.FullName
