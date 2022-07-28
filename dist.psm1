@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'GithubDesktop'
     Description = 'The script installs or updates Github Desktop on Windows.'
     Guid = 'd393b38f-f1b8-4b2f-bda2-9a35301f80b2'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/4035da19b9d87f32003ddc6bad3d16d8f50796aa/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/a51a0d13e112ef171b672791dcfcb505d7cd7687/icon.svg'
     Tags = @('github-desktop','nuget-package','update','http-client')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
@@ -35,7 +35,7 @@ Function New-UpdaterScript {
                 ModuleVersion = '4.0.0'
             },@{
                 ModuleName = 'RegCli'
-                ModuleVersion = '4.0.0'
+                ModuleVersion = '4.0.1'
             })
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
