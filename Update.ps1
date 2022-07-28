@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Postman",
+    $InstallLocation = "${Env:ProgramData}\GitHub Desktop",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,73 +11,64 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\postman.exe"
+    $NameLocation = "$InstallLocation\GithubDesktop.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         @{
-            Uri = "https://dl.pstmn.io/download/latest/win$(Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } })"
+            Uri = 'https://central.github.com/deployments/desktop/desktop/latest/win32'
             Method = 'HEAD'
+            MaximumRedirection = 0
             ErrorAction = 'SilentlyContinue'
-        } | Select-Object @{
-            Name = 'Link'
-            Expression = { $_.Uri }
+            SkipHttpErrorCheck = $True
+        } | ForEach-Object {
+            [uri] "$((Invoke-WebRequest @_ -Verbose:$False).Headers.Location)"
+        } |
+        Select-Object @{
+            Name = 'Version'
+            Expression = { ($_.Segments?[-2] -replace '/$' -split '-')?[0] }
         },@{
-            Name = 'Resource'
-            Expression = {
-                Invoke-WebRequest @_ -Verbose:$False |
-                ForEach-Object { ($_.Headers.'Content-Disposition' -split '=')[-1] } |
-                Select-Object @{
-                    Name = 'Version'
-                    Expression = { 
-                        [void] ($_ -match '\-(?<Version>(\d+\.)+\d+)\-')
-                        $Matches.Version
-                    }
-                },@{
-                    Name = 'Name'
-                    Expression = { $_ }
-                }
-            }
-        } | Select-Object Link -ExpandProperty Resource |
-        Select-NonEmptyObject
+            Name = 'Link'
+            Expression = { "$_" }
+        } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Postman'
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $SoftwareName)" }
+    $InstallerDescription = 'Simple collaboration from your desktop'
+    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
+        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
         $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'postman' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
+        Set-BatchRedirect 'githubdesktop' $NameLocation
+        If (!(Test-InstallOutdated)) { Write-Verbose "Github Desktop $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
 }
 
 <#
 .SYNOPSIS
-    Updates Postman software.
+    Updates GitHub Desktop software.
 .DESCRIPTION
-    The script installs or updates Postman on Windows.
+    The script installs or updates GitHub Desktop on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Postman.
+    It defaults to "%ProgramData%\GitHub Desktop".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Postman -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\GitHub Desktop' -ErrorAction SilentlyContinue
 
-    PS > .\UpdatePostman.ps1 -InstallLocation C:\ProgramData\Postman -SaveTo .
+    PS > .\UpdateGithubDesktop.ps1 -InstallLocation 'C:\ProgramData\GitHub Desktop' -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Postman | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\GitHub Desktop' | Select-Object Name -First 5
     Name
     ----
     locales
@@ -89,8 +80,8 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    9.25.2.exe
-    UpdatePostman.ps1
+    3.0.5.exe
+    UpdateGithubDesktop.ps1
 
-    Install Postman to 'C:\ProgramData\Postman' and save its setup installer to the current directory.
+    Install GitHub Desktop to 'C:\ProgramData\GitHub Desktop' and save its setup installer to the current directory.
 #>
