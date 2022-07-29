@@ -1,6 +1,6 @@
 {
-    "version": "0.0.2",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Initialize Github Desktop updater script."
+        "Initialize Figma updater script."
     ]
 }

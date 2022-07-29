@@ -1,9 +1,9 @@
 $DevDependencies = @{
     ProgramName = 'GithubDesktop'
-    Description = 'The script installs or updates Github Desktop on Windows.'
-    Guid = 'd393b38f-f1b8-4b2f-bda2-9a35301f80b2'
+    Description = 'The script installs or updates Figma on Windows.'
+    Guid = 'e993c3f1-f299-4e54-8eea-735b27e2d042'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/8d1970259bf4c1e8fb25ab87ef8a9d3bf1bea990/icon.png'
-    Tags = @('github-desktop','nuget-package','update','github')
+    Tags = @('figma','nuget-package','update','prototyping')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
@@ -35,7 +35,7 @@ Function New-UpdaterScript {
                 ModuleVersion = '4.0.0'
             },@{
                 ModuleName = 'RegCli'
-                ModuleVersion = '4.0.1'
+                ModuleVersion = '4.1.0'
             })
             ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
