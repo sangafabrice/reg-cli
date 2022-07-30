@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'GithubDesktop'
-    Description = 'The script installs or updates Figma on Windows.'
-    Guid = 'e993c3f1-f299-4e54-8eea-735b27e2d042'
+    ProgramName = 'GitKraken'
+    Description = 'The script installs or updates GitKraken on Windows.'
+    Guid = 'bba9b6ac-3864-44da-84f8-46bfed7d6ae8'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/8d1970259bf4c1e8fb25ab87ef8a9d3bf1bea990/icon.png'
-    Tags = @('figma','nuget-package','update','prototyping')
+    Tags = @('gitkraken','nuget-package','update','git')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 

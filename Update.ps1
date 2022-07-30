@@ -11,11 +11,11 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Figma.exe"
+    $NameLocation = "$InstallLocation\gitkraken.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        'https://desktop.figma.com/win/FigmaSetup.exe' |
+        "https://release.gitkraken.com/win$(Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } })/GitKrakenSetup.exe" |
         Select-Object @{
             Name = 'Version'
             Expression = { [datetime] "$((Invoke-WebRequest $_ -Method Head -Verbose:$False).Headers.'Last-Modified')" }
@@ -24,22 +24,23 @@ Param (
             Expression = { $_ }
         } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Figma'
-    $InstallerDescription = "$SoftwareName Desktop"
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
+    $SoftwareName = 'GitKraken'
+    $InstallerDescription = 'Unleash your repo'
+    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerLastModified $SaveTo $InstallerDescription }
     Try {
+        $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
+        $VersionPreInstall = & $GetExeVersion
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
         $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'figma' $NameLocation
-        If (!(Test-InstallOutdated -UseInstaller)) { 
-            Write-Verbose "$SoftwareName $((Get-Item -LiteralPath (Get-InstallerPath) -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw) installation complete." 
-        }
+        Set-BatchRedirect 'gitkraken' $NameLocation
+        $VersionPostInstall = & $GetExeVersion
+        If ($VersionPostInstall -gt $VersionPreInstall) { Write-Verbose "$SoftwareName $VersionPostInstall installation complete." }
     } 
-    Catch { $_ }
+    Catch { }
 }
 
 <#
