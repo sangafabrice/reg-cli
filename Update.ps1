@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Figma",
+    $InstallLocation = "${Env:ProgramData}\Atom",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,73 +11,68 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\gitkraken.exe"
+    $NameLocation = "$InstallLocation\atom.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        "https://release.gitkraken.com/win$(Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } })/GitKrakenSetup.exe" |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { [datetime] "$((Invoke-WebRequest $_ -Method Head -Verbose:$False).Headers.'Last-Modified')" }
-        },@{
+        Get-DownloadInfo -PropertyList @{
+            RepositoryId = 'atom/atom'
+            AssetPattern = "AtomSetup$(If((Get-ExecutableType $NameLocation) -eq 'x64'){ '\-x64' })\.exe$"
+        } | Select-Object Version,@{
             Name = 'Link'
-            Expression = { $_ }
+            Expression = { $_.Link.Url }
         } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'GitKraken'
-    $InstallerDescription = 'Unleash your repo'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerLastModified $SaveTo $InstallerDescription }
+    $InstallerDescription = 'A hackable text editor for the 21st Century.'
+    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
-        $VersionPreInstall = & $GetExeVersion
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
         $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'gitkraken' $NameLocation
-        $VersionPostInstall = & $GetExeVersion
-        If ($VersionPostInstall -gt $VersionPreInstall) { Write-Verbose "$SoftwareName $VersionPostInstall installation complete." }
+        Set-BatchRedirect 'atom' $NameLocation
+        If (!(Test-InstallOutdated)) { Write-Verbose "Atom $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
 }
 
 <#
 .SYNOPSIS
-    Updates Figma software.
+    Updates Atom software.
 .DESCRIPTION
-    The script installs or updates Figma on Windows.
+    The script installs or updates Atom on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Figma".
+    It defaults to "%ProgramData%\Atom".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Figma' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Atom' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateFigma.ps1 -InstallLocation 'C:\ProgramData\Figma' -SaveTo .
+    PS > .\UpdateAtom.ps1 -InstallLocation 'C:\ProgramData\Atom' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Figma' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Atom' | Select-Object Name -First 5
     Name
     ----
     locales
     resources
+    atom_ExecutionStub.exe
+    atom.exe
     chrome_100_percent.pak
-    chrome_200_percent.pak
-    d3dcompiler_47.dll
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.208.69.68.exe
-    UpdateFigma.ps1
+    v1.60.0.exe
+    UpdateAtom.ps1
 
-    Install Figma to 'C:\ProgramData\Figma' and save its setup installer to the current directory.
+    Install Atom to 'C:\ProgramData\Atom' and save its setup installer to the current directory.
 #>

@@ -1,6 +1,6 @@
 {
     "version": "0.0.1",
     "releaseNotes": [
-        "Initialize GitKraken updater script."
+        "Initialize Atom updater script."
     ]
 }
