@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Atom'
-    Description = 'The script installs or updates Atom on Windows.'
-    Guid = '77bf0927-3aed-4ac8-b3d2-2193dd0028d0'
+    ProgramName = 'WhatsApp'
+    Description = 'The script installs or updates WhatsApp on Windows.'
+    Guid = '72b6f5fe-6338-45c7-a058-cdb710d2daf0'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/d443476a819b0ec2a89519b383fa10f82ad67d18/icon.png'
-    Tags = @('atom','nuget-package','update','ide')
+    Tags = @('whatsapp','nuget-package','update','communication')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
