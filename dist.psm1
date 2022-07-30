@@ -1,8 +1,8 @@
 $DevDependencies = @{
-    ProgramName = 'GithubDesktop'
+    ProgramName = 'Figma'
     Description = 'The script installs or updates Figma on Windows.'
     Guid = 'e993c3f1-f299-4e54-8eea-735b27e2d042'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/8d1970259bf4c1e8fb25ab87ef8a9d3bf1bea990/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/bea24049ab697b7a7f4ff20dea67f10b1bfa59bd/icon.png'
     Tags = @('figma','nuget-package','update','prototyping')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
