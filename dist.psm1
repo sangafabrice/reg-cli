@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'WhatsApp'
-    Description = 'The script installs or updates WhatsApp on Windows.'
-    Guid = '72b6f5fe-6338-45c7-a058-cdb710d2daf0'
+    ProgramName = 'SourceTree'
+    Description = 'The script installs or updates SourceTree on Windows.'
+    Guid = '2ce4bb1c-1ecf-4b6a-83fc-638475a03115'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/d443476a819b0ec2a89519b383fa10f82ad67d18/icon.png'
-    Tags = @('whatsapp','nuget-package','update','communication')
+    Tags = @('sourcetree','nuget-package','update','git')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
