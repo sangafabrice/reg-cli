@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Figma",
+    $InstallLocation = "${Env:ProgramData}\GitKraken",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -45,26 +45,26 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Figma software.
+    Updates GitKraken software.
 .DESCRIPTION
-    The script installs or updates Figma on Windows.
+    The script installs or updates GitKraken on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Figma".
+    It defaults to "%ProgramData%\GitKraken".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Figma' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\GitKraken' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateFigma.ps1 -InstallLocation 'C:\ProgramData\Figma' -SaveTo .
+    PS > .\UpdateGitKraken.ps1 -InstallLocation 'C:\ProgramData\GitKraken' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Figma' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\GitKraken' | Select-Object Name -First 5
     Name
     ----
     locales
@@ -76,8 +76,8 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.208.69.68.exe
-    UpdateFigma.ps1
+    2022.193.1434.83.exe
+    UpdateGitKraken.ps1
 
-    Install Figma to 'C:\ProgramData\Figma' and save its setup installer to the current directory.
+    Install GitKraken to 'C:\ProgramData\GitKraken' and save its setup installer to the current directory.
 #>
