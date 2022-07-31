@@ -15,7 +15,7 @@ Param (
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        (Invoke-WebRequest "https://www.sourcetreeapp.com/download-archives").Links.href |
+        (Invoke-WebRequest "https://www.sourcetreeapp.com/download-archives" -Verbose:$False).Links.href |
         Where-Object { $_ -like '*.exe' } |
         Select-Object @{
             Name = 'Version'
@@ -27,7 +27,6 @@ Param (
             Name = 'Link'
             Expression = { $_ }
         } -First 1 | Select-NonEmptyObject
-        $UpdateInfo
     $InstallerVersion = $UpdateInfo.Version
     $InstallerDescription = 'SourceTree'
     If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
