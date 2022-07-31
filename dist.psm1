@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'SourceTree'
-    Description = 'The script installs or updates SourceTree on Windows.'
-    Guid = '2ce4bb1c-1ecf-4b6a-83fc-638475a03115'
+    ProgramName = 'Prepros'
+    Description = 'The script installs or updates Prepros on Windows.'
+    Guid = 'db0bfe17-68c0-4fc5-9fc4-8333cf4c7ed3'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/d443476a819b0ec2a89519b383fa10f82ad67d18/icon.png'
-    Tags = @('sourcetree','nuget-package','update','git')
+    Tags = @('prepros','nuget-package','update','ide')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
