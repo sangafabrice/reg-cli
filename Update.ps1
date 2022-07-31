@@ -71,16 +71,16 @@ Param (
     PS > Get-ChildItem 'C:\ProgramData\Prepros' | Select-Object Name -First 5
     Name
     ----
-    de
-    es
-    extras
-    fr
-    icons
+    locales
+    resources
+    swiftshader
+    chrome_100_percent.pak
+    chrome_200_percent.pak
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    3.4.9.exe
+    7.6.0.exe
     UpdatePrepros.ps1
 
     Install Prepros to 'C:\ProgramData\Prepros' and save its setup installer to the current directory.
