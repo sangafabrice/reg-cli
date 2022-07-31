@@ -67,16 +67,16 @@ Param (
     PS > Get-ChildItem 'C:\ProgramData\SourceTree' | Select-Object Name -First 5
     Name
     ----
-    locales
-    resources
-    SourceTree_ExecutionStub.exe
-    SourceTree.exe
-    chrome_100_percent.pak
+    de
+    es
+    extras
+    fr
+    icons
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    v1.60.0.exe
+    3.4.9.exe
     UpdateSourceTree.ps1
 
     Install SourceTree to 'C:\ProgramData\SourceTree' and save its setup installer to the current directory.
