@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Prepros'
-    Description = 'The script installs or updates Prepros on Windows.'
-    Guid = 'db0bfe17-68c0-4fc5-9fc4-8333cf4c7ed3'
+    ProgramName = 'RunJS'
+    Description = 'The script installs or updates RunJS on Windows.'
+    Guid = '9fd0dc1e-1d3e-46d2-b6ba-7540a973d3e0'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/81991b3ae3db9d9ad5cecc31fe33fd33c2ff5ce7/icon.png'
-    Tags = @('prepros','nuget-package','update','ide')
+    Tags = @('runjs','nuget-package','update','ide')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 

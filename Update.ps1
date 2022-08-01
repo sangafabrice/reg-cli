@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Prepros",
+    $InstallLocation = "${Env:ProgramData}\RunJS",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,63 +11,55 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Prepros.exe"
+    $NameLocation = "$InstallLocation\RunJS.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        @{
-            Uri = 'https://prepros.io/downloads/stable/windows'
-            Method  = 'HEAD'
-            MaximumRedirection = 0
-            SkipHttpErrorCheck = $True
-            ErrorAction = 'SilentlyContinue'
-            Verbose = $False
-        } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { [version] (([uri] $_).Segments?[-2] -replace '/$') }
-        },@{
+        Get-DownloadInfo -PropertyList @{ 
+            RepositoryId = 'lukehaas/RunJS'
+            AssetPattern = 'RunJS\-Setup\-(\d+\.)+exe$' 
+        } | Select-Object Version,@{
             Name = 'Link'
-            Expression = { $_ }
+            Expression = { "$($_.Link.Url)" }
         } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'Prepros'
+    $InstallerDescription = 'The JavaScript and TypeScript playground for your desktop'
     If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
         $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'prepros' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$InstallerDescription $(Get-InstallerVersion) installation complete." }
+        Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
+        Set-NsisShortcut $NameLocation
+        Set-BatchRedirect 'runjs' $NameLocation
+        If (!(Test-InstallOutdated)) { Write-Verbose "RunJS $(Get-InstallerVersion) installation complete." }
     } 
     Catch { }
 }
 
 <#
 .SYNOPSIS
-    Updates Prepros software.
+    Updates RunJS software.
 .DESCRIPTION
-    The script installs or updates Prepros on Windows.
+    The script installs or updates RunJS on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Prepros".
+    It defaults to "%ProgramData%\RunJS".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Prepros' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\RunJS' -ErrorAction SilentlyContinue
 
-    PS > .\UpdatePrepros.ps1 -InstallLocation 'C:\ProgramData\Prepros' -SaveTo .
+    PS > .\UpdateRunJS.ps1 -InstallLocation 'C:\ProgramData\RunJS' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Prepros' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\RunJS' | Select-Object Name -First 5
     Name
     ----
     locales
@@ -79,8 +71,8 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    7.6.0.exe
-    UpdatePrepros.ps1
+    v2.5.1.exe
+    UpdateRunJS.ps1
 
-    Install Prepros to 'C:\ProgramData\Prepros' and save its setup installer to the current directory.
+    Install RunJS to 'C:\ProgramData\RunJS' and save its setup installer to the current directory.
 #>
