@@ -23,14 +23,13 @@ Param (
             ErrorAction = 'SilentlyContinue'
             Verbose = $False
         } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location } |
-        Where-Object { $_ -like '*.exe' } |
         Select-Object @{
             Name = 'Version'
             Expression = { [version] (([uri] $_).Segments?[-2] -replace '/$') }
         },@{
             Name = 'Link'
             Expression = { $_ }
-        } -First 1 | Select-NonEmptyObject
+        } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
     $InstallerDescription = 'Prepros'
     If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
