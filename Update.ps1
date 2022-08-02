@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\YouTube Music Desktop",
+    $InstallLocation = "${Env:ProgramData}\WordPress.com",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,19 +11,19 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\YouTube Music Desktop App.exe"
+    $NameLocation = "$InstallLocation\WordPress.com.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{ 
-            RepositoryId = 'ytmdesktop/ytmdesktop'
-            AssetPattern = 'YouTube\-Music\-Desktop\-App\-Setup\-(\d+\.)+exe$' 
+            RepositoryId = 'Automattic/wp-desktop'
+            AssetPattern = 'wordpress\.com\-win32\-setup\-(\d+\.)+exe$' 
         } | Select-Object Version,@{
             Name = 'Link'
             Expression = { "$($_.Link.Url)" }
         } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'YouTube Music Desktop App'
+    $InstallerDescription = 'Desktop version of WordPress.com'
     If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
@@ -32,7 +32,7 @@ Param (
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'ytmdesktop' $NameLocation
+        Set-BatchRedirect 'wordpresscom' $NameLocation
         If (!(Test-InstallOutdated)) { Write-Verbose "$InstallerDescription $(Get-InstallerVersion) installation complete." }
     } 
     Catch { $_ }
@@ -40,26 +40,26 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates YouTube Music Desktop App software.
+    Updates WordPress.com software.
 .DESCRIPTION
-    The script installs or updates YouTube Music Desktop App on Windows.
+    The script installs or updates WordPress.com on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\YouTube Music Desktop".
+    It defaults to "%ProgramData%\WordPress.com".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\YouTube Music Desktop' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\WordPress.com' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateYouTubeMusicDesktop.ps1 -InstallLocation 'C:\ProgramData\YouTube Music Desktop' -SaveTo .
+    PS > .\UpdateWordPressCom.ps1 -InstallLocation 'C:\ProgramData\WordPress.com' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\YouTube Music Desktop' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\WordPress.com' | Select-Object Name -First 5
     Name
     ----
     locales
@@ -72,7 +72,7 @@ Param (
     Name
     ----
     v1.13.0.exe
-    UpdateYouTubeMusicDesktop.ps1
+    UpdateWordPressCom.ps1
 
-    Install YouTube Music Desktop App to 'C:\ProgramData\YouTube Music Desktop' and save its setup installer to the current directory.
+    Install WordPress.com to 'C:\ProgramData\WordPress.com' and save its setup installer to the current directory.
 #>
