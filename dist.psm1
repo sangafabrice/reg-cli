@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'YouTubeMusicDesktop'
     Description = 'The script installs or updates YouTube Music Desktop App on Windows.'
-    Guid = '9fd0dc1e-1d3e-46d2-b6ba-7540a973d3e0'
+    Guid = 'eadc456d-7b26-4551-8b4a-9b229665df40'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/3e385840f4cf4e43d53598ba56506ddaba93c287/icon.png'
     Tags = @('youtube-music-desktop','nsis','update','music-player')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
