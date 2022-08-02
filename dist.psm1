@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'WordPressCom'
     Description = 'The script installs or updates WordPress.com on Windows.'
-    Guid = 'eadc456d-7b26-4551-8b4a-9b229665df40'
+    Guid = '14bc911e-6214-4c6a-a3a3-5e0583517293'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/9d5c4b2eb928f6f9f4ada4a83f8f70c9cbb5bef8/icon.png'
     Tags = @('wordpress-com','nsis','update','web-framework')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
