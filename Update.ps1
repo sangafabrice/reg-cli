@@ -66,16 +66,16 @@ Param (
     PS > Get-ChildItem 'C:\ProgramData\Grammarly' | Select-Object Name -First 5
     Name
     ----
-    locales
-    resources
-    chrome_100_percent.pak
-    chrome_200_percent.pak
-    d3dcompiler_47.dll
+    $PLUGINSDIR
+    cs
+    de
+    es
+    fr
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.208.69.68.exe
+    2022.210.766.77.exe
     UpdateGrammarly.ps1
 
     Install Grammarly to 'C:\ProgramData\Grammarly' and save its setup installer to the current directory.

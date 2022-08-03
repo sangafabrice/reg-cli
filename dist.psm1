@@ -1,8 +1,8 @@
 $DevDependencies = @{
     ProgramName = 'Grammarly'
     Description = 'The script installs or updates Grammarly on Windows.'
-    Guid = 'e993c3f1-f299-4e54-8eea-735b27e2d042'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/bea24049ab697b7a7f4ff20dea67f10b1bfa59bd/icon.png'
+    Guid = '7e0bf039-72e6-488c-a8d7-bc5ede332134'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/1410ee77f281db788a440306dc6e6a111e107175/icon.png'
     Tags = @('grammarly','nuget-package','update','autocorrection')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
