@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Figma",
+    $InstallLocation = "${Env:ProgramData}\Grammarly",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,11 +11,11 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Figma.exe"
+    $NameLocation = "$InstallLocation\Grammarly.Desktop.exe"
     $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        'https://desktop.figma.com/win/FigmaSetup.exe' |
+        'https://download-windows.grammarly.com/GrammarlyInstaller.exe' |
         Select-Object @{
             Name = 'Version'
             Expression = { [datetime] "$((Invoke-WebRequest $_ -Method Head -Verbose:$False).Headers.'Last-Modified')" }
@@ -24,8 +24,8 @@ Param (
             Expression = { $_ }
         } | Select-NonEmptyObject
     $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Figma'
-    $InstallerDescription = "$SoftwareName Desktop"
+    $SoftwareName = 'Grammarly'
+    $InstallerDescription = "$SoftwareName for Windows"
     If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
@@ -34,7 +34,7 @@ Param (
         Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
         Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
         Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'figma' $NameLocation
+        Set-BatchRedirect 'grammarly' $NameLocation
         If (!(Test-InstallOutdated -UseInstaller)) { 
             Write-Verbose "$SoftwareName $((Get-Item -LiteralPath (Get-InstallerPath) -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw) installation complete." 
         }
@@ -44,26 +44,26 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Figma software.
+    Updates Grammarly software.
 .DESCRIPTION
-    The script installs or updates Figma on Windows.
+    The script installs or updates Grammarly on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Figma".
+    It defaults to "%ProgramData%\Grammarly".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Figma' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Grammarly' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateFigma.ps1 -InstallLocation 'C:\ProgramData\Figma' -SaveTo .
+    PS > .\UpdateGrammarly.ps1 -InstallLocation 'C:\ProgramData\Grammarly' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Figma' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Grammarly' | Select-Object Name -First 5
     Name
     ----
     locales
@@ -76,7 +76,7 @@ Param (
     Name
     ----
     2022.208.69.68.exe
-    UpdateFigma.ps1
+    UpdateGrammarly.ps1
 
-    Install Figma to 'C:\ProgramData\Figma' and save its setup installer to the current directory.
+    Install Grammarly to 'C:\ProgramData\Grammarly' and save its setup installer to the current directory.
 #>
