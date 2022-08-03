@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Termius'
     Description = 'The script installs or updates Termius on Windows.'
     Guid = '6366d99c-37c4-45a7-adb8-5df73b93ae91'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/d443476a819b0ec2a89519b383fa10f82ad67d18/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/0aad4dd995f076881747b03518cf1bc67ffbf0c8/icon.png'
     Tags = @('termius','nuget-package','update','ssh')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
