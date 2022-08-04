@@ -65,14 +65,14 @@ Param (
     ----
     Tabbyes
     resources
-    swiftshader
     chrome_100_percent.pak
     chrome_200_percent.pak
+    d3dcompiler_47.dll
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    1.24.0.exe
+    v1.0.183.exe
     UpdateTabby.ps1
 
     Install Tabby to 'C:\ProgramData\Tabby' and save its setup installer to the current directory.
