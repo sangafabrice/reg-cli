@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Local'
     Description = 'The script installs or updates Local on Windows.'
     Guid = 'c68d19be-5946-4955-8a04-35f6944d7abb'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/81991b3ae3db9d9ad5cecc31fe33fd33c2ff5ce7/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/521b1ef6e7b3ff20e8f78e79b17bc0cd9b9b7865/icon.png'
     Tags = @('local','nuget-package','update','wordpress')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
