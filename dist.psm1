@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Prepros'
-    Description = 'The script installs or updates Prepros on Windows.'
-    Guid = 'db0bfe17-68c0-4fc5-9fc4-8333cf4c7ed3'
+    ProgramName = 'Local'
+    Description = 'The script installs or updates Local on Windows.'
+    Guid = 'c68d19be-5946-4955-8a04-35f6944d7abb'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/81991b3ae3db9d9ad5cecc31fe33fd33c2ff5ce7/icon.png'
-    Tags = @('prepros','nuget-package','update','ide')
+    Tags = @('local','nuget-package','update','wordpress')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
