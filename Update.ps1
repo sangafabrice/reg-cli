@@ -81,7 +81,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    v1.0.183.exe
+    2022.196.1109.15.exe
     UpdateMessenger.ps1
 
     Install Messenger to 'C:\ProgramData\Messenger' and save its setup installer to the current directory.

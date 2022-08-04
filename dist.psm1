@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Messenger'
     Description = 'The script installs or updates Messenger by Facebook on Windows.'
     Guid = '588b3e32-0451-4f1a-9284-9568601217e8'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/b97cb57de4fe760bf489c9706e0493ca13fe4247/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/780c550dfdb0540db5fd67daa322cc1dcbbc5457/icon.png'
     Tags = @('messenger','nuget-package','update','facebook')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
