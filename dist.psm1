@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Tabby'
-    Description = 'The script installs or updates Tabby on Windows.'
-    Guid = 'db578950-f8d2-485d-930c-5895078113f1'
+    ProgramName = 'Messenger'
+    Description = 'The script installs or updates Messenger by Facebook on Windows.'
+    Guid = '588b3e32-0451-4f1a-9284-9568601217e8'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/b97cb57de4fe760bf489c9706e0493ca13fe4247/icon.png'
-    Tags = @('tabby','nuget-package','update','terminal')
+    Tags = @('messenger','nuget-package','update','facebook')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
