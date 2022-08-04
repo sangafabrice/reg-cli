@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'Local'
-    Description = 'The script installs or updates Local on Windows.'
+    ProgramName = 'TuneIn'
+    Description = 'The script installs or updates TuneIn on Windows.'
     Guid = 'c68d19be-5946-4955-8a04-35f6944d7abb'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/521b1ef6e7b3ff20e8f78e79b17bc0cd9b9b7865/icon.png'
-    Tags = @('local','nuget-package','update','wordpress')
+    Tags = @('tunein','nuget-package','update','radio')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
