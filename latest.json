@@ -1,6 +1,6 @@
 {
-    "version": "1.0.1",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Force the script to load RegCli 3.0.1"
+        "Initialize Tor updater script"
     ]
 }

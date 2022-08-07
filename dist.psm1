@@ -1,9 +1,9 @@
 $DevDependencies = @{
-    ProgramName = 'MozillaFirefox'
-    Description = 'The script installs or updates Mozilla Firefox browser on Windows.'
-    Guid = '6d9b52c5-9b60-48e1-a0c1-e5c62d5bb660'
+    ProgramName = 'Tor'
+    Description = 'The script installs or updates Tor browser on Windows.'
+    Guid = '5309d28a-8bf8-488b-a23f-35f7b0b84305'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fa46f4d6bb7df0d1d507d8a9f2d0e0f60f2bc454/icon.png'
-    Tags = @('firefox','update','browser')
+    Tags = @('tor','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
 
