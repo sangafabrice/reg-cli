@@ -21,10 +21,9 @@ Param (
             ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
             Protocol         = '3.0'
         } -From Omaha | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Brave'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
+    $InstallerVersion = [version] $UpdateInfo.Version
+    $InstallerDescription = 'Brave Installer'
+    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
         New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
         Import-Module -Verbose:$False -Force
@@ -34,7 +33,7 @@ Param (
         Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
         Set-ChromiumShortcut $NameLocation
         Set-BatchRedirect 'brave' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
+        If (!(Test-InstallOutdated)) { Write-Verbose "Brave $(Get-ExecutableVersion) installation complete." }
     } 
     Catch { }
 }
