@@ -1,6 +1,10 @@
 {
-    "version": "4.0.1",
+    "version": "5.0.0",
     "releaseNotes": [
-        "Use ProductName property of VersionInfo to create shortcut if FileDescription is empty or null."
+        "Use Last Modified Time as a version.",
+        "Use 7z library in replacement of standalone console apps.",
+        "Add Nsis installer expansion function.",
+        "Separate class and functions.",
+        "Remove publish date getter."
     ]
 }
