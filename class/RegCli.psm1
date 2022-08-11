@@ -509,4 +509,36 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
             }
         } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSignature,$InstallerExtension
     }
+
+    Static [System.Management.Automation.PSModuleInfo] GetCommonScript([string] $Name, [string] $CommonPath) {
+        # Load the Invoke-CommonScript function
+
+        New-Item -Path $CommonPath -ItemType Directory -ErrorAction SilentlyContinue
+        Return New-Module {
+            Param(
+                [string] $Name,
+                [string] $CommonPath
+            )
+
+            $CommonScript = "$CommonPath\$Name"
+            $RequestArguments = @{
+                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name.ps1"
+                Method = 'HEAD'
+                Verbose = $False
+            }
+            Try {
+                $CommonScriptEtag = (Invoke-WebRequest @RequestArguments).Headers.ETag -replace '"|\s|#'
+                $LocalCommonScriptEtag = (Get-Content $CommonScript -Tail 1 -ErrorAction SilentlyContinue) -replace '"|\s|#'
+                If ($LocalCommonScriptEtag -ieq $CommonScriptEtag) { Throw }
+                $RequestArguments.Method = 'GET'
+                ${Function:Invoke-CommonScript} = "$(Invoke-WebRequest @RequestArguments)"
+                Set-Content $CommonScript -Value ${Function:Invoke-CommonScript}
+                Add-Content $CommonScript -Value "# $CommonScriptEtag"
+            }
+            Catch {
+                $ErrorActionPreference = 'SilentlyContinue'
+                ${Function:Invoke-CommonScript} = (Get-Content $CommonScript -Raw)?.Substring(0,(Get-Item $CommonScript).Length - 68)
+            }
+        } -ArgumentList $Name,$CommonPath
+    }
 }

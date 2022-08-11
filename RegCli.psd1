@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '5.0.0'
+ModuleVersion = '6.0.0'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -15,7 +15,7 @@ FunctionsToExport = 'Expand-Installer','Expand-ChromiumInstaller',
                'Set-ChromiumVisualElementsManifest','New-RegCliUpdate', 
                'Test-InstallLocation','Test-InstallerLocation', 
                'Get-SavedInstallerVersion','Get-SavedInstallerLastModified', 
-               'Select-NonEmptyObject'
+               'Select-NonEmptyObject','Import-CommonScript'
 CmdletsToExport = @()
 AliasesToExport = 'Set-SquirrelShortcut','Set-NsisShortcut'
 FileList = 'en-US\RegCli-help.xml','RegCli.psm1','RegCli.psd1', 
@@ -31,7 +31,8 @@ PrivateData = @{
 Use 7z library in replacement of standalone console apps.
 Add Nsis installer expansion function.
 Separate class and functions.
-Remove publish date getter.'
+Remove publish date getter.
+Add common script parts.'
     }
 }
 }
