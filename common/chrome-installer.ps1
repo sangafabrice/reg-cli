@@ -14,22 +14,27 @@ param (
 
 & {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
+    $UpdateInfo = $UpdateInfo.Where({ $_ })
     $InstallerVersion = [version] $UpdateInfo.Version
     If (!$UpdateInfo) {
         $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription
         Remove-Variable 'UpdateInfo' -Force
     }
     Try {
-        $UpdateModule =
-            New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-            Import-Module -Verbose:$False -Force -PassThru
-        $UpdateInfo | Start-InstallerDownload -Verbose:$IsVerbose -Force:$SkipSslValidation
-        Remove-InstallerOutdated -Verbose:$IsVerbose
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$IsVerbose
+        Switch ($NameLocation) {
+            Default {
+                $UpdateModule =
+                    New-RegCliUpdate $_ $SaveTo $InstallerVersion $InstallerDescription |
+                    Import-Module -Verbose:$False -Force -PassThru
+                $UpdateInfo | Start-InstallerDownload -Verbose:$IsVerbose -Force:$SkipSslValidation
+                Remove-InstallerOutdated -Verbose:$IsVerbose
+                Expand-ChromiumInstaller (Get-InstallerPath) $_ -Verbose:$IsVerbose
+                Set-ChromiumShortcut $_
+                Set-BatchRedirect $BatchRedirectName $_
+            }
+        }
         $VisualElementManifest |
         ForEach-Object { Set-ChromiumVisualElementsManifest "$($_.BaseNameLocation).VisualElementsManifest.xml" $_.HexColor }
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect $BatchRedirectName $NameLocation
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete." }
     } 
     Finally { Remove-Module $UpdateModule -Verbose:$False }
