@@ -13,7 +13,6 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\chrome"
     $NameLocation = "$BaseNameLocation.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $MachineType = "$(Get-ExecutableType $NameLocation)"
     $UpdateInfo = 
@@ -23,22 +22,17 @@ Param (
             OwnerBrand       = "$(Switch ($MachineType) { 'x64' { 'YTUH' } Default { 'GGLS' } })"
             ApplicationSpec  = "$(Switch ($MachineType) { 'x64' { 'x64-stable-statsdef_1' } Default { 'stable-arch_x86-statsdef_1' } })"
         } -From Omaha | Select-NonEmptyObject
-    $InstallerVersion = [version] $UpdateInfo.Version
-    $InstallerDescription = 'Google Chrome Installer'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
-    Else { $UpdateInfo.Link = "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" }
+    If ($UpdateInfo) { $UpdateInfo.Link = "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'chrome' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "Google Chrome $(Get-ExecutableVersion) installation complete." }
-    } 
-    Catch { }
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Google Chrome' 'Google Chrome Installer' 'chrome' @{
+            BaseNameLocation = $BaseNameLocation
+            HexColor = '#2D364C'
+        } -Verbose:($VerbosePreference -ine 'SilentlyContinue')
+    }
+    Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
 
 <#
