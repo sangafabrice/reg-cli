@@ -293,3 +293,14 @@ Function Select-NonEmptyObject {
         } }
     }
 }
+
+Function Import-CommonScript {
+    [CmdletBinding()]
+    [OutputType([System.Management.Automation.PSModuleInfo])]
+    Param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $Name
+    )
+    [RegCli]::GetCommonScript($Name, "$PSScriptRoot\common")
+}
