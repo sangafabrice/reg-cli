@@ -15,7 +15,10 @@ param (
 & {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
     $InstallerVersion = [version] $UpdateInfo.Version
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
+    If (!$UpdateInfo) {
+        $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription
+        Remove-Variable 'UpdateInfo' -Force
+    }
     Try {
         $UpdateModule =
             New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
