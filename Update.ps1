@@ -13,7 +13,6 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\AvastBrowser"
     $NameLocation = "$BaseNameLocation.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{
@@ -22,23 +21,17 @@ Param (
             OwnerBrand       = '2101'
             OSArch           = Get-ExecutableType $NameLocation
         } -From Omaha | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Avast Secure Browser'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Avast Secure' 'Avast Secure Browser Installer' 'secure' @{
+            BaseNameLocation = $BaseNameLocation
+            HexColor = '#2D364C'
+        } -SkipSslValidation -Verbose:($VerbosePreference -ine 'SilentlyContinue')
         Remove-Item "${BaseNameLocation}Uninstall.exe" -Force -ErrorAction SilentlyContinue
-        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#2D364C'
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'secure' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
-    Catch { }
+    }
+    Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
 
 <#
