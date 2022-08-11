@@ -16,10 +16,7 @@ param (
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
     $UpdateInfo = $UpdateInfo.Where({ $_ })
     $InstallerVersion = [version] $UpdateInfo.Version
-    If (!$UpdateInfo) {
-        $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription
-        Remove-Variable 'UpdateInfo' -Force
-    }
+    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
         Switch ($NameLocation) {
             Default {
