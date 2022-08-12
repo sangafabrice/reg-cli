@@ -11,26 +11,30 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\blisk.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = Get-DownloadInfo -PropertyList @{} -From Blisk | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Blisk'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'blisk' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Get-DownloadInfo -PropertyList @{} -From Blisk |
+                Select-NonEmptyObject
+            )
+            NameLocation = "$InstallLocation\blisk.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'Blisk'
+            InstallerDescription = 'Blisk Installer'
+            BatchRedirectName = 'blisk'
+            VisualElementManifest = @{
+                BaseNameLocation = "$InstallLocation\chrome"
+                HexColor = '#5F6368'
+            }
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
