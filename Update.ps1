@@ -13,36 +13,21 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\msedge"
     $NameLocation = "$BaseNameLocation.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From MSEdge |
         Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Microsoft Edge'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Force -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#173A73'
-        Set-ChromiumShortcut $NameLocation
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Microsoft Edge' 'Microsoft Edge Installer' 'msedge' @{
+            BaseNameLocation = $BaseNameLocation
+            HexColor = '#173A73'
+        } -SkipSslValidation -Verbose:($VerbosePreference -ine 'SilentlyContinue')
         Edit-TaskbarShortcut $NameLocation
-        Set-BatchRedirect 'msedge' $NameLocation
-        #Region: Set shell verb to open a PDF file as an MSEdge app
-        @{
-            Path = 'Registry::HKEY_CLASSES_ROOT\MSEdgePDF\shell\open\command'
-            Name = '(default)'
-            Value = '"' + $NameLocation + '" --app="%1"'
-            Force = $True
-        } | ForEach-Object { Set-ItemProperty @_ }
-        #EndRegion
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
-    Catch { }
+    }
+    Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
 
 <#
