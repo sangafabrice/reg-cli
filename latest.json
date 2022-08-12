@@ -1,5 +1,5 @@
 {
-    "version": "5.0.0",
+    "version": "5.0.1",
     "releaseNotes": [
         "Add removal of dynamic module.",
         "Force to load RegCli version 6.0.0",

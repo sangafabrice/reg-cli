@@ -13,27 +13,36 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\AvastBrowser"
     $NameLocation = "$BaseNameLocation.exe"
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            UpdateServiceURL = 'https://update.avastbrowser.com/service/update2'
-            ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
-            OwnerBrand       = '2101'
-            OSArch           = Get-ExecutableType $NameLocation
-        } -From Omaha | Select-NonEmptyObject
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
-        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Avast Secure' 'Avast Secure Browser Installer' 'secure' @{
-            BaseNameLocation = $BaseNameLocation
-            HexColor = '#2D364C'
-        } -SkipSslValidation -Verbose:($VerbosePreference -ine 'SilentlyContinue')
-        Remove-Item "${BaseNameLocation}Uninstall.exe" -Force -ErrorAction SilentlyContinue
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Get-DownloadInfo -PropertyList @{
+                    UpdateServiceURL = 'https://update.avastbrowser.com/service/update2'
+                    ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
+                    OwnerBrand       = '2101'
+                    OSArch           = Get-ExecutableType $NameLocation
+                } -From Omaha | Select-NonEmptyObject
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Avast Secure'
+            InstallerDescription = 'Avast Secure Browser Installer'
+            BatchRedirectName = 'secure'
+            VisualElementManifest = @{
+                BaseNameLocation = $BaseNameLocation
+                HexColor = '#2D364C'
+            }
+            SkipSslValidation = $True
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Finally { Remove-Module $UpdateModule -Verbose:$False }
+    Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
-
 <#
 .SYNOPSIS
     Updates Avast Secure browser software.
