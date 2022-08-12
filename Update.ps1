@@ -12,24 +12,34 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\brave.exe"
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            UpdateServiceURL = 'https://updates.bravesoftware.com/service/update2'
-            ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
-            ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
-            Protocol         = '3.0'
-        } -From Omaha | Select-NonEmptyObject
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
-        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Brave' 'Brave Installer' 'brave' @{
-            BaseNameLocation = "$InstallLocation\chrome"
-            HexColor = '#5F6368'
-        } -Verbose:($VerbosePreference -ine 'SilentlyContinue')
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Get-DownloadInfo -PropertyList @{
+                    UpdateServiceURL = 'https://updates.bravesoftware.com/service/update2'
+                    ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
+                    ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
+                    Protocol         = '3.0'
+                } -From Omaha | Select-NonEmptyObject
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Brave'
+            InstallerDescription = 'Brave Installer'
+            BatchRedirectName = 'brave'
+            VisualElementManifest = @{
+                BaseNameLocation = "$InstallLocation\chrome"
+                HexColor = '#5F6368'
+            }
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Finally { Remove-Module $UpdateModule -Verbose:$False }
+    Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
