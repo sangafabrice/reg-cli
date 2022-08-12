@@ -12,7 +12,6 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\brave.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{
@@ -21,21 +20,16 @@ Param (
             ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
             Protocol         = '3.0'
         } -From Omaha | Select-NonEmptyObject
-    $InstallerVersion = [version] $UpdateInfo.Version
-    $InstallerDescription = 'Brave Installer'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumVisualElementsManifest "$InstallLocation\chrome.VisualElementsManifest.xml" '#5F6368'
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'brave' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "Brave $(Get-ExecutableVersion) installation complete." }
-    } 
-    Catch { }
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Brave' 'Brave Installer' 'brave' @{
+            BaseNameLocation = "$InstallLocation\chrome"
+            HexColor = '#5F6368'
+        } -Verbose:($VerbosePreference -ine 'SilentlyContinue')
+    }
+    Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
 
 <#
