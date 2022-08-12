@@ -27,12 +27,22 @@ Param (
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
-        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Google Chrome' 'Google Chrome Installer' 'chrome' @{
-            BaseNameLocation = $BaseNameLocation
-            HexColor = '#2D364C'
-        } -Verbose:($VerbosePreference -ine 'SilentlyContinue')
+        @{
+            UpdateInfo = $UpdateInfo
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Google Chrome'
+            InstallerDescription = 'Google Chrome Installer'
+            BatchRedirectName = 'chrome'
+            VisualElementManifest = @{
+                BaseNameLocation = $BaseNameLocation
+                HexColor = '#2D364C'
+            }
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Finally { Remove-Module $UpdateModule -Verbose:$False }
+    Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
