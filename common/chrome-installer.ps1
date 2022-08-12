@@ -33,6 +33,7 @@ param (
         $VisualElementManifest |
         ForEach-Object { Set-ChromiumVisualElementsManifest "$($_.BaseNameLocation).VisualElementsManifest.xml" $_.HexColor }
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete." }
-    } 
+    }
+    Catch { }
     Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
