@@ -13,27 +13,20 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\vivaldi"
     $NameLocation = "$BaseNameLocation.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From Vivaldi |
         Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Vivaldi'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumVisualElementsManifest "$BaseNameLocation.VisualElementsManifest.xml" '#EF3939'
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'vivaldi' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
-    Catch { }
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Vivaldi' 'Vivaldi Installer' 'vivaldi' @{
+            BaseNameLocation = $BaseNameLocation
+            HexColor = '#EF3939'
+        } -Verbose:($VerbosePreference -ine 'SilentlyContinue')
+    }
+    Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
 
 <#
