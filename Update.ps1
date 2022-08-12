@@ -13,20 +13,31 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\vivaldi"
     $NameLocation = "$BaseNameLocation.exe"
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From Vivaldi |
-        Select-NonEmptyObject
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
-        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Vivaldi' 'Vivaldi Installer' 'vivaldi' @{
-            BaseNameLocation = $BaseNameLocation
-            HexColor = '#EF3939'
-        } -Verbose:($VerbosePreference -ine 'SilentlyContinue')
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Get-DownloadInfo -PropertyList @{
+                    OSArch = Get-ExecutableType $NameLocation
+                } -From Vivaldi | Select-NonEmptyObject
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Vivaldi'
+            InstallerDescription = 'Vivaldi Installer'
+            BatchRedirectName = 'vivaldi'
+            VisualElementManifest = @{
+                BaseNameLocation = $BaseNameLocation
+                HexColor = '#EF3939'
+            }
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Finally { Remove-Module $UpdateModule -Verbose:$False }
+    Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
