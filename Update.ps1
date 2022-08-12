@@ -13,21 +13,32 @@ Param (
 & {
     $BaseNameLocation = "$InstallLocation\msedge"
     $NameLocation = "$BaseNameLocation.exe"
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{ OSArch = (Get-ExecutableType $NameLocation) } -From MSEdge |
-        Select-NonEmptyObject
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
-        Invoke-CommonScript $UpdateInfo $NameLocation $SaveTo 'Microsoft Edge' 'Microsoft Edge Installer' 'msedge' @{
-            BaseNameLocation = $BaseNameLocation
-            HexColor = '#173A73'
-        } -SkipSslValidation -Verbose:($VerbosePreference -ine 'SilentlyContinue')
-        Edit-TaskbarShortcut $NameLocation
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Get-DownloadInfo -PropertyList @{
+                    OSArch = Get-ExecutableType $NameLocation
+                } -From MSEdge | Select-NonEmptyObject
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Microsoft Edge'
+            InstallerDescription = 'Microsoft Edge Installer'
+            BatchRedirectName = 'msedge'
+            VisualElementManifest = @{
+                BaseNameLocation = $BaseNameLocation
+                HexColor = '#173A73'
+            }
+            SkipSslValidation = $True
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Finally { Remove-Module $UpdateModule -Verbose:$False }
+    Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
