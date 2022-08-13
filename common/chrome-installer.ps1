@@ -30,7 +30,7 @@ param (
                 Set-BatchRedirect $BatchRedirectName $_
             }
         }
-        $VisualElementManifest |
+        $VisualElementManifest.Where({ $_ }) |
         ForEach-Object { Set-ChromiumVisualElementsManifest "$($_.BaseNameLocation).VisualElementsManifest.xml" $_.HexColor }
         If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete." }
     }
