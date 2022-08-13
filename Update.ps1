@@ -12,30 +12,31 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\launcher.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            RepositoryID = 'opera/desktop'
-            OSArch = (Get-ExecutableType $NameLocation)
-            FormatedName = 'Opera'
-        } -From Opera | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Opera'
-    $InstallerDescription = "$SoftwareName Installer"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'opera' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Get-DownloadInfo -PropertyList @{
+                    RepositoryID = 'opera/desktop'
+                    OSArch = (Get-ExecutableType $NameLocation)
+                    FormatedName = 'Opera'
+                } -From Opera | Select-NonEmptyObject
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Opera'
+            InstallerDescription = 'Opera Installer'
+            BatchRedirectName = 'opera'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
+
 
 <#
 .SYNOPSIS
