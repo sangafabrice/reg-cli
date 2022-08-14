@@ -43,6 +43,7 @@ Param (
     Catch { }
     Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
+
 <#
 .SYNOPSIS
     Updates Avast Secure browser software.
