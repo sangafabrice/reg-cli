@@ -37,7 +37,6 @@ Param (
     Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
-
 <#
 .SYNOPSIS
     Updates Opera browser software.
