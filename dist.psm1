@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Maxthon'
     Description = 'The script installs or updates Maxthon on Windows.'
     Guid = '5b784b4a-bb9b-4098-a7e8-d78df4087d99'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/521b1ef6e7b3ff20e8f78e79b17bc0cd9b9b7865/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5e0c2aeb6d2c9b078b64b24d043b2a83cabacef4/icon.png'
     Tags = @('maxthon','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
