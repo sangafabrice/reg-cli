@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Local",
+    $InstallLocation = "${Env:ProgramData}\Maxthon",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,76 +11,82 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Local.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        @{
-            Uri = 'https://cdn.localwp.com/stable/latest/windows'
-            Method  = 'HEAD'
-            MaximumRedirection = 0
-            SkipHttpErrorCheck = $True
-            ErrorAction = 'SilentlyContinue'
-            Verbose = $False
-        } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { [version] (([uri] $_).Segments?[-2] -split '\+')?[0] }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'Create local WordPress sites with ease.'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
+    $NameLocation = "$InstallLocation\Maxthon.exe"
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-NsisInstaller (Get-InstallerPath) $NameLocation 32 -Verbose:$VerbosePreferenceBool
-        Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'local' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "Local $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                @{
+                    Uri = "https://www.maxthon.com/mx6/formal-$(
+                        Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } }
+                    )/dl"
+                    Method  = 'HEAD'
+                    MaximumRedirection = 0
+                    SkipHttpErrorCheck = $True
+                    ErrorAction = 'SilentlyContinue'
+                    Verbose = $False
+                } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location?[0] } |
+                Select-Object @{
+                    Name = 'Version'
+                    Expression = { (([uri] $_).Segments?[-1] -split '_')?[1] }
+                },@{
+                    Name = 'Link'
+                    Expression = { $_ }
+                } | Select-NonEmptyObject
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Maxthon'
+            InstallerDescription = 'Maxthon Installer'
+            BatchRedirectName = 'maxthon'
+            VisualElementManifest = @{
+                BaseNameLocation = "$InstallLocation\chrome"
+                HexColor = '#5F6368'
+            }
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
 .SYNOPSIS
-    Updates Local software.
+    Updates Maxthon software.
 .DESCRIPTION
-    The script installs or updates Local on Windows.
+    The script installs or updates Maxthon on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Local".
+    It defaults to "%ProgramData%\Maxthon".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Local' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Maxthon' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateLocal.ps1 -InstallLocation 'C:\ProgramData\Local' -SaveTo .
+    PS > .\UpdateMaxthon.ps1 -InstallLocation 'C:\ProgramData\Maxthon' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Local' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Maxthon' | Select-Object Name -First 5
     Name
     ----
-    locales
-    resources
-    swiftshader
-    chrome_100_percent.pak
-    chrome_200_percent.pak
+    6.1.3.3000
+    chrome_proxy.exe
+    chrome.VisualElementsManifest.xml
+    Maxthon.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    6.4.2.exe
-    UpdateLocal.ps1
+    6.1.3.3000.exe
+    UpdateMaxthon.ps1
 
-    Install Local to 'C:\ProgramData\Local' and save its setup installer to the current directory.
+    Install Maxthon to 'C:\ProgramData\Maxthon' and save its setup installer to the current directory.
 #>
