@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Opera",
+    $InstallLocation = "${Env:ProgramData}\OperaGX",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -21,18 +21,18 @@ Param (
                 Write-Verbose 'Retrieve install or update information...'
                 Try {
                     Get-DownloadInfo -PropertyList @{
-                        RepositoryID = 'opera/desktop'
+                        RepositoryID = 'opera_gx'
                         OSArch = (Get-ExecutableType $NameLocation)
-                        FormatedName = 'Opera'
+                        FormatedName = 'Opera_GX'
                     } -From Opera | Select-NonEmptyObject
                 }
                 Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Opera'
-            InstallerDescription = 'Opera Installer'
-            BatchRedirectName = 'opera'
+            SoftwareName = 'Opera GX'
+            InstallerDescription = 'Opera GX Installer'
+            BatchRedirectName = 'operagx'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -42,39 +42,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Opera browser software.
+    Updates Opera GX browser software.
 .DESCRIPTION
-    The script installs or updates Opera browser on Windows.
+    The script installs or updates Opera GX browser on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Opera.
+    It defaults to %ProgramData%\OperaGX.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Opera -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\OperaGX -ErrorAction SilentlyContinue
 
-    PS > .\UpdateOpera.ps1 -InstallLocation C:\ProgramData\Opera -SaveTo .
+    PS > .\UpdateOperaGX.ps1 -InstallLocation C:\ProgramData\OperaGX -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Opera | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\OperaGX | Select-Object Name -First 5
     Name
     ----
     Assets
     localization
     MEIPreload
     resources
-    89.0.4447.38.manifest
+    89.0.4447.64.manifest
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    89.0.4447.38.exe
-    UpdateOpera.ps1
+    89.0.4447.64.exe
+    UpdateOperaGX.ps1
 
-    Install Opera browser to 'C:\ProgramData\Opera' and save its setup installer to the current directory.
+    Install Opera GX browser to 'C:\ProgramData\OperaGX' and save its setup installer to the current directory.
 #>

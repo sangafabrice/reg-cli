@@ -1,6 +1,6 @@
 {
-    "version": "2.0.1",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Force to load DownloadInfo version 5.0.0"
+        "Initialize Opera GX updater script."
     ]
 }
