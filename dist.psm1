@@ -32,7 +32,7 @@ Function New-UpdaterScript {
             Description = $DevDependencies.Description
             RequiredModules = @(@{
                 ModuleName = 'DownloadInfo'
-                ModuleVersion = '4.0.0'
+                ModuleVersion = '5.0.0'
             },@{
                 ModuleName = 'RegCli'
                 ModuleVersion = '6.0.0'

@@ -19,11 +19,14 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Get-DownloadInfo -PropertyList @{
-                    RepositoryID = 'opera/desktop'
-                    OSArch = (Get-ExecutableType $NameLocation)
-                    FormatedName = 'Opera'
-                } -From Opera | Select-NonEmptyObject
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryID = 'opera/desktop'
+                        OSArch = (Get-ExecutableType $NameLocation)
+                        FormatedName = 'Opera'
+                    } -From Opera | Select-NonEmptyObject
+                }
+                Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
