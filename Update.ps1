@@ -20,9 +20,12 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Get-DownloadInfo -PropertyList @{
-                    OSArch = Get-ExecutableType $NameLocation
-                } -From MSEdge | Select-NonEmptyObject
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        OSArch = Get-ExecutableType $NameLocation
+                    } -From MSEdge | Select-NonEmptyObject
+                }
+                Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
