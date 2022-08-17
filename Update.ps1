@@ -15,13 +15,27 @@ Param (
     $NameLocation = "$BaseNameLocation.exe"
     Write-Verbose 'Retrieve install or update information...'
     $MachineType = "$(Get-ExecutableType $NameLocation)"
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            UpdateServiceURL = 'https://update.googleapis.com/service/update2'
-            ApplicationID    = '{8A69D345-D564-463c-AFF1-A69D9E530F96}'
-            OwnerBrand       = "$(Switch ($MachineType) { 'x64' { 'YTUH' } Default { 'GGLS' } })"
-            ApplicationSpec  = "$(Switch ($MachineType) { 'x64' { 'x64-stable-statsdef_1' } Default { 'stable-arch_x86-statsdef_1' } })"
-        } -From Omaha | Select-NonEmptyObject
+    $UpdateInfo = $(
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                UpdateServiceURL = 'https://update.googleapis.com/service/update2'
+                ApplicationID    = '{8A69D345-D564-463c-AFF1-A69D9E530F96}'
+                OwnerBrand       = "$(
+                    Switch ($MachineType) {
+                        'x64'   { 'YTUH' }
+                        Default { 'GGLS' }
+                    }
+                )"
+                ApplicationSpec  = "$(
+                    Switch ($MachineType) {
+                        'x64'   { 'x64-stable-statsdef_1' }
+                        Default { 'stable-arch_x86-statsdef_1' }
+                    }
+                )"
+            } -From Omaha | Select-NonEmptyObject
+        }
+        Catch { }
+    )
     If ($UpdateInfo) { $UpdateInfo.Link = "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" }
     Try {
         $UpdateModule =
