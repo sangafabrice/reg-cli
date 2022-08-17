@@ -1,11 +1,4 @@
-$DevDependencies = @{
-    ProgramName = 'OperaGX'
-    Description = 'The script installs or updates Opera GX browser on Windows.'
-    Guid = '1fd836e9-2d1c-4c0d-a43e-2b1798cc719c'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/642e5e98a5620f1841db0694588e3417f9c89535/icon.png'
-    Tags = @('opera','opera-gx','chromium','update','browser')
-    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
-}
+$DistPath = "$(Get-Item "$PSScriptRoot\..\dist")"
 
 Function New-UpdaterScript {
     <#
@@ -16,9 +9,10 @@ Function New-UpdaterScript {
         1. latest.json exists
     #>
 
+    Invoke-Expression (Get-Content "$($Script:DistPath)\dist" -Raw)
     $GithubRepo = $DevDependencies.RemoteRepo
     $HeaderPath = '.\Header.ps1'
-    Push-Location $PSScriptRoot
+    Push-Location $Script:DistPath
     Get-Content .\latest.json -Raw |
     ConvertFrom-Json |
     ForEach-Object {
@@ -32,12 +26,12 @@ Function New-UpdaterScript {
             Description = $DevDependencies.Description
             RequiredModules = @(@{
                 ModuleName = 'DownloadInfo'
-                ModuleVersion = '5.0.0'
+                ModuleVersion = '5.0.2'
             },@{
                 ModuleName = 'RegCli'
                 ModuleVersion = '6.0.0'
             })
-            ExternalModuleDependencies = 'RegCli'
+            ExternalModuleDependencies = @('DownloadInfo','RegCli')
             Tags = $DevDependencies.Tags
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = "$GithubRepo/tree/$(git branch --show-current)"
@@ -60,8 +54,9 @@ Function Publish-UpdaterScript {
         1. The NUGET_API_KEY environment variable is set.
     #>
 
+    Invoke-Expression (Get-Content "$($Script:DistPath)\dist" -Raw)
     @{
-        Path = "$PSScriptRoot\Update$($DevDependencies.ProgramName).ps1" |
+        Path = "$($Script:DistPath)\Update$($DevDependencies.ProgramName).ps1" |
             ForEach-Object {
                 New-UpdaterScript | Out-File $_
                 Return $_
@@ -69,9 +64,9 @@ Function Publish-UpdaterScript {
         NuGetApiKey = $Env:NUGET_API_KEY
     } | ForEach-Object { 
         Try {
-            Publish-Script @_
+            # Publish-Script @_
             Write-Host "$((Get-Item $_.Path).Name) published"
         } Catch { }
-        Remove-Item $_.Path -Exclude Update.ps1
+        # Remove-Item $_.Path -Exclude Update.ps1
     }
 }
