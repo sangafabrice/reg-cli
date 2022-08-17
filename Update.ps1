@@ -19,12 +19,15 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Get-DownloadInfo -PropertyList @{
-                    UpdateServiceURL = 'https://updates.bravesoftware.com/service/update2'
-                    ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
-                    ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
-                    Protocol         = '3.0'
-                } -From Omaha | Select-NonEmptyObject
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        UpdateServiceURL = 'https://updates.bravesoftware.com/service/update2'
+                        ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
+                        ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
+                        Protocol         = '3.0'
+                    } -From Omaha | Select-NonEmptyObject
+                }
+                Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
