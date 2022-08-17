@@ -1,0 +1,8 @@
+$DevDependencies = @{
+    ProgramName = 'OperaGX'
+    Description = 'The script installs or updates Opera GX browser on Windows.'
+    Guid = '0a4998c5-dd45-4bdc-8d16-22c30a1b6e74'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/c1b35f3073b019f8f3363e8526c1595ba0b26a8d/icon.png'
+    Tags = @('opera','opera-gx','chromium','update','browser')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}
