@@ -9,14 +9,25 @@ param (
     [string] $BatchRedirectName,
     [ValidateScript({ ForEach ($key in @('BaseNameLocation','HexColor')) { $_.ContainsKey($key) } })]
     [hashtable] $VisualElementManifest,
-    [switch] $SkipSslValidation
+    [switch] $SkipSslValidation,
+    [switch] $UseLastModified
 )
 
 & {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
     $UpdateInfo = $UpdateInfo.Where({ $_ })
     $InstallerVersion = [version] $UpdateInfo.Version
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
+    If (!$UpdateInfo) {
+        $InstallerVersion = $(
+            @{
+                Path = $SaveTo
+                Description = $InstallerDescription
+            } | ForEach-Object {
+                If ($UseLastModified) { Get-SavedInstallerLastModified @_ }
+                Else { Get-SavedInstallerVersion @_ }
+            }
+        )
+    }
     Try {
         Switch ($NameLocation) {
             Default {
@@ -32,7 +43,9 @@ param (
         }
         $VisualElementManifest.Where({ $_ }) |
         ForEach-Object { Set-ChromiumVisualElementsManifest "$($_.BaseNameLocation).VisualElementsManifest.xml" $_.HexColor }
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete." }
+        If (!(Test-InstallOutdated -CompareInstalls:$UseLastModified)) {
+            Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete."
+        }
     }
     Catch { }
     Finally { Remove-Module $UpdateModule -Verbose:$False }
