@@ -12,33 +12,34 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\firefox.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            RepositoryId = 'firefox'
-            OSArch = (Get-ExecutableType $NameLocation)
-            VersionDelim = $Null
-        } -From Mozilla | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Firefox'
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerPublishDate $SaveTo $SoftwareName)" }
     Try {
-        $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
-        $VersionPreInstall = & $GetExeVersion
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName -UseTimeStamp:$(!$UpdateInfo) |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'firefox' $NameLocation
-        $VersionPostInstall = & $GetExeVersion
-        If ($VersionPostInstall -gt $VersionPreInstall) {
-            Write-Verbose "$SoftwareName $((Get-InstallerVersion) ?? $VersionPostInstall) installation complete."
-        }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryId = 'firefox'
+                        OSArch = (Get-ExecutableType $NameLocation)
+                        VersionDelim = $Null
+                    } -From Mozilla | Select-NonEmptyObject
+                }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Firefox'
+            InstallerDescription = 'Firefox'
+            BatchRedirectName = 'firefox'
+            UseTimestamp = $True
+            TimestampType = 'SigningTime'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#

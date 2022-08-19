@@ -1,6 +1,8 @@
 {
     "version": "1.0.1",
     "releaseNotes": [
-        "Force the script to load RegCli 3.0.1"
+        "Add removal of dynamic module.",
+        "Force to load RegCli version 6.0.1",
+        "Use common script."
     ]
 }
