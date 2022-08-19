@@ -40,7 +40,10 @@ Filter New-RCManifest {
                 (Get-Content ".\$ModuleName.psm1").Where({ $_ -like 'Set-Alias*' }) |
                 ForEach-Object { ($_ -split ' ')[2] }
             )
-            FileList = @("en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1",'class\Download7zip.ps1',"class\$ModuleName.psm1",'class\ValidationUtility.psm1')
+            FileList = @(
+                "en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1",'class\Download7zip.ps1',
+                "class\$ModuleName.psm1",'class\ValidationUtility.psm1','class\GetSigningTime.psm1'
+            )
             Tags = @('Update','Chromium','RegCli')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = $GithubRepo
