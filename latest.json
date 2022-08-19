@@ -1,11 +1,6 @@
 {
-    "version": "6.0.0",
+    "version": "6.0.1",
     "releaseNotes": [
-        "Use Last Modified Time as a version.",
-        "Use 7z library in replacement of standalone console apps.",
-        "Add Nsis installer expansion function.",
-        "Separate class and functions.",
-        "Remove publish date getter.",
-        "Add common script parts."
+        "Add identify the latest version using the certificate signing time."
     ]
 }

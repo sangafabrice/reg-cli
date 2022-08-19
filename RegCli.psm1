@@ -194,10 +194,11 @@ Function New-RegCliUpdate {
         [ValidateNotNullOrEmpty()]
         [string] $Description,
         [switch] $UseSignature,
+        [switch] $UseSigningTime,
         [ValidateNotNullOrEmpty()]
         [string] $Extension = '.exe'
     )
-    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseSignature, $Extension)
+    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseSignature, $UseSigningTime, $Extension)
 }
 
 Filter Test-InstallLocation {
@@ -257,6 +258,22 @@ Filter Get-SavedInstallerLastModified {
         [switch] $UseSignature
     )
     [RegCli]::GetSavedInstallerInfo('DateTime', $Path, $Description, $UseSignature)
+}
+
+Filter Get-SavedInstallerSigningTime {
+    [CmdletBinding()]
+    [OutputType([datetime])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string] $Description,
+        [switch] $UseSignature
+    )
+    [RegCli]::GetSavedInstallerInfo('SigningTime', $Path, $Description, $UseSignature)
 }
 
 Function Select-NonEmptyObject {

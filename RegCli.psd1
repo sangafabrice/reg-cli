@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '6.0.0'
+ModuleVersion = '6.0.1'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -15,24 +15,20 @@ FunctionsToExport = 'Expand-Installer','Expand-ChromiumInstaller',
                'Set-ChromiumVisualElementsManifest','New-RegCliUpdate', 
                'Test-InstallLocation','Test-InstallerLocation', 
                'Get-SavedInstallerVersion','Get-SavedInstallerLastModified', 
-               'Select-NonEmptyObject','Import-CommonScript'
+               'Get-SavedInstallerSigningTime','Select-NonEmptyObject', 
+               'Import-CommonScript'
 CmdletsToExport = @()
 AliasesToExport = 'Set-SquirrelShortcut','Set-NsisShortcut'
 FileList = 'en-US\RegCli-help.xml','RegCli.psm1','RegCli.psd1', 
                'class\Download7zip.ps1','class\RegCli.psm1', 
-               'class\ValidationUtility.psm1'
+               'class\ValidationUtility.psm1','class\GetSigningTime.psm1'
 PrivateData = @{
     PSData = @{
         Tags = 'Update','Chromium','RegCli'
         LicenseUri = 'https://github.com/sangafabrice/reg-cli/blob/main/LICENSE.md'
         ProjectUri = 'https://github.com/sangafabrice/reg-cli'
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
-        ReleaseNotes = 'Use Last Modified Time as a version.
-Use 7z library in replacement of standalone console apps.
-Add Nsis installer expansion function.
-Separate class and functions.
-Remove publish date getter.
-Add common script parts.'
+        ReleaseNotes = 'Add identify the latest version using the certificate signing time.'
     }
 }
 }
