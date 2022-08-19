@@ -248,6 +248,11 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 Switch ($Type) {
                     'Version'  { $InstallerObj.VersionInfo.FileVersionRaw }
                     'DateTime' { $InstallerObj.LastWriteTime }
+                    'SigningTime' {
+                        $AuthenticodeModule = Import-Module "$PSScriptRoot\GetSigningTime.psm1" -PassThru
+                        Get-AuthenticodeSigningTime $InstallerObj.FullName
+                        Remove-Module $AuthenticodeModule -ErrorAction SilentlyContinue
+                    }
                 }
             } | Sort-Object -Descending |
             Select-Object -First 1
@@ -255,7 +260,8 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
     }
 
     Static [System.Management.Automation.PSModuleInfo] NewUpdate([string] $ExecutablePath, [string] $InstallerDirectory,
-        [psobject] $VersionString, [string] $InstallerDescription, [switch] $UseSignature, [string] $InstallerExtension = '.exe') {
+        [psobject] $VersionString, [string] $InstallerDescription, [switch] $UseSignature, [switch] $UseSigningTime, 
+        [string] $InstallerExtension = '.exe') {
         # Load a dynamic module of helper functions for non-software specific tasks
 
         Return New-Module {
@@ -265,6 +271,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [psobject] $VersionString,
                 [string] $InstallerDescription,
                 [switch] $UseSignature,
+                [switch] $UseSigningTime,
                 [string] $InstallerExtension
             )
 
@@ -304,7 +311,14 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     Where({
                         $(
                             If ($Version -is [version]) { $_.VersionInfo.FileVersionRaw }
-                            ElseIf ($Version -is [datetime]) { $_.LastWriteTime }
+                            ElseIf ($Version -is [datetime]) {
+                                If ($UseSigningTime) {
+                                    $AuthenticodeModule = Import-Module "$PSScriptRoot\GetSigningTime.psm1" -PassThru
+                                    Get-AuthenticodeSigningTime $_.FullName
+                                    Remove-Module $AuthenticodeModule -ErrorAction SilentlyContinue
+                                }
+                                Else { $_.LastWriteTime }
+                            }
                         ) -eq $Version
                     }, 'First').FullName ??
                     "$SaveTo\$($_ -is [datetime] ? ('{0}.{1}.{2}' -f $_.Year,$_.DayOfYear,$_.TimeOfDay.TotalMinutes.ToString('#.##')):$_)$InstallerExtension"
@@ -334,7 +348,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     If ($UseInstaller) {
                         $AttributeCollection = [System.Collections.ObjectModel.Collection[System.Attribute]]::New()
                         $AttributeCollection.Add([System.Management.Automation.ParameterAttribute] @{ Mandatory = $False })
-                        $AttributeCollection.Add([System.Management.Automation.ValidateSetAttribute]::New('Version','DateTime'))
+                        $AttributeCollection.Add([System.Management.Automation.ValidateSetAttribute]::New('Version','DateTime','SigningTime'))
                         $ParamDictionary = [System.Management.Automation.RuntimeDefinedParameterDictionary]::New()
                         $ParamDictionary.Add('Type',[System.Management.Automation.RuntimeDefinedParameter]::New('Type',[string],$AttributeCollection))
                         $PSBoundParameters.Type = 'Version'
@@ -348,6 +362,11 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                             Switch ($PSBoundParameters.Type) {
                                 'Version'  { $Intaller.VersionInfo.FileVersionRaw }
                                 'DateTime' { $Intaller.LastWriteTime }
+                                'SigningTime' {
+                                    $AuthenticodeModule = Import-Module "$PSScriptRoot\GetSigningTime.psm1" -PassThru
+                                    Get-AuthenticodeSigningTime $Intaller.FullName
+                                    Remove-Module $AuthenticodeModule -ErrorAction SilentlyContinue
+                                }
                             }
                         )
                     }
@@ -507,7 +526,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     $InstallStatus.Value = (Get-Item (Get-Item $InstallPath).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
                 }
             }
-        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSignature,$InstallerExtension
+        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSignature,$UseSigningTime,$InstallerExtension
     }
 
     Static [System.Management.Automation.PSModuleInfo] GetCommonScript([string] $Name, [string] $CommonPath) {
