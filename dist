@@ -1,0 +1,8 @@
+$DevDependencies = @{
+    ProgramName = 'FirefoxDevEdition'
+    Description = 'The script installs or updates Mozilla Firefox Developer Edition browser on Windows.'
+    Guid = '2b9f3f36-3644-44ab-aa3e-0febd015fae5'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fa46f4d6bb7df0d1d507d8a9f2d0e0f60f2bc454/icon.png'
+    Tags = @('firefox', 'dev-edition','update','browser')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}

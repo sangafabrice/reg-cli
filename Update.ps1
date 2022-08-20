@@ -12,36 +12,35 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\firefox.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            RepositoryId = 'devedition'
-            OSArch = (Get-ExecutableType $NameLocation)
-            VersionDelim = 'b'
-        } -From Mozilla | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'Firefox'
-    $SoftwareName = "$InstallerDescription Developer Edition"
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerPublishDate $SaveTo $InstallerDescription)" }
     Try {
-        $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
-        $VersionPreInstall = & $GetExeVersion
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription -UseTimeStamp:$(!$UpdateInfo) |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-ChromiumInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-ChromiumShortcut $NameLocation
-        Set-BatchRedirect 'firefoxdev' $NameLocation
-        $VersionPostInstall = & $GetExeVersion
-        If ($VersionPostInstall -gt $VersionPreInstall) {
-            $CurrentVersion = ("$(Get-InstallerVersion)" -replace '\.([0-9]+)$','b$1').Trim()
-            If ([string]::IsNullOrEmpty($CurrentVersion)) { $CurrentVersion = $VersionPostInstall }
-            Write-Verbose "$SoftwareName $CurrentVersion installation complete."
-        }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryId = 'devedition'
+                        OSArch = Get-ExecutableType $NameLocation
+                        VersionDelim = 'b'
+                    } -From Mozilla | Select-NonEmptyObject
+                }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Firefox Developer Edition'
+            InstallerDescription = 'Firefox'
+            BatchRedirectName = 'firefoxdev'
+            UseTimestamp = $True
+            TimestampType = 'SigningTime'
+            Checksum = '60fb6bee2787c5fbcf3d6c1176a3f74f36b1529949b6456e73f289656df4d471dda487596945ea9fda5e33f48f43f09690ae49e65cf6066be9db7d3ddab0b42d'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { $_ }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
