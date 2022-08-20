@@ -27,7 +27,7 @@ DynamicParam {
 Process {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
     $UpdateInfo = $UpdateInfo.Where({ $_ })
-    $InstallerVersion = [version] $UpdateInfo.Version
+    $InstallerVersion = Try { [version] $UpdateInfo.Version } Catch { "$($UpdateInfo.Version)" }
     If (!$UpdateInfo) {
         $InstallerVersion = $(
             $InfoArguments = @{
