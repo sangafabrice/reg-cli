@@ -1,6 +1,6 @@
 {
-    "version": "0.0.3",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Force the script to load RegCli 3.0.1"
+        "Add common script to firefox dev updater script."
     ]
 }

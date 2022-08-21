@@ -12,22 +12,22 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\firefox.exe"
+    Write-Verbose 'Retrieve install or update information...'
+    $UpdateInfo =
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                RepositoryId = 'devedition'
+                OSArch = Get-ExecutableType $NameLocation
+                VersionDelim = 'b'
+            } -From Mozilla | Select-NonEmptyObject
+        }
+        Catch { }
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
         @{
-            UpdateInfo = $(
-                Write-Verbose 'Retrieve install or update information...'
-                Try {
-                    Get-DownloadInfo -PropertyList @{
-                        RepositoryId = 'devedition'
-                        OSArch = Get-ExecutableType $NameLocation
-                        VersionDelim = 'b'
-                    } -From Mozilla | Select-NonEmptyObject
-                }
-                Catch { }
-            )
+            UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Firefox Developer Edition'
@@ -35,11 +35,11 @@ Param (
             BatchRedirectName = 'firefoxdev'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
-            Checksum = '60fb6bee2787c5fbcf3d6c1176a3f74f36b1529949b6456e73f289656df4d471dda487596945ea9fda5e33f48f43f09690ae49e65cf6066be9db7d3ddab0b42d'
+            Checksum = $UpdateInfo.Checksum
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Catch { $_ }
+    Catch { }
     Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
