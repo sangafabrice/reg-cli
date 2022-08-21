@@ -15,7 +15,7 @@ Param (
     $NameLocation = "$BaseNameLocation.exe"
     Write-Verbose 'Retrieve install or update information...'
     $MachineType = "$(Get-ExecutableType $NameLocation)"
-    $UpdateInfo = $(
+    $UpdateInfo =
         Try {
             Get-DownloadInfo -PropertyList @{
                 UpdateServiceURL = 'https://update.googleapis.com/service/update2'
@@ -35,7 +35,6 @@ Param (
             } -From Omaha | Select-NonEmptyObject
         }
         Catch { }
-    )
     If ($UpdateInfo) { $UpdateInfo.Link = "$($UpdateInfo.Link.Where({ "$_" -like 'https://*' }, 'First'))" }
     Try {
         $UpdateModule =
