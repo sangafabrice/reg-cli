@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Thunderbird'
     Description = 'The script installs or updates Thunderbird on Windows.'
     Guid = 'adc1bacc-de0e-4f3e-86cb-2c59292609fe'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fa46f4d6bb7df0d1d507d8a9f2d0e0f60f2bc454/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/a498ab8307b08f95e99d2d79fae0d0d177495b41/icon.png'
     Tags = @('thunderbird','update','browser','email')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
