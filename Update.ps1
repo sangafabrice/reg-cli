@@ -12,22 +12,22 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\firefox.exe"
+    Write-Verbose 'Retrieve install or update information...'
+    $UpdateInfo =
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                RepositoryId = 'firefox'
+                OSArch = (Get-ExecutableType $NameLocation)
+                VersionDelim = $Null
+            } -From Mozilla | Select-NonEmptyObject
+        }
+        Catch { }
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
         @{
-            UpdateInfo = $(
-                Write-Verbose 'Retrieve install or update information...'
-                Try {
-                    Get-DownloadInfo -PropertyList @{
-                        RepositoryId = 'firefox'
-                        OSArch = (Get-ExecutableType $NameLocation)
-                        VersionDelim = $Null
-                    } -From Mozilla | Select-NonEmptyObject
-                }
-                Catch { }
-            )
+            UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Firefox'
@@ -35,6 +35,7 @@ Param (
             BatchRedirectName = 'firefox'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
+            Checksum = $UpdateInfo.Checksum
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
