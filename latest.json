@@ -1,6 +1,6 @@
 {
-    "version": "2.0.0",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Use common script."
+        "Initialize Thunderbird updater script."
     ]
 }

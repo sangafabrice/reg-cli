@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Firefox",
+    $InstallLocation = "${Env:ProgramData}\Thunderbird",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,13 +11,13 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\firefox.exe"
+    $NameLocation = "$InstallLocation\thunderbird.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
         Try {
             Get-DownloadInfo -PropertyList @{
-                RepositoryId = 'firefox'
-                OSArch = (Get-ExecutableType $NameLocation)
+                RepositoryId = 'thunderbird'
+                OSArch = Get-ExecutableType $NameLocation
                 VersionDelim = $Null
             } -From Mozilla | Select-NonEmptyObject
         }
@@ -30,9 +30,9 @@ Param (
             UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Firefox'
-            InstallerDescription = 'Firefox'
-            BatchRedirectName = 'firefox'
+            SoftwareName = 'Thunderbird'
+            InstallerDescription = 'Thunderbird'
+            BatchRedirectName = 'thunderbird'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
@@ -45,39 +45,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Mozilla Firefox browser software.
+    Updates Mozilla Thunderbird software.
 .DESCRIPTION
-    The script installs or updates Mozilla Firefox browser on Windows.
+    The script installs or updates Mozilla Thunderbird on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\MozillaFirefox.
+    It defaults to %ProgramData%\Thunderbird.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\MozillaFirefox -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Thunderbird -ErrorAction SilentlyContinue
 
-    PS > .\UpdateMozillaFirefox.ps1 -InstallLocation C:\ProgramData\MozillaFirefox -SaveTo .
+    PS > .\UpdateThunderbird.ps1 -InstallLocation C:\ProgramData\Thunderbird -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\MozillaFirefox | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\Thunderbird | Select-Object Name -First 5
     Name
     ----
-    browser
+    chrome
     defaults
     fonts
-    gmp-clearkey
+    isp
     uninstall
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    102.0.1.exe
-    UpdateMozillaFirefox.ps1
+    102.1.2.exe
+    UpdateThunderbird.ps1
 
-    Install Mozilla Firefox browser to 'C:\ProgramData\MozillaFirefox' and save its setup installer to the current directory.
+    Install Mozilla Thunderbird to 'C:\ProgramData\Thunderbird' and save its setup installer to the current directory.
 #>
