@@ -17,7 +17,7 @@ Param (
         Try {
             Get-DownloadInfo -PropertyList @{
                 RepositoryId = 'firefox'
-                OSArch = (Get-ExecutableType $NameLocation)
+                OSArch = Get-ExecutableType $NameLocation
                 VersionDelim = $Null
             } -From Mozilla | Select-NonEmptyObject
         }
