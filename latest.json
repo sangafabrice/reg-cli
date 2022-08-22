@@ -1,6 +1,6 @@
 {
-    "version": "6.0.1",
+    "version": "6.0.2",
     "releaseNotes": [
-        "Add identify the latest version using the certificate signing time."
+        "Add identify the latest version using the checksum."
     ]
 }

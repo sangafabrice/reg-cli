@@ -261,7 +261,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
     Static [System.Management.Automation.PSModuleInfo] NewUpdate([string] $ExecutablePath, [string] $InstallerDirectory,
         [psobject] $VersionString, [string] $InstallerDescription, [switch] $UseSignature, [switch] $UseSigningTime, 
-        [string] $InstallerExtension = '.exe') {
+        [string] $InstallerChecksum, [string] $InstallerExtension = '.exe') {
         # Load a dynamic module of helper functions for non-software specific tasks
 
         Return New-Module {
@@ -272,6 +272,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [string] $InstallerDescription,
                 [switch] $UseSignature,
                 [switch] $UseSigningTime,
+                [string] $InstallerChecksum,
                 [string] $InstallerExtension
             )
 
@@ -309,6 +310,10 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                         $_.VersionInfo.FileDescription -ieq $InstallerDescription 
                     }).
                     Where({
+                        If (![string]::IsNullOrEmpty($InstallerChecksum)) {
+                            Return $InstallerChecksum -ieq (Get-FileHash $_.FullName $(
+                            Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
+                        }
                         $(
                             If ($Version -is [version]) { $_.VersionInfo.FileVersionRaw }
                             ElseIf ($Version -is [datetime]) {
@@ -526,7 +531,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     $InstallStatus.Value = (Get-Item (Get-Item $InstallPath).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
                 }
             }
-        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSignature,$UseSigningTime,$InstallerExtension
+        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSignature,$UseSigningTime,$InstallerChecksum,$InstallerExtension
     }
 
     Static [System.Management.Automation.PSModuleInfo] GetCommonScript([string] $Name, [string] $CommonPath) {

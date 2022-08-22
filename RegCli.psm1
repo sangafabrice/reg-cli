@@ -195,10 +195,13 @@ Function New-RegCliUpdate {
         [string] $Description,
         [switch] $UseSignature,
         [switch] $UseSigningTime,
+        [AllowNull()]
+        [string] $Checksum,
         [ValidateNotNullOrEmpty()]
         [string] $Extension = '.exe'
     )
-    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseSignature, $UseSigningTime, $Extension)
+    If (!$PSBoundParameters.ContainsKey('Checksum')) { $Checksum = $Null }
+    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseSignature, $UseSigningTime, $Checksum, $Extension)
 }
 
 Filter Test-InstallLocation {
