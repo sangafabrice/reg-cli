@@ -10,7 +10,8 @@ Param (
     [ValidateScript({ ForEach ($key in @('BaseNameLocation','HexColor')) { $_.ContainsKey($key) } })]
     [hashtable] $VisualElementManifest,
     [switch] $SkipSslValidation,
-    [switch] $UseTimestamp
+    [switch] $UseTimestamp,
+    [string] $Checksum
 )
 
 DynamicParam {
@@ -54,6 +55,10 @@ Process {
                         Version = $InstallerVersion
                         Description = $InstallerDescription
                         UseSigningTime = !$UpdateInfo -and $PSBoundParameters.TimestampType -ieq 'SigningTime'
+                        Checksum = $(
+                            If ($PSBoundParameters.ContainsKey('Checksum')) { $Checksum = $Null }
+                            $Checksum
+                        )
                     } | ForEach-Object { New-RegCliUpdate @_ } |
                     Import-Module -Verbose:$False -Force -PassThru
                 $UpdateInfo | Start-InstallerDownload -Verbose:$IsVerbose -Force:$SkipSslValidation
