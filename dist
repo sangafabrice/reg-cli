@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Tor'
     Description = 'The script installs or updates Tor browser on Windows.'
     Guid = '5309d28a-8bf8-488b-a23f-35f7b0b84305'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fa46f4d6bb7df0d1d507d8a9f2d0e0f60f2bc454/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/62138344689ed63f3c776a6c22b8eb85bd4723ca/icon.png'
     Tags = @('tor','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
