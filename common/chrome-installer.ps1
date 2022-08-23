@@ -11,6 +11,7 @@ Param (
     [hashtable] $VisualElementManifest,
     [switch] $SkipSslValidation,
     [switch] $UseTimestamp,
+    [switch] $UseSignature,
     [string] $Checksum
 )
 
@@ -28,19 +29,22 @@ DynamicParam {
 Process {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
     $UpdateInfo = $UpdateInfo.Where({ $_ })
-    $InstallerVersion = Try { [version] $UpdateInfo.Version } Catch { "$($UpdateInfo.Version)" }
+    $InstallerVersion =
+        Try {
+            $UpdateInfo.LastModified ?? ([version] $UpdateInfo.Version)
+        } Catch { "$($UpdateInfo.Version)" }
     If (!$UpdateInfo) {
         $InstallerVersion = $(
             $InfoArguments = @{
                 Path = $SaveTo
                 Description = $InstallerDescription
+                UseSignature = $UseSignature
             }
             If ($UseTimestamp) {
                 Switch ($PSBoundParameters.TimestampType) {
                     'DateTime'    { Get-SavedInstallerLastModified @InfoArguments }
                     'SigningTime' { Get-SavedInstallerSigningTime @InfoArguments }
                 }
-                
             }
             Else { Get-SavedInstallerVersion @InfoArguments }
         )
@@ -55,6 +59,7 @@ Process {
                         Version = $InstallerVersion
                         Description = $InstallerDescription
                         UseSigningTime = !$UpdateInfo -and $PSBoundParameters.TimestampType -ieq 'SigningTime'
+                        UseSignature = $UseSignature
                         Checksum = $(
                             If ($PSBoundParameters.ContainsKey('Checksum')) { $Checksum = $Null }
                             $Checksum
