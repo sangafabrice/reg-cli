@@ -1,9 +1,6 @@
 {
-    "version": "5.0.2",
+    "version": "5.0.3",
     "releaseNotes": [
-        "Add removal of dynamic module.",
-        "Force to load RegCli version 6.0.0",
-        "Skip SSL validation when downloading resource.",
-        "Use common script."
+        "Force to load RegCli version 6.0.2"
     ]
 }
