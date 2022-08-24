@@ -1,6 +1,6 @@
 {
-    "version": "2.0.1",
+    "version": "2.0.2",
     "releaseNotes": [
-        "Force to load DownloadInfo version 5.0.0"
+        "Force to load RegCli version 6.0.2"
     ]
 }
