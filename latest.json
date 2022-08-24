@@ -1,6 +1,6 @@
 {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Initialize Opera GX updater script."
+        "Force to load RegCli version 6.0.2"
     ]
 }
