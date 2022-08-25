@@ -453,12 +453,12 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
                     $Installer = Get-Item (Get-InstallerPath) -ErrorAction Stop
-                    If ($UseSignature) { $Thumbprint = (Get-AuthenticodeSignature $Installer.FullName).SignerCertificate.Thumbprint }
+                    If ($UseSignature) { $Thumbprint = (Get-AuthenticodeSignature $Installer.FullName).SignerCertificate.Subject }
                     Write-Verbose 'Delete outdated installers...'
                     (Get-ChildItem $Installer.Directory).
                     Where({ $_ -isnot [System.IO.DirectoryInfo] -and $_.LinkType -ine 'SymbolicLink' }).
                     Where({
-                        If ($UseSignature) { Return ((Get-AuthenticodeSignature $_.FullName).SignerCertificate.Thumbprint) -ieq $Thumbprint }
+                        If ($UseSignature) { Return ((Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject) -ieq $Thumbprint }
                         $_.VersionInfo.FileDescription -ieq $Installer.VersionInfo.FileDescription
                     }) |
                     Remove-Item -Exclude $Installer.Name
