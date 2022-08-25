@@ -11,31 +11,30 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\firefox.exe"
+    $NameLocation = "$InstallLocation\waterfox.exe"
     Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo =
-        Try {
-            Get-DownloadInfo -PropertyList @{
-                RepositoryId = 'devedition'
-                OSArch = Get-ExecutableType $NameLocation
-                VersionDelim = 'b'
-            } -From Mozilla | Select-NonEmptyObject
-        }
-        Catch { }
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
         @{
-            UpdateInfo = $UpdateInfo
+            UpdateInfo = $(
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryId = 'WaterfoxCo/Waterfox'
+                        AssetPattern = 'Setup\.exe$'
+                    } | Select-Object Version,@{
+                        Name = 'Link'
+                        Expression = { $_.Link.Url }
+                    } | Select-NonEmptyObject
+                }
+                Catch { }
+            )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Waterfox'
             InstallerDescription = 'Waterfox'
             BatchRedirectName = 'waterfox'
-            UseTimestamp = $True
-            TimestampType = 'SigningTime'
-            Checksum = $UpdateInfo.Checksum
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -76,7 +75,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    103.0.9.exe
+    G4.1.5.exe
     UpdateWaterfox.ps1
 
     Install Waterfox browser to 'C:\ProgramData\Waterfox' and save its setup installer to the current directory.
