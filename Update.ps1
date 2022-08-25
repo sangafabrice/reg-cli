@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\FirefoxDevEdition",
+    $InstallLocation = "${Env:ProgramData}\Waterfox",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -30,9 +30,9 @@ Param (
             UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Firefox Developer Edition'
-            InstallerDescription = 'Firefox'
-            BatchRedirectName = 'firefoxdev'
+            SoftwareName = 'Waterfox'
+            InstallerDescription = 'Waterfox'
+            BatchRedirectName = 'waterfox'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
@@ -45,26 +45,26 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Mozilla Firefox Developer Edition browser software.
+    Updates Waterfox browser software.
 .DESCRIPTION
-    The script installs or updates Mozilla Firefox Developer Edition browser on Windows.
+    The script installs or updates Waterfox browser on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\FirefoxDevEdition.
+    It defaults to %ProgramData%\Waterfox.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\FirefoxDevEdition -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Waterfox -ErrorAction SilentlyContinue
 
-    PS > .\UpdateFirefoxDevEdition.ps1 -InstallLocation C:\ProgramData\FirefoxDevEdition -SaveTo .
+    PS > .\UpdateWaterfox.ps1 -InstallLocation C:\ProgramData\Waterfox -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\FirefoxDevEdition | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\Waterfox | Select-Object Name -First 5
     Name
     ----
     browser
@@ -77,7 +77,7 @@ Param (
     Name
     ----
     103.0.9.exe
-    UpdateFirefoxDevEdition.ps1
+    UpdateWaterfox.ps1
 
-    Install Mozilla Firefox Developer Edition browser to 'C:\ProgramData\FirefoxDevEdition' and save its setup installer to the current directory.
+    Install Waterfox browser to 'C:\ProgramData\Waterfox' and save its setup installer to the current directory.
 #>
