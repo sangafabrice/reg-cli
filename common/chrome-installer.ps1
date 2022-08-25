@@ -67,7 +67,7 @@ Process {
                     } | ForEach-Object { New-RegCliUpdate @_ } |
                     Import-Module -Verbose:$False -Force -PassThru
                 $UpdateInfo | Start-InstallerDownload -Verbose:$IsVerbose -Force:$SkipSslValidation
-                Remove-InstallerOutdated -Verbose:$IsVerbose
+                Remove-InstallerOutdated -UseSignature:$UseSignature -Verbose:$IsVerbose
                 Expand-ChromiumInstaller (Get-InstallerPath) $_ -Verbose:$IsVerbose
                 Set-ChromiumShortcut $_
                 Set-BatchRedirect $BatchRedirectName $_
