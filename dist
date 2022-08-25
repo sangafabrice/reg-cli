@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Waterfox'
     Description = 'The script installs or updates Waterfox browser on Windows.'
     Guid = '7fc93349-b2de-47bd-88b1-391ee40b9131'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/fa46f4d6bb7df0d1d507d8a9f2d0e0f60f2bc454/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/23e5f570257898bbf23d5341b94c4e7b86869328/icon.svg'
     Tags = @('waterfox','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
