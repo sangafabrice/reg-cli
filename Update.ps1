@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Firefox",
+    $InstallLocation = "${Env:ProgramData}\Librewolf",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,15 +11,12 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\firefox.exe"
+    $NameLocation = "$InstallLocation\librewolf.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
         Try {
-            Get-DownloadInfo -PropertyList @{
-                RepositoryId = 'firefox'
-                OSArch = Get-ExecutableType $NameLocation
-                VersionDelim = $Null
-            } -From Mozilla | Select-NonEmptyObject
+            Get-DownloadInfo -PropertyList @{} -From Librewolf |
+            Select-NonEmptyObject
         }
         Catch { }
     Try {
@@ -30,11 +27,10 @@ Param (
             UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Firefox'
-            InstallerDescription = 'Firefox'
-            BatchRedirectName = 'firefox'
+            SoftwareName = 'Librewolf'
+            InstallerDescription = 'Librewolf'
+            BatchRedirectName = 'librewolf'
             UseTimestamp = $True
-            TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
@@ -45,39 +41,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Mozilla Firefox browser software.
+    Updates Librewolf browser software.
 .DESCRIPTION
-    The script installs or updates Mozilla Firefox browser on Windows.
+    The script installs or updates Librewolf browser on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\MozillaFirefox.
+    It defaults to %ProgramData%\Librewolf.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\MozillaFirefox -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Librewolf -ErrorAction SilentlyContinue
 
-    PS > .\UpdateMozillaFirefox.ps1 -InstallLocation C:\ProgramData\MozillaFirefox -SaveTo .
+    PS > .\UpdateLibrewolf.ps1 -InstallLocation C:\ProgramData\Librewolf -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\MozillaFirefox | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\Librewolf | Select-Object Name -First 5
     Name
     ----
+    $PLUGINSDIR
     browser
     defaults
+    distribution
     fonts
-    gmp-clearkey
-    uninstall
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    102.0.1.exe
-    UpdateMozillaFirefox.ps1
+    v104.0-1.exe
+    UpdateLibrewolf.ps1
 
-    Install Mozilla Firefox browser to 'C:\ProgramData\MozillaFirefox' and save its setup installer to the current directory.
+    Install Librewolf browser to 'C:\ProgramData\Librewolf' and save its setup installer to the current directory.
 #>

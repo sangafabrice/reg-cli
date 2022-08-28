@@ -1,6 +1,6 @@
 {
-    "version": "2.0.2",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Force to load RegCli version 6.0.2"
+        "Initialize Librewolf updater script."
     ]
 }
