@@ -12,20 +12,20 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\firefox.exe"
+    Write-Verbose 'Retrieve install or update information...'
+    $UpdateInfo =
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                OSArch = Get-ExecutableType $NameLocation
+            } -From TorProject | Select-NonEmptyObject
+        }
+        Catch { }
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
         @{
-            UpdateInfo = $(
-                Write-Verbose 'Retrieve install or update information...'
-                Try {
-                    Get-DownloadInfo -PropertyList @{
-                        OSArch = Get-ExecutableType $NameLocation
-                    } -From TorProject | Select-NonEmptyObject
-                }
-                Catch { }
-            )
+            UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Tor'
@@ -33,7 +33,7 @@ Param (
             BatchRedirectName = 'tor'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
-            UseSignature = $True
+            Checksum = $UpdateInfo.Checksum
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }

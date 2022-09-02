@@ -1,6 +1,6 @@
 {
-    "version": "0.0.3",
+    "version": "0.1.0",
     "releaseNotes": [
-        "Force to load RegCli 6.0.3"
+        "Replace lastmodified by checksum in torproject script."
     ]
 }
