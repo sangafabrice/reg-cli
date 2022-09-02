@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Yandex'
     Description = 'The script installs or updates Yandex browser on Windows.'
     Guid = '2b8582bb-90a0-4cb1-97aa-c92be8099dba'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/88e8345bfd93c03273280405759b79dae697a7f0/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/b222dd31fc9b32e58cca4b38596aa0f59f7d175c/icon.png'
     Tags = @('yandex','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
