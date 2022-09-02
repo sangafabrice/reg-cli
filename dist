@@ -1,8 +1,8 @@
 $DevDependencies = @{
-    ProgramName = 'Vivaldi'
-    Description = 'The script installs or updates Vivaldi browser on Windows.'
-    Guid = 'f15674db-9841-4822-b368-50354c387101'
+    ProgramName = 'Yandex'
+    Description = 'The script installs or updates Yandex browser on Windows.'
+    Guid = '2b8582bb-90a0-4cb1-97aa-c92be8099dba'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/88e8345bfd93c03273280405759b79dae697a7f0/icon.png'
-    Tags = @('vivaldi','chromium','update','browser')
+    Tags = @('yandex','chromium','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }

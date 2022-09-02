@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Vivaldi",
+    $InstallLocation = "${Env:ProgramData}\Yandex",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,7 +11,7 @@ Param (
 )
 
 & {
-    $BaseNameLocation = "$InstallLocation\vivaldi"
+    $BaseNameLocation = "$InstallLocation\browser"
     $NameLocation = "$BaseNameLocation.exe"
     Try {
         $UpdateModule =
@@ -23,19 +23,20 @@ Param (
                 Try {
                     Get-DownloadInfo -PropertyList @{
                         OSArch = Get-ExecutableType $NameLocation
-                    } -From Vivaldi | Select-NonEmptyObject
+                    } -From Yandex | Select-NonEmptyObject
                 }
                 Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Vivaldi'
-            InstallerDescription = 'Vivaldi Installer'
-            BatchRedirectName = 'vivaldi'
+            SoftwareName = 'Yandex'
+            InstallerDescription = 'Yandex'
+            BatchRedirectName = 'yandex'
             VisualElementManifest = @{
                 BaseNameLocation = $BaseNameLocation
-                HexColor = '#EF3939'
+                HexColor = '#5f6368'
             }
+            Extension = '.msi'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
