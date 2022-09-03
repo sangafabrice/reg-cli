@@ -8,7 +8,8 @@ Class RegCli {
     # and only declares static functions
     # It is a singleton
 
-    Static [string] $AutorunDirectory = "$(
+    #Region Hidden Members
+    Static Hidden [string] $AutorunDirectory = "$(
         # Get the autorun directory
         # where the autorun batch script is located
 
@@ -18,17 +19,173 @@ Class RegCli {
         } | ForEach-Object { Get-Item @_ })?.Directory
     )"
 
-    Static [MachineType] $OSArchitecture = $(
+    Static Hidden [MachineType] $OSArchitecture = $(
         # Get the OS architecture string
 
         If ([Environment]::Is64BitOperatingSystem) { [MachineType]::x64 } Else { [MachineType]::x86 }
     )
 
+    Static Hidden [void] Get7zip() {
+        # Download and install 7zip if it is not yet installed
+
+        $PSScriptRoot |
+        ForEach-Object {
+            Set-Variable -Name '7Z_EXE' -Value '7z.exe' -Option Constant
+            Set-Variable -Name '7Z_DLL' -Value '7z.dll' -Option Constant
+            If ((Test-Path "$_\$7Z_EXE","$_\$7Z_DLL").Where({ $_ }).Count -lt 2) {
+                Set-Variable -Name 'CHECKSUM' -Value @{
+                    '7z' = '8C8FBCF80F0484B48A07BD20E512B103969992DBF81B6588832B08205E3A1B43'
+                    '7z_x64' = 'B055FEE85472921575071464A97A79540E489C1C3A14B9BDFBDBAB60E17F36E4'
+                    '7zr' = '5E47D0900FB0AB13059E0642C1FFF974C8340C0029DECC3CE7470F9AA78869AB'
+                } -Option Constant
+                Set-Variable -Name 'CURRENT_DIRECTORY' -Value $PWD -Option Constant
+                Set-Location $_
+                Try {
+                    Set-Variable -Name '7Z_URL' -Value (
+                        'https://www.7-zip.org/a/7z2201{0}.exe' -f ([Environment]::Is64BitOperatingSystem ? '-x64':'')
+                    ) -Option Constant
+                    Set-Variable -Name '7ZR_URL' -Value 'https://www.7-zip.org/a/7zr.exe' -Option Constant
+                    Start-BitsTransfer $7ZR_URL,$7Z_URL
+                    Set-Variable -Name '7Z_SETUP' -Value ([uri] $7Z_URL).Segments?[-1] -Option Constant
+                    Set-Variable -Name '7ZR_SETUP' -Value ([uri] $7ZR_URL).Segments?[-1] -Option Constant
+                    Set-Variable -Name 'REMOVE_SETUP' -Value { 
+                        Remove-Item $7Z_SETUP,$7ZR_SETUP -Force -ErrorAction SilentlyContinue 
+                    } -Option Constant
+                    Set-Variable -Name 'COMPARE_SHA' -Value {
+                        Param($File, $Hash)
+                        If ((Get-FileHash $File -Algorithm SHA256).Hash -ine $Hash) { 
+                            & $REMOVE_SETUP
+                            Throw
+                        }
+                    } -Option Constant
+                    Switch ($7Z_SETUP) {
+                        { $_ -like '*-x64.exe' } { & $COMPARE_SHA $_ $CHECKSUM.'7z_x64' }
+                        Default { & $COMPARE_SHA $_ $CHECKSUM.'7z' }
+                    }
+                    & $COMPARE_SHA $7ZR_SETUP $CHECKSUM.'7zr'
+                    . ".\$7ZR_SETUP" x -aoa -o"$_" $7Z_SETUP '7z.exe' '7z.dll' | Out-Null
+                    & $REMOVE_SETUP
+                }
+                Finally { Set-Location $CURRENT_DIRECTORY }
+            }
+        }
+    }
+
+    Static Hidden [psobject] GetMsiDBRecord(
+        [string] $InstallerPath,
+        [string] $PropertyName
+    ) {
+        # Get the value of a record defined by a property name in an MSI installer.
+
+        Try {
+            $WinInstaller = New-Object -ComObject WindowsInstaller.Installer
+            $DB = $WinInstaller.GetType().InvokeMember("OpenDatabase", "InvokeMethod",
+                $Null, $WinInstaller, @((Resolve-Path $InstallerPath).Path, 0))
+            $Query = "SELECT Value FROM Property WHERE Property = '$PropertyName'"
+            $View = $DB.GetType().InvokeMember("OpenView", "InvokeMethod", $Null, $DB, ($Query))
+            $View.GetType().InvokeMember("Execute", "InvokeMethod", $Null, $View, $Null)
+            $Record = $View.GetType().InvokeMember("Fetch", "InvokeMethod", $Null, $View, $Null)
+            $PropertyValue = $record.GetType().InvokeMember("StringData", "GetProperty", $Null, $record, 1)
+            $View.GetType().InvokeMember("Close", "InvokeMethod", $Null, $View, $Null)
+            Return $PropertyValue
+        } Catch { Return $Null }
+    }
+
+    Static Hidden [scriptblock] GetSavedInstallerFilter() {
+        # Get the scriptblock that runs the steppable pipeline that filters saved installers
+
+        Return {
+            [CmdletBinding()]
+            Param(
+                [Parameter(Mandatory, ValueFromPipeline)]
+                [ValidateNotNullOrEmpty()]
+                [pscustomobject] $Item,
+                [ValidateNotNullOrEmpty()]
+                [array] $AllowedExtensions = @('.exe','.msi'),
+                [string] $Description
+            )
+
+            Process {
+                Switch (
+                    {
+                        Where-Object {
+                            $Item -isnot [System.IO.DirectoryInfo] -and
+                            $Item.LinkType -ine 'SymbolicLink' -and
+                            $Item.Extension -iin $AllowedExtensions -and
+                            (
+                                $(
+                                    Switch (@($Item.Extension,$Item)) {
+                                        '.msi'  {
+                                            [void] $Switch.MoveNext()
+                                            [RegCli]::GetMsiDBRecord($Switch.Current.FullName, 'ProductName')
+                                        }
+                                        Default {
+                                            [void] $Switch.MoveNext()
+                                            $Switch.Current.VersionInfo.FileDescription
+                                        }
+                                    }
+                                ) ?? (Get-AuthenticodeSignature $Item.FullName).SignerCertificate.Subject
+                            ) -like "$Description*"
+                        }
+                    }.GetSteppablePipeline()
+                ) {
+                    Default {
+                        $_.Begin($true)
+                        $_.Process($Item)
+                        $_.End()
+                        $_.Dispose()
+                    } 
+                }
+            }
+        }
+    }
+
+    Static Hidden [scriptblock] GetSavedInstallerScript() {
+        # Get the scriptblock that runs the steppable pipeline that filters saved installers
+
+        Return {
+            [CmdletBinding()]
+            Param(
+                [Parameter(Mandatory, ValueFromPipeline)]
+                [ValidateNotNullOrEmpty()]
+                [pscustomobject] $Item,
+                [ValidateNotNullOrEmpty()]
+                [string] $Type = 'Version'
+            )
+
+            Begin { If ($Type -ieq 'SigningTime') { Import-Module "$PSScriptRoot\SigningTimeGetter.psm1" } }
+            Process {
+                Switch (@($Type,$Item)) {
+                    'Version'  {
+                        [void] $Switch.MoveNext()
+                        Switch ($Switch.Current) {
+                            { $_.Extension -ieq '.msi' }  { [version] [RegCli]::GetMsiDBRecord($_.FullName, 'ProductVersion') }
+                            Default { $_.VersionInfo.FileVersionRaw }
+                        }
+                    }
+                    'DateTime' { 
+                        [void] $Switch.MoveNext()
+                        $Switch.Current.LastWriteTime
+                    }
+                    'SigningTime' {
+                        [void] $Switch.MoveNext()
+                        Get-AuthenticodeSigningTime $Switch.Current.FullName
+                    }
+                }
+            }
+            End { Remove-Module SigningTimeGetter -ErrorAction SilentlyContinue }
+        }
+    }
+    #EndRegion
+
     Static [void] ExpandInstaller([string] $Path) {
         [RegCli]::ExpandInstaller($Path, $Null)
     }
 
-    Static [void] ExpandInstaller([string] $InstallerPath, [string] $DestinationPath) {
+    Static [void] ExpandInstaller(
+        [string] $InstallerPath,
+        [string] $DestinationPath
+    ) {
         # Extract files from a specified self-extracting executable
         # installer $InstallerPath to $DestinationPath directory.
         # Precondition : 
@@ -40,12 +197,16 @@ Class RegCli {
         ForEach-Object {
             If ([string]::IsNullOrEmpty($DestinationPath)) { $DestinationPath = "$($_.Directory)\$($_.BaseName)" }
             $InstallerPath = $_.FullName
-            . "$PSScriptRoot\Download7zip.ps1"
+            [RegCli]::Get7zip()
             . "$PSScriptRoot\7z.exe" x -aoa -o"$DestinationPath" "$InstallerPath" 2> $Null
         }
     }
 
-    Static [void] ExpandTypeInstaller([string] $InstallerPath, [string] $ExecutablePath, [string] $ArchivePattern) {
+    Static [void] ExpandTypeInstaller(
+        [string] $InstallerPath,
+        [string] $ExecutablePath,
+        [string] $ArchivePattern
+    ) {
         # Extracts files from a specified Type installer $InstallerPath
         # to the directory in which the application $ExecutablePath is located.
         # Precondition : 
@@ -97,7 +258,10 @@ Class RegCli {
         }
     }
 
-    Static [void] SetChromiumVisualElementsManifest([string] $VisualElementsManifest, [string] $BackgroundColor) {
+    Static [void] SetChromiumVisualElementsManifest(
+        [string] $VisualElementsManifest,
+        [string] $BackgroundColor
+    ) {
         # Create the VisualElementManifest.xml in chromium app directory
 
         $InstallLocation = $VisualElementsManifest -replace ($VisualElementsManifest -split '\\')[-1] -replace '\\$'
@@ -167,7 +331,10 @@ Class RegCli {
         Return [RegCli]::DownloadInstaller($InstallerUrl, $InstallerUrl.Segments[-1])
     }
 
-    Static [string] DownloadInstaller([uri] $InstallerUrl, [string] $InstallerName) {
+    Static [string] DownloadInstaller(
+        [uri] $InstallerUrl,
+        [string] $InstallerName
+    ) {
         # Download resource and save it to %TEMP% directory
 
         Try {
@@ -209,7 +376,10 @@ Class RegCli {
         Return [RegCli]::OSArchitecture
     }
 
-    Static [void] SetBatchRedirect([string] $BatchName, [string] $ExecutablePath) {
+    Static [void] SetBatchRedirect(
+        [string] $BatchName,
+        [string] $ExecutablePath
+    ) {
         # Create a batch redirect script in Autorun directory
 
         Try {
@@ -235,33 +405,34 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
         }
         Catch { }
     }
-    
-    Static [psobject] GetSavedInstallerInfo([string] $Type, [string] $InstallerDirectory, [string] $InstallerDescription, [switch] $UseSignature) {
-        Return $(
-            Get-ChildItem $InstallerDirectory |
-            Where-Object { $_ -isnot [System.IO.DirectoryInfo] -and $_.LinkType -ine 'SymbolicLink' } |
-            Where-Object {
-                If ($UseSignature) { Return (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject.StartsWith($InstallerDescription) }
-                $_.VersionInfo.FileDescription -ieq $InstallerDescription
-            } | ForEach-Object { 
-                $InstallerObj = $_
-                Switch ($Type) {
-                    'Version'  { $InstallerObj.VersionInfo.FileVersionRaw }
-                    'DateTime' { $InstallerObj.LastWriteTime }
-                    'SigningTime' {
-                        $AuthenticodeModule = Import-Module "$PSScriptRoot\GetSigningTime.psm1" -PassThru
-                        Get-AuthenticodeSigningTime $InstallerObj.FullName
-                        Remove-Module $AuthenticodeModule -ErrorAction SilentlyContinue
-                    }
-                }
-            } | Sort-Object -Descending |
-            Select-Object -First 1
-        )
+
+    Static [psobject] GetSavedInstallerInfo(
+        [string] $Type,
+        [string] $InstallerDirectory,
+        [string] $InstallerDescription
+    ) {
+        # Get the most recent date or signing time, or the latest version
+        # of a pool of saved installers of particular software.
+
+        ${Function:Select-SavedInstaller} = [RegCli]::GetSavedInstallerFilter()
+        ${Function:Get-SavedInstallerInfo} = [RegCli]::GetSavedInstallerScript()
+        Return Get-ChildItem $InstallerDirectory |
+        Select-SavedInstaller -Description $InstallerDescription |
+        Get-SavedInstallerInfo -Type $Type |
+        Sort-Object -Descending |
+        Select-Object -First 1
     }
 
-    Static [System.Management.Automation.PSModuleInfo] NewUpdate([string] $ExecutablePath, [string] $InstallerDirectory,
-        [psobject] $VersionString, [string] $InstallerDescription, [switch] $UseSignature, [switch] $UseSigningTime, 
-        [string] $InstallerChecksum, [string] $InstallerExtension = '.exe') {
+    Static [System.Management.Automation.PSModuleInfo] NewUpdate(
+        [string] $ExecutablePath,
+        [string] $InstallerDirectory,
+        [psobject] $VersionString,
+        [string] $InstallerDescription,
+        [switch] $UseSigningTime,
+        [string] $InstallerChecksum,
+        [string] $SoftwareName,
+        [string] $InstallerExtension = '.exe'
+    ) {
         # Load a dynamic module of helper functions for non-software specific tasks
 
         Return New-Module {
@@ -270,11 +441,14 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 [string] $SaveTo,
                 [psobject] $VersionString,
                 [string] $InstallerDescription,
-                [switch] $UseSignature,
                 [switch] $UseSigningTime,
                 [string] $InstallerChecksum,
+                [string] $SoftwareName,
                 [string] $InstallerExtension
             )
+            
+            ${Function:Select-SavedInstaller} = [RegCli]::GetSavedInstallerFilter()
+            ${Function:Get-SavedInstallerInfo} = [RegCli]::GetSavedInstallerScript()
 
             Function Get-ExecutableVersion {
                 [CmdletBinding()]
@@ -286,49 +460,89 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
             Set-Variable -Name 'VERSION_PREINSTALL' -Value (Get-ExecutableVersion) -Option Constant
 
-            Switch ($VersionString) { Default {
-                $Version = $(
-                    If ($_ -is [string]) {
+            $Version =
+                Switch ($VersionString) {
+                    { $_ -is [string] } { 
                         Try {
-                            [version] ((& {
-                                Param ($VerStr)
-                                Switch ($VerStr -replace '\.\.','.') {
-                                    { $_ -eq $VerStr } { Return $_ }
-                                    Default { & $MyInvocation.MyCommand.ScriptBlock $_ }
-                                }
-                            } ($_ -replace '[^0-9\.]','.')) -replace '^\.' -replace '\.$')
-                        } Catch { } 
-                    } Else { $_ }
-                )
-                $InstallerPath = (Get-ChildItem $SaveTo).
-                    Where({ $_ -isnot [System.IO.DirectoryInfo] -and $_.LinkType -ine 'SymbolicLink' }).
-                    Where({ 
-                        If ($UseSignature) { 
-                            Return (Get-AuthenticodeSignature $_.FullName).
-                            SignerCertificate.Subject.StartsWith($InstallerDescription)
-                        }
-                        $_.VersionInfo.FileDescription -ieq $InstallerDescription 
-                    }).
-                    Where({
-                        If (![string]::IsNullOrEmpty($InstallerChecksum)) {
-                            Return $InstallerChecksum -ieq (Get-FileHash $_.FullName $(
-                            Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
-                        }
-                        $(
-                            If ($Version -is [version]) { $_.VersionInfo.FileVersionRaw }
-                            ElseIf ($Version -is [datetime]) {
-                                If ($UseSigningTime) {
-                                    $AuthenticodeModule = Import-Module "$PSScriptRoot\GetSigningTime.psm1" -PassThru
-                                    Get-AuthenticodeSigningTime $_.FullName
-                                    Remove-Module $AuthenticodeModule -ErrorAction SilentlyContinue
-                                }
-                                Else { $_.LastWriteTime }
-                            }
-                        ) -eq $Version
-                    }, 'First').FullName ??
-                    "$SaveTo\$($_ -is [datetime] ? ('{0}.{1}.{2}' -f $_.Year,$_.DayOfYear,$_.TimeOfDay.TotalMinutes.ToString('#.##')):$_)$InstallerExtension"
-            } }
+                            [version] (
+                                (
+                                    & {
+                                        Param ($VerStr)
+                                        Switch ($VerStr -replace '\.\.','.') {
+                                            { $_ -eq $VerStr } { Return $_ }
+                                            Default { & $MyInvocation.MyCommand.ScriptBlock $_ }
+                                        }
+                                    } ($_ -replace '[^0-9\.]','.')
+                                ) -replace '^\.' -replace '\.$'
+                            )
+                        } Catch { }
+                    }
+                    Default { $_ }
+                }
             
+            $GetVersionInfo = & {
+                Switch ($InstallerChecksum.Length) {
+                    64 {
+                        Return {
+                            Param($Item)
+                            $InstallerChecksum -ieq (Get-FileHash $Item.FullName 'SHA256').Hash 
+                        }
+                    }
+                    128 {
+                        Return {
+                            Param($Item)
+                            $InstallerChecksum -ieq (Get-FileHash $Item.FullName 'SHA512').Hash
+                        }
+                    }
+                }
+                Switch (${Version}?.GetType()) {
+                    'version'  {
+                        Switch ($InstallerExtension) {
+                            '.msi'  {
+                                Return {
+                                    Param($Item)
+                                    ([version] [RegCli]::GetMsiDBRecord($Item.FullName, 'ProductVersion')) -eq $Version
+                                }
+                            }
+                            Default {
+                                Return {
+                                    Param($Item)
+                                    $Item.VersionInfo.FileVersionRaw -eq $Version
+                                }
+                            }
+                        }
+                    }
+                    'datetime' {
+                        If ($UseSigningTime) {
+                            Return {
+                                Param($Item)
+                                (Get-AuthenticodeSigningTime $Item.FullName) -eq $Version
+                            }
+                        }
+                        Else {
+                            Return {
+                                Param($Item)
+                                $Item.LastWriteTime -eq $Version
+                            }
+                        }
+                    }
+                }
+            }
+
+            $InstallerPath = $(
+                If ($UseSigningTime) { Import-Module "$PSScriptRoot\SigningTimeGetter.psm1" }
+                Get-ChildItem $SaveTo |
+                Select-SavedInstaller -AllowedExtensions @($InstallerExtension) -Description $InstallerDescription |
+                Where-Object { & $GetVersionInfo $_ } |
+                Select-Object -First 1
+                Remove-Module SigningTimeGetter -ErrorAction SilentlyContinue
+            ).FullName ??
+            "$SaveTo\$(${SoftwareName}?.ToLower().Trim() -replace ' ','_')$(If(!!$SoftwareName){'_'})$(
+                $VersionString | ForEach-Object {
+                    $_ -is [datetime] ? ('{0}.{1}.{2}' -f $_.Year,$_.DayOfYear,$_.TimeOfDay.TotalMinutes.ToString('#.##')):$_
+                }
+            )$InstallerExtension"
+
             <#
             .SYNOPSIS
                 Gets the installer path.
@@ -360,20 +574,10 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                         $ParamDictionary
                     }
                 }
+
                 Process {
                     If ($UseInstaller) {
-                        $Intaller = Get-Item -LiteralPath (Get-InstallerPath) -ErrorAction SilentlyContinue
-                        Return $(
-                            Switch ($PSBoundParameters.Type) {
-                                'Version'  { $Intaller.VersionInfo.FileVersionRaw }
-                                'DateTime' { $Intaller.LastWriteTime }
-                                'SigningTime' {
-                                    $AuthenticodeModule = Import-Module "$PSScriptRoot\GetSigningTime.psm1" -PassThru
-                                    Get-AuthenticodeSigningTime $Intaller.FullName
-                                    Remove-Module $AuthenticodeModule -ErrorAction SilentlyContinue
-                                }
-                            }
-                        )
+                        Return Get-SavedInstallerInfo -Type $Type -Item (Get-Item -LiteralPath (Get-InstallerPath) -ErrorAction SilentlyContinue)
                     }
                     Return $Script:Version
                 }
@@ -384,7 +588,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
             .SYNOPSIS
                 Saves the installer to the installation path.
             #>
-            Function Start-InstallerDownload {
+            Filter Start-InstallerDownload {
                 [CmdletBinding()]
                 [OutputType([System.Void])]
                 Param (
@@ -448,19 +652,18 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
             Function Remove-InstallerOutdated {
                 [CmdletBinding()]
                 [OutputType([System.Void])]
-                Param ([switch] $UseSignature)
+                Param ()
 
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
                     $Installer = Get-Item (Get-InstallerPath) -ErrorAction Stop
-                    If ($UseSignature) { $Thumbprint = (Get-AuthenticodeSignature $Installer.FullName).SignerCertificate.Subject }
+                    $InstallerDescription = $Installer | ForEach-Object {
+                        $_.VersionInfo.FileDescription ??
+                        (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject
+                    }
                     Write-Verbose 'Delete outdated installers...'
-                    (Get-ChildItem $Installer.Directory).
-                    Where({ $_ -isnot [System.IO.DirectoryInfo] -and $_.LinkType -ine 'SymbolicLink' }).
-                    Where({
-                        If ($UseSignature) { Return ((Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject) -ieq $Thumbprint }
-                        $_.VersionInfo.FileDescription -ieq $Installer.VersionInfo.FileDescription
-                    }) |
+                    Get-ChildItem $Installer.Directory |
+                    Select-SavedInstaller -Description $InstallerDescription |
                     Remove-Item -Exclude $Installer.Name
                 }
                 Catch { }
@@ -483,28 +686,19 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                         $ParamDictionary
                     }
                 }
+
                 Process {
-                    If ($PSBoundParameters.CompareInstalls) { Return ((Get-ExecutableVersion) -lt $VERSION_PREINSTALL) }
-                    (Get-InstallerVersion -UseInstaller:$UseInstaller) -gt $(
-                        Try {
-                            $(
-                                @{
-                                    LiteralPath = $InstallPath
-                                    ErrorAction = 'SilentlyContinue'
-                                } | ForEach-Object { Get-Item @_ }
-                            ).VersionInfo.FileVersionRaw
-                        } 
-                        Catch { }
-                    )
+                    If ($PSBoundParameters.CompareInstalls) { Return (Get-ExecutableVersion) -lt $VERSION_PREINSTALL }
+                    (Get-InstallerVersion -UseInstaller:$UseInstaller) -gt (Get-ExecutableVersion)
                 }
                 End { }
-                
             }
 
             Function Set-ConsoleSymlink {
                 [CmdletBinding()]
                 [OutputType([System.Void])]
                 Param ([ref] $InstallStatus)
+
                 $InstallDirectory = $InstallPath -replace '(\\|/)[^\\/]+$'
                 If ([string]::IsNullOrEmpty($InstallDirectory)) { $InstallDirectory = $PWD }
                 If ("$((Get-Item $InstallDirectory -ErrorAction SilentlyContinue).FullName)" -ieq (Get-Item $SaveTo).FullName) {
@@ -531,10 +725,13 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                     $InstallStatus.Value = (Get-Item (Get-Item $InstallPath).Target).FullName -ieq (Get-Item (Get-InstallerPath)).FullName
                 }
             }
-        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSignature,$UseSigningTime,$InstallerChecksum,$InstallerExtension
+        } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSigningTime,$InstallerChecksum,$SoftwareName,$InstallerExtension
     }
 
-    Static [System.Management.Automation.PSModuleInfo] GetCommonScript([string] $Name, [string] $CommonPath) {
+    Static [System.Management.Automation.PSModuleInfo] GetCommonScript(
+        [string] $Name,
+        [string] $CommonPath
+    ) {
         # Load the Invoke-CommonScript function
 
         New-Item -Path $CommonPath -ItemType Directory -ErrorAction SilentlyContinue
@@ -546,7 +743,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
             $CommonScript = "$CommonPath\$Name"
             $RequestArguments = @{
-                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name.ps1"
+                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name@1.0.ps1"
                 Method = 'HEAD'
                 Verbose = $False
             }

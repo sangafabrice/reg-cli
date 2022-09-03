@@ -193,15 +193,16 @@ Function New-RegCliUpdate {
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [string] $Description,
-        [switch] $UseSignature,
         [switch] $UseSigningTime,
         [AllowNull()]
         [string] $Checksum,
+        [AllowNull()]
+        [string] $SoftwareName,
         [ValidateNotNullOrEmpty()]
         [string] $Extension = '.exe'
     )
     If (!$PSBoundParameters.ContainsKey('Checksum')) { $Checksum = $Null }
-    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseSignature, $UseSigningTime, $Checksum, $Extension)
+    [RegCli]::NewUpdate($Path, $SaveTo, $Version, $Description, $UseSigningTime, $Checksum, $SoftwareName, $Extension)
 }
 
 Filter Test-InstallLocation {
@@ -241,10 +242,9 @@ Filter Get-SavedInstallerVersion {
         [string] $Path,
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string] $Description,
-        [switch] $UseSignature
+        [string] $Description
     )
-    [RegCli]::GetSavedInstallerInfo('Version', $Path, $Description, $UseSignature)
+    [RegCli]::GetSavedInstallerInfo('Version', $Path, $Description)
 }
 
 Filter Get-SavedInstallerLastModified {
@@ -257,10 +257,9 @@ Filter Get-SavedInstallerLastModified {
         [string] $Path,
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string] $Description,
-        [switch] $UseSignature
+        [string] $Description
     )
-    [RegCli]::GetSavedInstallerInfo('DateTime', $Path, $Description, $UseSignature)
+    [RegCli]::GetSavedInstallerInfo('DateTime', $Path, $Description)
 }
 
 Filter Get-SavedInstallerSigningTime {
@@ -273,10 +272,9 @@ Filter Get-SavedInstallerSigningTime {
         [string] $Path,
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string] $Description,
-        [switch] $UseSignature
+        [string] $Description
     )
-    [RegCli]::GetSavedInstallerInfo('SigningTime', $Path, $Description, $UseSignature)
+    [RegCli]::GetSavedInstallerInfo('SigningTime', $Path, $Description)
 }
 
 Function Select-NonEmptyObject {
