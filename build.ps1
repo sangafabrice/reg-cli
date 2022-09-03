@@ -41,8 +41,8 @@ Filter New-RCManifest {
                 ForEach-Object { ($_ -split ' ')[2] }
             )
             FileList = @(
-                "en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1",'class\Download7zip.ps1',
-                "class\$ModuleName.psm1",'class\ValidationUtility.psm1','class\GetSigningTime.psm1'
+                "en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1",
+                "class\$ModuleName.psm1",'class\ValidationUtility.psm1','class\SigningTimeGetter.psm1'
             )
             Tags = @('Update','Chromium','RegCli')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
