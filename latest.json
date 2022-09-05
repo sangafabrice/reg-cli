@@ -1,12 +1,7 @@
 {
-    "version": "6.1.0",
+    "version": "6.1.1",
     "releaseNotes": [
-        "Include the script to download 7zip in RegCli as a hidden method.",
-        "Change the Signing Time module name.",
-        "Change search zone of Installer Description automatically.",
-        "Remove UseSignature.",
-        "Use msi table to retrieve version and product name.",
-        "Remove code repetition. The code to filter file system items.",
-        "Change the version of common files."
+        "Add removal of MSI saved installer.",
+        "Convert GetMSIDBRecord method into a VBScript script to allow use of Nothing for destroying ComObject since $Null in Powershell or Undefined in JScript does not work."
     ]
 }
