@@ -66,6 +66,7 @@ Class RegCli {
                     . ".\$7ZR_SETUP" x -aoa -o"$_" $7Z_SETUP '7z.exe' '7z.dll' | Out-Null
                     & $REMOVE_SETUP
                 }
+                Catch { }
                 Finally { Set-Location $CURRENT_DIRECTORY }
             }
         }
@@ -78,17 +79,34 @@ Class RegCli {
         # Get the value of a record defined by a property name in an MSI installer.
 
         Try {
-            $WinInstaller = New-Object -ComObject WindowsInstaller.Installer
-            $DB = $WinInstaller.GetType().InvokeMember("OpenDatabase", "InvokeMethod",
-                $Null, $WinInstaller, @((Resolve-Path $InstallerPath).Path, 0))
-            $Query = "SELECT Value FROM Property WHERE Property = '$PropertyName'"
-            $View = $DB.GetType().InvokeMember("OpenView", "InvokeMethod", $Null, $DB, ($Query))
-            $View.GetType().InvokeMember("Execute", "InvokeMethod", $Null, $View, $Null)
-            $Record = $View.GetType().InvokeMember("Fetch", "InvokeMethod", $Null, $View, $Null)
-            $PropertyValue = $record.GetType().InvokeMember("StringData", "GetProperty", $Null, $record, 1)
-            $View.GetType().InvokeMember("Close", "InvokeMethod", $Null, $View, $Null)
-            Return $PropertyValue
-        } Catch { Return $Null }
+            Return $(
+                CScript.exe //NoLogo "$PSScriptRoot\GetMsiDBRecord.vbs" `
+                /Path:"$((Resolve-Path $InstallerPath).Path)" `
+                /Property:"$PropertyName"
+            )
+        }
+        Catch { Return $Null }
+    }
+
+    Static Hidden [string] GetInstallerDescription([psobject] $InstallerItem) {
+        # Get installer description
+
+        Return (
+            $InstallerItem | ForEach-Object {
+                $(
+                    Switch (@($_.Extension,$_)) {
+                        '.msi'  {
+                            [void] $Switch.MoveNext()
+                            [RegCli]::GetMsiDBRecord($Switch.Current.FullName, 'ProductName')
+                        }
+                        Default {
+                            [void] $Switch.MoveNext()
+                            $Switch.Current.VersionInfo.FileDescription
+                        }
+                    }
+                ) ?? (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject
+            }
+        )
     }
 
     Static Hidden [scriptblock] GetSavedInstallerFilter() {
@@ -109,23 +127,12 @@ Class RegCli {
                 Switch (
                     {
                         Where-Object {
-                            $Item -isnot [System.IO.DirectoryInfo] -and
-                            $Item.LinkType -ine 'SymbolicLink' -and
-                            $Item.Extension -iin $AllowedExtensions -and
-                            (
-                                $(
-                                    Switch (@($Item.Extension,$Item)) {
-                                        '.msi'  {
-                                            [void] $Switch.MoveNext()
-                                            [RegCli]::GetMsiDBRecord($Switch.Current.FullName, 'ProductName')
-                                        }
-                                        Default {
-                                            [void] $Switch.MoveNext()
-                                            $Switch.Current.VersionInfo.FileDescription
-                                        }
-                                    }
-                                ) ?? (Get-AuthenticodeSignature $Item.FullName).SignerCertificate.Subject
-                            ) -like "$Description*"
+                            $Item | ForEach-Object {
+                                $_ -isnot [System.IO.DirectoryInfo] -and
+                                $_.LinkType -ine 'SymbolicLink' -and
+                                $_.Extension -iin $AllowedExtensions -and
+                                [RegCli]::GetInstallerDescription($_) -like "$Description*"
+                            }
                         }
                     }.GetSteppablePipeline()
                 ) {
@@ -657,10 +664,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
                     $Installer = Get-Item (Get-InstallerPath) -ErrorAction Stop
-                    $InstallerDescription = $Installer | ForEach-Object {
-                        $_.VersionInfo.FileDescription ??
-                        (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject
-                    }
+                    $InstallerDescription = [RegCli]::GetInstallerDescription($Installer)
                     Write-Verbose 'Delete outdated installers...'
                     Get-ChildItem $Installer.Directory |
                     Select-SavedInstaller -Description $InstallerDescription |

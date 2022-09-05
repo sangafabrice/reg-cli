@@ -42,7 +42,8 @@ Filter New-RCManifest {
             )
             FileList = @(
                 "en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1",
-                "class\$ModuleName.psm1",'class\ValidationUtility.psm1','class\SigningTimeGetter.psm1'
+                "class\$ModuleName.psm1",'class\ValidationUtility.psm1',
+                'class\SigningTimeGetter.psm1','class\GetMsiDBRecord.vbs'
             )
             Tags = @('Update','Chromium','RegCli')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
