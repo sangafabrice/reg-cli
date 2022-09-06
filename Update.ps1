@@ -76,7 +76,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    103.0.9.exe
+    firefox_developer_edition_105.0b7.exe
     UpdateFirefoxDevEdition.ps1
 
     Install Mozilla Firefox Developer Edition browser to 'C:\ProgramData\FirefoxDevEdition' and save its setup installer to the current directory.
