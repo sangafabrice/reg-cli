@@ -76,7 +76,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    102.0.1.exe
+    firefox_104.0.2.exe
     UpdateMozillaFirefox.ps1
 
     Install Mozilla Firefox browser to 'C:\ProgramData\MozillaFirefox' and save its setup installer to the current directory.
