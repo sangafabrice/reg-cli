@@ -76,7 +76,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    102.1.2.exe
+    thunderbird_102.2.1.exe
     UpdateThunderbird.ps1
 
     Install Mozilla Thunderbird to 'C:\ProgramData\Thunderbird' and save its setup installer to the current directory.

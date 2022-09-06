@@ -1,6 +1,6 @@
 {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Initialize Thunderbird updater script."
+        "Force to load RegCli version 6.1.1"
     ]
 }
