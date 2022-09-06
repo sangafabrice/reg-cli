@@ -69,7 +69,7 @@ Param (
     PS > Get-ChildItem C:\ProgramData\Brave | Select-Object Name
     Name
     ----
-    103.1.40.109
+    105.1.43.89
     brave.exe
     chrome_proxy.exe
     chrome.VisualElementsManifest.xml
@@ -77,7 +77,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    103.1.40.109.exe
+    brave_105.1.43.89.exe
     UpdateBrave.ps1
 
     Install Brave browser to 'C:\ProgramData\Brave' and save its setup installer to the current directory.
