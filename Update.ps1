@@ -68,12 +68,12 @@ Param (
     localization
     MEIPreload
     resources
-    89.0.4447.64.manifest
+    90.0.4480.86.manifest
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    89.0.4447.64.exe
+    opera_gx_90.0.4480.86.exe
     UpdateOperaGX.ps1
 
     Install Opera GX browser to 'C:\ProgramData\OperaGX' and save its setup installer to the current directory.
