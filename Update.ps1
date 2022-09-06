@@ -82,7 +82,7 @@ Param (
     PS > Get-ChildItem C:\ProgramData\GoogleChrome | Select-Object Name
     Name
     ----
-    103.0.5060.66
+    105.0.5195.102
     chrome_proxy.exe
     chrome.exe
     chrome.VisualElementsManifest.xml
@@ -90,7 +90,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    103.0.5060.66.exe
+    google_chrome_105.0.5195.102.exe
     UpdateGoogleChrome.ps1
 
     Install Google Chrome browser to 'C:\ProgramData\GoogleChrome' and save its setup installer to the current directory.

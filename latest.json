@@ -1,6 +1,6 @@
 {
-    "version": "3.0.3",
+    "version": "3.0.4",
     "releaseNotes": [
-        "Force to load RegCli version 6.0.2"
+        "Force to load RegCli version 6.1.1"
     ]
 }
