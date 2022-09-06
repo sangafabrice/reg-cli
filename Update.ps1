@@ -46,39 +46,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Vivaldi browser software.
+    Updates Yandex browser software.
 .DESCRIPTION
-    The script installs or updates Vivaldi browser on Windows.
+    The script installs or updates Yandex browser on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Vivaldi.
+    It defaults to %ProgramData%\Yandex.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Vivaldi -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Yandex -ErrorAction SilentlyContinue
 
-    PS > .\UpdateVivaldi.ps1 -InstallLocation C:\ProgramData\Vivaldi -SaveTo .
+    PS > .\UpdateYandex.ps1 -InstallLocation C:\ProgramData\Yandex -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Vivaldi | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\Yandex | Select-Object Name
     Name
     ----
-    5.3.2679.68
-    update_notifier.exe
-    vivaldi.exe
-    vivaldi.VisualElementsManifest.xml
-    vivaldi_proxy.exe
+    22.7.0.1907
+    browser_proxy.exe
+    browser.exe
+    browser.VisualElementsManifest.xml
+    clidmgr.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    5.3.2679.68.exe
-    UpdateVivaldi.ps1
+    yandex_22.7.0.1907.msi
+    UpdateYandex.ps1
 
-    Install Vivaldi browser to 'C:\ProgramData\Vivaldi' and save its setup installer to the current directory.
+    Install Yandex browser to 'C:\ProgramData\Yandex' and save its setup installer to the current directory.
 #>
