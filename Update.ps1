@@ -68,12 +68,12 @@ Param (
     localization
     MEIPreload
     resources
-    89.0.4447.38.manifest
+    90.0.4480.84.manifest
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    89.0.4447.38.exe
+    opera_90.0.4480.84.exe
     UpdateOpera.ps1
 
     Install Opera browser to 'C:\ProgramData\Opera' and save its setup installer to the current directory.
