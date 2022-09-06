@@ -67,7 +67,7 @@ Param (
     PS > Get-ChildItem C:\ProgramData\Vivaldi | Select-Object Name
     Name
     ----
-    5.3.2679.68
+    5.4.2753.47
     update_notifier.exe
     vivaldi.exe
     vivaldi.VisualElementsManifest.xml
@@ -76,7 +76,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    5.3.2679.68.exe
+    vivaldi_5.4.2753.47.exe
     UpdateVivaldi.ps1
 
     Install Vivaldi browser to 'C:\ProgramData\Vivaldi' and save its setup installer to the current directory.
