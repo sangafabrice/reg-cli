@@ -64,7 +64,7 @@ Param (
     PS > Get-ChildItem C:\ProgramData\Blisk | Select-Object Name
     Name
     ----
-    18.0.193.167
+    19.0.60.43
     blisk.exe
     chrome.VisualElementsManifest.xml
     chrome_proxy.exe
@@ -72,7 +72,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    18.0.193.167.exe
+    blisk_19.0.60.43.exe
     UpdateBlisk.ps1
 
     Install Blisk browser to 'C:\ProgramData\Blisk' and save its setup installer to the current directory.
