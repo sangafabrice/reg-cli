@@ -74,7 +74,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.204.654.83.exe
+    tor_11.5.2.exe
     UpdateTor.ps1
 
     Install Tor browser to 'C:\ProgramData\Tor' and save its setup installer to the current directory.

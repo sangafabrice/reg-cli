@@ -1,6 +1,7 @@
 {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "releaseNotes": [
-        "Replace lastmodified by checksum in torproject script."
+        "Replace lastmodified by checksum in torproject script.",
+        "Fix comment-based help typo."
     ]
 }
