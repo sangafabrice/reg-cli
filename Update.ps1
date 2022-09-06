@@ -78,7 +78,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    103.0.1264.49.exe
+    microsoft_edge_105.0.1343.27.exe
     UpdateMSEdge.ps1
 
     Install MSEdge browser to 'C:\ProgramData\MSEdge' and save its setup installer to the current directory.
