@@ -71,7 +71,7 @@ Param (
     PS > Get-ChildItem C:\ProgramData\AvastSecure | Select-Object Name
     Name
     ----
-    102.1.17190.115
+    104.0.18088.102
     AvastBrowser.exe
     AvastBrowser.VisualElementsManifest.xml
     AvastBrowserQHelper.exe
@@ -81,7 +81,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    102.1.17190.115.exe
+    avast_secure_104.0.18088.102.exe
     UpdateAvastSecure.ps1
 
     Install Avast Secure browser to 'C:\ProgramData\AvastSecure' and save its setup installer to the current directory.
