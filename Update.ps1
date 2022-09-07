@@ -72,7 +72,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    v104.0-1.exe
+    librewolf_v104.0-1.exe
     UpdateLibrewolf.ps1
 
     Install Librewolf browser to 'C:\ProgramData\Librewolf' and save its setup installer to the current directory.
