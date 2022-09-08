@@ -32,6 +32,7 @@ Param (
             BatchRedirectName = 'librewolf'
             UseTimestamp = $True
             Checksum = $UpdateInfo.Checksum
+            UsePrefix = $True
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
