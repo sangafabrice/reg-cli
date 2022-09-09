@@ -10,6 +10,8 @@ Function New-UpdaterScript {
     #>
 
     Invoke-Expression (Get-Content "$($Script:DistPath)\dist" -Raw)
+    $DIModule = 'DownloadInfo'
+    $RCModule = 'RegCli'
     $GithubRepo = $DevDependencies.RemoteRepo
     $HeaderPath = '.\Header.ps1'
     Push-Location $Script:DistPath
@@ -25,13 +27,13 @@ Function New-UpdaterScript {
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
             Description = $DevDependencies.Description
             RequiredModules = @(@{
-                ModuleName = 'DownloadInfo'
-                ModuleVersion = '5.0.2'
+                ModuleName = $DIModule
+                ModuleVersion = "$((Find-Module $DIModule).Version)"
             },@{
-                ModuleName = 'RegCli'
-                ModuleVersion = '6.1.2'
+                ModuleName = $RCModule
+                ModuleVersion = "$((Find-Module $RCModule).Version)"
             })
-            ExternalModuleDependencies = @('DownloadInfo','RegCli')
+            ExternalModuleDependencies = @($DIModule,$RCModule)
             Tags = $DevDependencies.Tags
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = "$GithubRepo/tree/$(git branch --show-current)"
