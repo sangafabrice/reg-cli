@@ -1,6 +1,7 @@
 {
-    "version": "0.0.2",
+    "version": "0.0.3",
     "releaseNotes": [
-        "Force loading RegCli version 6.1.1"
+        "Force loading latest version of RegCli.",
+        "Remove InstallerDescription from updater script."
     ]
 }
