@@ -29,7 +29,12 @@ DynamicParam {
 }
 Process {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
-    $InstallerDescription = $InstallerDescription ?? $SoftwareName
+    If (!$InstallerDescription) {
+        If ($UsePrefix) {
+            $InstallerDescription = "$(${SoftwareName}?.ToLower().Trim() -replace ' ','_')$(If(!!$SoftwareName){'_'})"
+        }
+        Else { $InstallerDescription = $SoftwareName }
+    }
     $InstallerVersion =
         Try {
             $UpdateInfo.LastModified ?? ([version] $UpdateInfo.Version)
