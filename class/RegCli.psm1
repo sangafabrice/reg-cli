@@ -104,7 +104,7 @@ Class RegCli {
                             $Switch.Current.VersionInfo.FileDescription
                         }
                     }
-                ) ?? (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject
+                ) ?? (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject ?? $_.BaseName
             }
         )
     }
@@ -536,6 +536,8 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 }
             }
 
+            $InstallerPrefix = "$(${SoftwareName}?.ToLower().Trim() -replace ' ','_')$(If(!!$SoftwareName){'_'})"
+
             $InstallerPath = $(
                 If ($UseSigningTime) { Import-Module "$PSScriptRoot\SigningTimeGetter.psm1" }
                 Get-ChildItem $SaveTo |
@@ -544,7 +546,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
                 Select-Object -First 1
                 Remove-Module SigningTimeGetter -ErrorAction SilentlyContinue
             ).FullName ??
-            "$SaveTo\$(${SoftwareName}?.ToLower().Trim() -replace ' ','_')$(If(!!$SoftwareName){'_'})$(
+            "$SaveTo\$InstallerPrefix$(
                 $VersionString | ForEach-Object {
                     $_ -is [datetime] ? ('{0}.{1}.{2}' -f $_.Year,$_.DayOfYear,$_.TimeOfDay.TotalMinutes.ToString('#.##')):$_
                 }
@@ -659,15 +661,15 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
             Function Remove-InstallerOutdated {
                 [CmdletBinding()]
                 [OutputType([System.Void])]
-                Param ()
+                Param ([switch] $UsePrefix)
 
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
                     $Installer = Get-Item (Get-InstallerPath) -ErrorAction Stop
-                    $InstallerDescription = [RegCli]::GetInstallerDescription($Installer)
+                    $DescriptionCopy = !$UsePrefix ? [RegCli]::GetInstallerDescription($Installer):$InstallerPrefix
                     Write-Verbose 'Delete outdated installers...'
                     Get-ChildItem $Installer.Directory |
-                    Select-SavedInstaller -Description $InstallerDescription |
+                    Select-SavedInstaller -Description $DescriptionCopy |
                     Remove-Item -Exclude $Installer.Name
                 }
                 Catch { }

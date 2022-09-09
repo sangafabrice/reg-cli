@@ -1,7 +1,7 @@
 {
-    "version": "6.1.1",
+    "version": "6.1.2",
     "releaseNotes": [
-        "Add removal of MSI saved installer.",
-        "Convert GetMSIDBRecord method into a VBScript script to allow use of Nothing for destroying ComObject since $Null in Powershell or Undefined in JScript does not work."
+        "Add identifying installers using file name prefixes.",
+        "Remove unused dynamic parameter initialization."
     ]
 }

@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '6.1.1'
+ModuleVersion = '6.1.2'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -28,8 +28,8 @@ PrivateData = @{
         LicenseUri = 'https://github.com/sangafabrice/reg-cli/blob/main/LICENSE.md'
         ProjectUri = 'https://github.com/sangafabrice/reg-cli'
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
-        ReleaseNotes = 'Add removal of MSI saved installer.
-Convert GetMSIDBRecord method into a VBScript script to allow use of Nothing for destroying ComObject since $Null in Powershell or Undefined in JScript does not work.'
+        ReleaseNotes = 'Add identifying installers using file name prefixes.
+Remove unused dynamic parameter initialization.'
     }
 }
 }
