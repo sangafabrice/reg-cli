@@ -101,7 +101,6 @@ Function Save-Installer {
             $AttributeCollection.Add([System.Management.Automation.ParameterAttribute] @{ Mandatory = $False })
             $ParamDictionary = [System.Management.Automation.RuntimeDefinedParameterDictionary]::New()
             $ParamDictionary.Add('SkipSslValidation',[System.Management.Automation.RuntimeDefinedParameter]::New('SkipSslValidation','switch',$AttributeCollection))
-            $PSBoundParameters.Type = 'Version'
             $ParamDictionary
         }
     }
