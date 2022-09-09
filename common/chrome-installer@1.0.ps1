@@ -12,7 +12,8 @@ Param (
     [switch] $SkipSslValidation,
     [switch] $UseTimestamp,
     [string] $Checksum,
-    [string] $Extension = '.exe'
+    [string] $Extension = '.exe',
+    [switch] $UsePrefix
 )
 
 DynamicParam {
@@ -28,6 +29,7 @@ DynamicParam {
 }
 Process {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
+    $InstallerDescription = $InstallerDescription ?? $SoftwareName
     $InstallerVersion =
         Try {
             $UpdateInfo.LastModified ?? ([version] $UpdateInfo.Version)
@@ -66,7 +68,10 @@ Process {
                     } | ForEach-Object { New-RegCliUpdate @_ } |
                     Import-Module -Verbose:$False -Force -PassThru
                 $UpdateInfo.Where({ $_ }) | Start-InstallerDownload -Verbose:$IsVerbose -Force:$SkipSslValidation
-                Remove-InstallerOutdated -Verbose:$IsVerbose
+                @{ } | ForEach-Object {
+                    If ($UsePrefix) { $_.UsePrefix = $True}
+                    Remove-InstallerOutdated @_ -Verbose:$IsVerbose
+                }
                 Expand-ChromiumInstaller (Get-InstallerPath) $_ -Verbose:$IsVerbose
                 Set-ChromiumShortcut $_
                 Set-BatchRedirect $BatchRedirectName $_
@@ -78,7 +83,7 @@ Process {
             Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete."
         }
     }
-    Catch { $_ }
+    Catch { }
     Finally { Remove-Module $UpdateModule -Verbose:$False }
 }
 End { }
