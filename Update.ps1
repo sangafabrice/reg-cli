@@ -31,8 +31,6 @@ Param (
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Thunderbird'
-            InstallerDescription = 'Thunderbird'
-            BatchRedirectName = 'thunderbird'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
