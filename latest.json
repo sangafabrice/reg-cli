@@ -1,7 +1,6 @@
 {
-    "version": "6.1.2",
+    "version": "6.2.0",
     "releaseNotes": [
-        "Add identifying installers using file name prefixes.",
-        "Remove unused dynamic parameter initialization."
+        "Remove batch redirect function."
     ]
 }
