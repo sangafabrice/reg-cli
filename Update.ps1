@@ -28,7 +28,6 @@ Param (
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Librewolf'
-            BatchRedirectName = 'librewolf'
             UseTimestamp = $True
             Checksum = $UpdateInfo.Checksum
             UsePrefix = $True
