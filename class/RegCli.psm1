@@ -9,16 +9,6 @@ Class RegCli {
     # It is a singleton
 
     #Region Hidden Members
-    Static Hidden [string] $AutorunDirectory = "$(
-        # Get the autorun directory
-        # where the autorun batch script is located
-
-        (@{
-            LiteralPath = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Command Processor').Autorun
-            ErrorAction = 'SilentlyContinue'
-        } | ForEach-Object { Get-Item @_ })?.Directory
-    )"
-
     Static Hidden [MachineType] $OSArchitecture = $(
         # Get the OS architecture string
 
@@ -383,36 +373,6 @@ Class RegCli {
         Return [RegCli]::OSArchitecture
     }
 
-    Static [void] SetBatchRedirect(
-        [string] $BatchName,
-        [string] $ExecutablePath
-    ) {
-        # Create a batch redirect script in Autorun directory
-
-        Try {
-            $ExeItem = Get-Item -LiteralPath $ExecutablePath -ErrorAction Stop
-            Set-Content "$(
-                Switch ([RegCli]::AutorunDirectory) {
-                    { ![string]::IsNullOrEmpty($_) } { $_ }
-                    Default { "$PWD" }
-                }
-            )\$BatchName.bat" -Value @"
-@Echo OFF
-If Not "%~1"=="--version" (
-    If Not "%~1"=="-V" (
-        Start "" /D "$($ExeItem.Directory)" "$($ExeItem.Name)" %*
-        GoTo :EOF
-    )
-)
-For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($ExecutablePath -replace '\\','\\')" GET Version" 2^> Nul') Do (
-    Echo %%V
-    GoTo :EOF
-)
-"@
-        }
-        Catch { }
-    }
-
     Static [psobject] GetSavedInstallerInfo(
         [string] $Type,
         [string] $InstallerDirectory,
@@ -749,7 +709,7 @@ For /F "Skip=1 Tokens=* Delims=." %%V In ('"WMIC DATAFILE WHERE Name="$($Executa
 
             $CommonScript = "$CommonPath\$Name"
             $RequestArguments = @{
-                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name@1.0.ps1"
+                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name@1.1.ps1"
                 Method = 'HEAD'
                 Verbose = $False
             }

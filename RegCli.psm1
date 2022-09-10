@@ -115,23 +115,6 @@ Function Save-Installer {
     End { }
 }
 
-Function Set-BatchRedirect {
-    [CmdletBinding(PositionalBinding=$True)]
-    [OutputType([System.Void])]
-    Param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
-        [ValidateNotNullOrEmpty()]
-        [Alias('Name')]
-        [string] $BatchName,
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
-        [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
-        [Alias('Path')]
-        [string] $ApplicationPath
-    )
-    [RegCli]::SetBatchRedirect($BatchName, $ApplicationPath)
-}
-
 Filter Set-ChromiumShortcut {
     [CmdletBinding()]
     [OutputType([System.Void])]
