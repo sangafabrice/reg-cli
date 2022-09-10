@@ -1,6 +1,7 @@
 {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Initialize Waterfox updater script."
+        "Force loading latest version of RegCli.",
+        "Remove InstallerDescription from updater script."
     ]
 }

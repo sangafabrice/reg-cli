@@ -33,8 +33,8 @@ Param (
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Waterfox'
-            InstallerDescription = 'Waterfox'
             BatchRedirectName = 'waterfox'
+            UseTimestamp = $True
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
