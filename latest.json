@@ -1,7 +1,0 @@
-{
-    "version": "6.1.2",
-    "releaseNotes": [
-        "Add identifying installers using file name prefixes.",
-        "Remove unused dynamic parameter initialization."
-    ]
-}
