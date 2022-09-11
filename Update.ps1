@@ -31,8 +31,6 @@ Param (
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Firefox'
-            InstallerDescription = 'Firefox'
-            BatchRedirectName = 'firefox'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
