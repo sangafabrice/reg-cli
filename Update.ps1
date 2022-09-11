@@ -32,7 +32,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Opera'
             InstallerDescription = 'Opera Installer'
-            BatchRedirectName = 'opera'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
