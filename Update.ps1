@@ -32,7 +32,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Firefox Developer Edition'
             InstallerDescription = 'Firefox'
-            BatchRedirectName = 'firefoxdev'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
