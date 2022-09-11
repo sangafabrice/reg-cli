@@ -32,7 +32,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Opera GX'
             InstallerDescription = 'Opera GX Installer'
-            BatchRedirectName = 'operagx'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
