@@ -33,7 +33,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Brave'
             InstallerDescription = 'Brave Installer'
-            BatchRedirectName = 'brave'
             VisualElementManifest = @{
                 BaseNameLocation = "$InstallLocation\chrome"
                 HexColor = '#5F6368'
