@@ -30,7 +30,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Tor'
             InstallerDescription = 'CN="The Tor Project, Inc."'
-            BatchRedirectName = 'tor'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
