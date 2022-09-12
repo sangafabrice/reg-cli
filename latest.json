@@ -1,6 +1,6 @@
 {
-    "version": "0.0.2",
+    "version": "0.0.3",
     "releaseNotes": [
-        "Fix comment-based help."
+        "Remove batch redirect and description hashtable keys."
     ]
 }

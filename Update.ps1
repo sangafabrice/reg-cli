@@ -30,8 +30,6 @@ Param (
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Yandex'
-            InstallerDescription = 'Yandex'
-            BatchRedirectName = 'yandex'
             VisualElementManifest = @{
                 BaseNameLocation = $BaseNameLocation
                 HexColor = '#5f6368'
