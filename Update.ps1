@@ -46,7 +46,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Google Chrome'
             InstallerDescription = 'Google Chrome Installer'
-            BatchRedirectName = 'chrome'
             VisualElementManifest = @{
                 BaseNameLocation = $BaseNameLocation
                 HexColor = '#2D364C'
