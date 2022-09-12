@@ -28,7 +28,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Blisk'
             InstallerDescription = 'Blisk Installer'
-            BatchRedirectName = 'blisk'
             VisualElementManifest = @{
                 BaseNameLocation = "$InstallLocation\chrome"
                 HexColor = '#5F6368'
