@@ -31,7 +31,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Microsoft Edge'
             InstallerDescription = 'Microsoft Edge Installer'
-            BatchRedirectName = 'msedge'
             VisualElementManifest = @{
                 BaseNameLocation = $BaseNameLocation
                 HexColor = '#173A73'
