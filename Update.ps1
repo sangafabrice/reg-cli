@@ -31,7 +31,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Vivaldi'
             InstallerDescription = 'Vivaldi Installer'
-            BatchRedirectName = 'vivaldi'
             VisualElementManifest = @{
                 BaseNameLocation = $BaseNameLocation
                 HexColor = '#EF3939'
