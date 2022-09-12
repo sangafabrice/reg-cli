@@ -1,6 +1,6 @@
 {
-    "version": "5.0.4",
+    "version": "5.0.5",
     "releaseNotes": [
-        "Force to load RegCli version 6.1.1"
+        "Remove batch redirect hashtable key."
     ]
 }

@@ -34,7 +34,6 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Avast Secure'
             InstallerDescription = 'Avast Secure Browser Installer'
-            BatchRedirectName = 'secure'
             VisualElementManifest = @{
                 BaseNameLocation = $BaseNameLocation
                 HexColor = '#2D364C'
