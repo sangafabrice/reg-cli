@@ -26,7 +26,7 @@ Param (
                         ApplicationID    = '{A8504530-742B-42BC-895D-2BAD6406F698}'
                         OwnerBrand       = '2101'
                         OSArch           = Get-ExecutableType $NameLocation
-                    } -From Omaha | Select-NonEmptyObject
+                    } -From Omaha
                 }
                 Catch { }
             )
