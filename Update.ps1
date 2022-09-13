@@ -23,7 +23,7 @@ Param (
                 Try {
                     Get-DownloadInfo -PropertyList @{
                         OSArch = Get-ExecutableType $NameLocation
-                    } -From Vivaldi | Select-NonEmptyObject
+                    } -From Vivaldi
                 }
                 Catch { }
             )
