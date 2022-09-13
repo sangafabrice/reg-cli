@@ -17,7 +17,7 @@ Param (
         Try {
             Get-DownloadInfo -PropertyList @{
                 OSArch = Get-ExecutableType $NameLocation
-            } -From TorProject | Select-NonEmptyObject
+            } -From TorProject
         }
         Catch { }
     Try {
