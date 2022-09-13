@@ -1,6 +1,6 @@
 {
-    "version": "0.0.4",
+    "version": "0.0.5",
     "releaseNotes": [
-        "Remove batch redirect from updater script."
+        "Remove Select-NonEmptyObject from script."
     ]
 }
