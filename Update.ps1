@@ -14,7 +14,7 @@ Param (
     $NameLocation = "$InstallLocation\librewolf.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
-        Try { Get-DownloadInfo -From Librewolf | Select-NonEmptyObject }
+        Try { Get-DownloadInfo -From Librewolf }
         Catch { }
     Try {
         $UpdateModule =
