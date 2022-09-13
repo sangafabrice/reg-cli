@@ -19,7 +19,7 @@ Param (
                 RepositoryId = 'devedition'
                 OSArch = Get-ExecutableType $NameLocation
                 VersionDelim = 'b'
-            } -From Mozilla | Select-NonEmptyObject
+            } -From Mozilla
         }
         Catch { }
     Try {
