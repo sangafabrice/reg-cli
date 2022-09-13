@@ -1,6 +1,6 @@
 {
-    "version": "6.2.0",
+    "version": "6.2.1",
     "releaseNotes": [
-        "Remove batch redirect function."
+        "Remove Select-NonEmptyObject from module."
     ]
 }
