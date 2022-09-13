@@ -1,6 +1,6 @@
 {
-    "version": "0.0.3",
+    "version": "0.0.4",
     "releaseNotes": [
-        "Remove batch redirect and description hashtable keys."
+        "Remove Select-NonEmptyObject from script."
     ]
 }

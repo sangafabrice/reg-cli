@@ -23,7 +23,7 @@ Param (
                 Try {
                     Get-DownloadInfo -PropertyList @{
                         OSArch = Get-ExecutableType $NameLocation
-                    } -From Yandex | Select-NonEmptyObject
+                    } -From Yandex
                 }
                 Catch { }
             )
