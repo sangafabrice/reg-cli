@@ -19,7 +19,7 @@ Param (
                 RepositoryId = 'thunderbird'
                 OSArch = Get-ExecutableType $NameLocation
                 VersionDelim = $Null
-            } -From Mozilla | Select-NonEmptyObject
+            } -From Mozilla
         }
         Catch { }
     Try {
