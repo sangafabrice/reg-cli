@@ -23,7 +23,7 @@ Param (
                 Try {
                     Get-DownloadInfo -PropertyList @{
                         OSArch = Get-ExecutableType $NameLocation
-                    } -From MSEdge | Select-NonEmptyObject
+                    } -From MSEdge
                 }
                 Catch { }
             )
