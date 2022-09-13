@@ -1,6 +1,6 @@
 {
-    "version": "3.0.5",
+    "version": "3.1.0",
     "releaseNotes": [
-        "Remove batch redirect hashtable key"
+        "Simplify download info retrieval."
     ]
 }
