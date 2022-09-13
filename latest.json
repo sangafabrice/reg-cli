@@ -1,7 +1,6 @@
 {
-    "version": "2.0.4",
+    "version": "2.0.5",
     "releaseNotes": [
-        "Remove InstallerDescription from updater script.",
-        "Remove batch redirect from updater script."
+        "Remove Select-NonEmptyObject from script."
     ]
 }
