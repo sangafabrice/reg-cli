@@ -18,10 +18,7 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Try {
-                    Get-DownloadInfo -PropertyList @{} -From Blisk |
-                    Select-NonEmptyObject
-                }
+                Try { Get-DownloadInfo -From Blisk | Select-NonEmptyObject }
                 Catch { }
             )
             NameLocation = "$InstallLocation\blisk.exe"
