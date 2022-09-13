@@ -25,7 +25,7 @@ Param (
                         ApplicationID    = '{AFE6A462-C574-4B8A-AF43-4CC60DF4563B}'
                         ApplicationSpec  = "$(Get-ExecutableType $NameLocation)-rel"
                         Protocol         = '3.0'
-                    } -From Omaha | Select-NonEmptyObject
+                    } -From Omaha
                 }
                 Catch { }
             )
