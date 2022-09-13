@@ -22,9 +22,9 @@ Param (
                 Try {
                     Get-DownloadInfo -PropertyList @{
                         RepositoryID = 'opera/desktop'
-                        OSArch = (Get-ExecutableType $NameLocation)
+                        OSArch = Get-ExecutableType $NameLocation
                         FormatedName = 'Opera'
-                    } -From Opera | Select-NonEmptyObject
+                    } -From Opera
                 }
                 Catch { }
             )
