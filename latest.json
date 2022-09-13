@@ -1,6 +1,6 @@
 {
-    "version": "2.0.5",
+    "version": "2.0.6",
     "releaseNotes": [
-        "Remove empty property list parameter from DownloadInfo command."
+        "Remove Select-NonEmptyObject from script."
     ]
 }
