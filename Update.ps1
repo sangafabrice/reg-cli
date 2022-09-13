@@ -23,10 +23,7 @@ Param (
                     Get-DownloadInfo -PropertyList @{
                         RepositoryId = 'WaterfoxCo/Waterfox'
                         AssetPattern = 'Setup\.exe$'
-                    } | Select-Object Version,@{
-                        Name = 'Link'
-                        Expression = { $_.Link.Url }
-                    } | Select-NonEmptyObject
+                    }
                 }
                 Catch { }
             )
