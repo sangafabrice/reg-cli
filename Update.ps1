@@ -12,48 +12,29 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\postman.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        @{
-            Uri = "https://dl.pstmn.io/download/latest/win$(Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } })"
-            Method = 'HEAD'
-            ErrorAction = 'SilentlyContinue'
-        } | Select-Object @{
-            Name = 'Link'
-            Expression = { $_.Uri }
-        },@{
-            Name = 'Resource'
-            Expression = {
-                Invoke-WebRequest @_ -Verbose:$False |
-                ForEach-Object { ($_.Headers.'Content-Disposition' -split '=')[-1] } |
-                Select-Object @{
-                    Name = 'Version'
-                    Expression = { 
-                        [void] ($_ -match '\-(?<Version>(\d+\.)+\d+)\-')
-                        $Matches.Version
-                    }
-                },@{
-                    Name = 'Name'
-                    Expression = { $_ }
-                }
-            }
-        } | Select-Object Link -ExpandProperty Resource |
-        Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Postman'
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $SoftwareName)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'postman' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        OSArch = Get-ExecutableType $NameLocation
+                    } -From Postman
+                }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Postman'
+            InstallerType = 'Nupkg'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
