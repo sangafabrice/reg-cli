@@ -70,7 +70,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    9.25.2.exe
+    postman_10.0.1.exe
     UpdatePostman.ps1
 
     Install Postman to 'C:\ProgramData\Postman' and save its setup installer to the current directory.
