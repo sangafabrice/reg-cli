@@ -12,39 +12,26 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\GithubDesktop.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        @{
-            Uri = 'https://central.github.com/deployments/desktop/desktop/latest/win32'
-            Method = 'HEAD'
-            MaximumRedirection = 0
-            ErrorAction = 'SilentlyContinue'
-            SkipHttpErrorCheck = $True
-        } | ForEach-Object {
-            [uri] "$((Invoke-WebRequest @_ -Verbose:$False).Headers.Location)"
-        } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { ($_.Segments?[-2] -replace '/$' -split '-')?[0] }
-        },@{
-            Name = 'Link'
-            Expression = { "$_" }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'Simple collaboration from your desktop'
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'githubdesktop' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "Github Desktop $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try { Get-DownloadInfo -From GithubDesktop }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Github Desktop'
+            InstallerDescription = 'Simple collaboration from your desktop'
+            InstallerType = 'Nupkg'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
