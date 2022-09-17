@@ -12,38 +12,25 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\insomnia.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        @{
-            Uri = 'https://updates.insomnia.rest/downloads/windows/latest'
-            MaximumRedirection = 0
-            SkipHttpErrorCheck = $True
-            ErrorAction = 'SilentlyContinue'
-        } | ForEach-Object { Invoke-WebRequest @_ -Verbose:$False } |
-        Where-Object StatusCode -EQ 302 |
-        ForEach-Object { $_.Headers.Location } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { ([uri] $_).Segments?[-2] -replace '/$' }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Insomnia'
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $SoftwareName)" }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $SoftwareName |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'insomnia' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$SoftwareName $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try { Get-DownloadInfo -From Insomnia }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Insomnia'
+            InstallerType = 'Squirrel'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -79,7 +66,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    core@2022.4.2.exe
+    insomnia_core@2022.5.1.exe
     UpdateInsomnia.ps1
 
     Install Insomnia to 'C:\ProgramData\Insomnia' and save its setup installer to the current directory.
