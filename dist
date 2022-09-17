@@ -1,0 +1,8 @@
+$DevDependencies = @{
+    ProgramName = 'GithubDesktop'
+    Description = 'The script installs or updates Github Desktop on Windows.'
+    Guid = 'd393b38f-f1b8-4b2f-bda2-9a35301f80b2'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/8d1970259bf4c1e8fb25ab87ef8a9d3bf1bea990/icon.png'
+    Tags = @('github-desktop','nuget-package','update','github')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}

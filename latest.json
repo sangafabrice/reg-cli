@@ -1,6 +1,6 @@
 {
-    "version": "0.0.2",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Initialize Github Desktop updater script."
+        "Add common script to updater script."
     ]
 }

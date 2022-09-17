@@ -26,7 +26,7 @@ Param (
             SaveTo = $SaveTo
             SoftwareName = 'Github Desktop'
             InstallerDescription = 'Simple collaboration from your desktop'
-            InstallerType = 'Nupkg'
+            InstallerType = 'Squirrel'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
