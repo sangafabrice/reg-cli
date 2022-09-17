@@ -12,7 +12,9 @@ Param (
     [switch] $UseTimestamp,
     [string] $Checksum,
     [string] $Extension = '.exe',
-    [switch] $UsePrefix
+    [switch] $UsePrefix,
+    [ValidateSet('Chromium','Squirrel')]
+    [string] $InstallerType = 'Chromium'
 )
 
 DynamicParam {
@@ -73,7 +75,16 @@ Process {
                     Import-Module -Verbose:$False -Force -PassThru
                 $UpdateInfo.Where({ $_ }) | Start-InstallerDownload -Verbose:$IsVerbose -Force:$SkipSslValidation
                 Remove-InstallerOutdated -UsePrefix:$UsePrefix -Verbose:$IsVerbose
-                Expand-ChromiumInstaller (Get-InstallerPath) $_ -Verbose:$IsVerbose
+                Switch (@($InstallerType,$_)) {
+                    'Squirrel'  {
+                        [void] $Switch.MoveNext()
+                        Expand-SquirrelInstaller (Get-InstallerPath) $Switch.Current -Verbose:$IsVerbose
+                    }
+                    Default {
+                        [void] $Switch.MoveNext()
+                        Expand-ChromiumInstaller (Get-InstallerPath) $Switch.Current -Verbose:$IsVerbose
+                    }
+                }
                 Set-ChromiumShortcut $_
             }
         }
