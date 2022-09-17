@@ -67,7 +67,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    3.0.5.exe
+    github_desktop_3.0.8.exe
     UpdateGithubDesktop.ps1
 
     Install GitHub Desktop to 'C:\ProgramData\GitHub Desktop' and save its setup installer to the current directory.
