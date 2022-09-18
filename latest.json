@@ -1,6 +1,6 @@
 {
-    "version": "0.0.1",
+    "version": "1.0.0",
     "releaseNotes": [
-        "Initialize Teams updater script."
+        "Add common script to updater script."
     ]
 }
