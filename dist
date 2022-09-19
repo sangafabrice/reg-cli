@@ -1,0 +1,8 @@
+$DevDependencies = @{
+    ProgramName = 'GitKraken'
+    Description = 'The script installs or updates GitKraken on Windows.'
+    Guid = 'bba9b6ac-3864-44da-84f8-46bfed7d6ae8'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/cb37742bc1c451d959aac66bc7ac8152fd673787/icon.png'
+    Tags = @('gitkraken','nuget-package','update','git')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}

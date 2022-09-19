@@ -12,35 +12,31 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\gitkraken.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        "https://release.gitkraken.com/win$(Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } })/GitKrakenSetup.exe" |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { [datetime] "$((Invoke-WebRequest $_ -Method Head -Verbose:$False).Headers.'Last-Modified')" }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'GitKraken'
-    $InstallerDescription = 'Unleash your repo'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerLastModified $SaveTo $InstallerDescription }
     Try {
-        $GetExeVersion = { (Get-Item -LiteralPath $NameLocation -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw }
-        $VersionPreInstall = & $GetExeVersion
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'gitkraken' $NameLocation
-        $VersionPostInstall = & $GetExeVersion
-        If ($VersionPostInstall -gt $VersionPreInstall) { Write-Verbose "$SoftwareName $VersionPostInstall installation complete." }
-    } 
-    Catch { }
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        OSArch = Get-ExecutableType $NameLocation
+                    } -From GitKraken
+                }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'GitKraken'
+            InstallerDescription = 'Unleash your repo'
+            InstallerType = 'Squirrel'
+            ForceReinstall = $True
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
+    Catch { $_ }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
