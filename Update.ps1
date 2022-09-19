@@ -19,29 +19,17 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                @{
-                    Uri = "https://www.maxthon.com/mx6/formal-$(
-                        Switch (Get-ExecutableType $NameLocation) { 'x64' { '64' } 'x86' { '32' } }
-                    )/dl"
-                    Method  = 'HEAD'
-                    MaximumRedirection = 0
-                    SkipHttpErrorCheck = $True
-                    ErrorAction = 'SilentlyContinue'
-                    Verbose = $False
-                } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location?[0] } |
-                Select-Object @{
-                    Name = 'Version'
-                    Expression = { (([uri] $_).Segments?[-1] -split '_')?[1] }
-                },@{
-                    Name = 'Link'
-                    Expression = { $_ }
-                } | Select-NonEmptyObject
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        OSArch = Get-ExecutableType $NameLocation
+                    } -From Maxthon
+                }
+                Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Maxthon'
             InstallerDescription = 'Maxthon Installer'
-            BatchRedirectName = 'maxthon'
             VisualElementManifest = @{
                 BaseNameLocation = "$InstallLocation\chrome"
                 HexColor = '#5F6368'
@@ -85,7 +73,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    6.1.3.3000.exe
+    maxthon_6.2.0.1000.exe
     UpdateMaxthon.ps1
 
     Install Maxthon to 'C:\ProgramData\Maxthon' and save its setup installer to the current directory.
