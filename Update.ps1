@@ -72,7 +72,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.193.1434.83.exe
+    gitkraken_8.9.1.exe
     UpdateGitKraken.ps1
 
     Install GitKraken to 'C:\ProgramData\GitKraken' and save its setup installer to the current directory.
