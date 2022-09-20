@@ -1,6 +1,10 @@
 {
-    "version": "6.2.1",
+    "version": "6.2.2",
     "releaseNotes": [
-        "Remove Select-NonEmptyObject from module."
+        "Validate common installer script name.",
+        "Centralize common installer script version",
+        "Add reinstall option for the same version.",
+        "Add SHA1 to checksum validation.",
+        "Normalize version string. to 4 parts."
     ]
 }

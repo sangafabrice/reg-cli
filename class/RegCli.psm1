@@ -202,7 +202,8 @@ Class RegCli {
     Static [void] ExpandTypeInstaller(
         [string] $InstallerPath,
         [string] $ExecutablePath,
-        [string] $ArchivePattern
+        [string] $ArchivePattern,
+        [bool] $ForceReinstall
     ) {
         # Extracts files from a specified Type installer $InstallerPath
         # to the directory in which the application $ExecutablePath is located.
@@ -239,7 +240,11 @@ Class RegCli {
                             Get-ChildItem $ExeName -Recurse -ErrorAction SilentlyContinue |
                             Select-Object -First 1
                         $Executable = Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue
-                        If ($UnzippedExeName.VersionInfo.FileVersionRaw -gt $Executable.VersionInfo.FileVersionRaw) {
+                        If (
+                            $ForceReinstall ?
+                            $($UnzippedExeName.VersionInfo.FileVersionRaw -ge $Executable.VersionInfo.FileVersionRaw):
+                            $($UnzippedExeName.VersionInfo.FileVersionRaw -gt $Executable.VersionInfo.FileVersionRaw)
+                        ) {
                             Write-Verbose 'Current install is outdated or not installed...'
                             Compress-Archive $ExeDir -DestinationPath "${Env:TEMP}\$($ExeBaseName)_$(Get-Date -Format 'yyMMddHHmm').zip"
                             Stop-Process -Name $($ExeBaseName) -Force -ErrorAction SilentlyContinue
@@ -447,8 +452,28 @@ Class RegCli {
                     Default { $_ }
                 }
             
+            If ($Version -is [version]) {
+                $Version = $Version | ForEach-Object {
+                    [version] (
+                        ($_.Major,$_.Minor,$_.Build,$_.Revision |
+                        ForEach-Object {
+                            Switch ($_) { 
+                                { $_ -lt 0 } { 0 }
+                                Default { $_ }
+                            }
+                        }) -join '.'
+                    )
+                }
+            }
+
             $GetVersionInfo = & {
                 Switch ($InstallerChecksum.Length) {
+                    40 {
+                        Return {
+                            Param($Item)
+                            $InstallerChecksum -ieq (Get-FileHash $Item.FullName 'SHA1').Hash 
+                        }
+                    }
                     64 {
                         Return {
                             Param($Item)
@@ -567,7 +592,7 @@ Class RegCli {
                     [string] $InstallerUrl,
                     [Parameter(ValueFromPipelineByPropertyName)]
                     [ValidateNotNullOrEmpty()]
-                    [ValidateScript({ $_.Length -in @(64, 128) })]
+                    [ValidateScript({ $_.Length -in @(40, 64, 128) })]
                     [Alias('Checksum')]
                     [string] $InstallerChecksum,
                     [Parameter(ValueFromPipelineByPropertyName)]
@@ -597,7 +622,7 @@ Class RegCli {
                     Where({ 
                         If ($IsChecksumPresent) {
                             $InstallerChecksum -ieq (Get-FileHash $_ $(
-                            Switch ($InstallerChecksum.Length) { 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
+                            Switch ($InstallerChecksum.Length) { 40 { 'SHA1' } 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
                         } Else { (Get-AuthenticodeSignature $_).Status -ieq 'Valid' }
                     }) |
                     Select-Object @{
@@ -694,6 +719,8 @@ Class RegCli {
         } -ArgumentList $ExecutablePath,$InstallerDirectory,$VersionString,$InstallerDescription,$UseSigningTime,$InstallerChecksum,$SoftwareName,$InstallerExtension
     }
 
+    Static [string] $CommonScriptVersion = '1.1'
+
     Static [System.Management.Automation.PSModuleInfo] GetCommonScript(
         [string] $Name,
         [string] $CommonPath
@@ -709,7 +736,7 @@ Class RegCli {
 
             $CommonScript = "$CommonPath\$Name"
             $RequestArguments = @{
-                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name@1.1.ps1"
+                Uri = "https://github.com/sangafabrice/reg-cli/raw/main/common/$Name@$([RegCli]::CommonScriptVersion).ps1"
                 Method = 'HEAD'
                 Verbose = $False
             }
