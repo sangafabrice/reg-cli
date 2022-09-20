@@ -29,7 +29,7 @@ Param (
             NameLocation = $NameLocation
             SaveTo = $SaveTo
             SoftwareName = 'Postman'
-            InstallerType = 'Nupkg'
+            InstallerType = 'Squirrel'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }

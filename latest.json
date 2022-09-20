@@ -1,6 +1,6 @@
 {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "releaseNotes": [
-        "Initialize Postman updater script."
+        "Change version string type to [version]."
     ]
 }
