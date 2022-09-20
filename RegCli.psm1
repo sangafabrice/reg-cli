@@ -29,9 +29,10 @@ Function Expand-ChromiumInstaller {
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
-        [string] $ApplicationPath
+        [string] $ApplicationPath,
+        [switch] $ForceReinstall
     )
-    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.7z')
+    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.7z', $ForceReinstall)
 }
 
 Function Expand-SquirrelInstaller {
@@ -45,9 +46,10 @@ Function Expand-SquirrelInstaller {
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
-        [string] $ApplicationPath
+        [string] $ApplicationPath,
+        [switch] $ForceReinstall
     )
-    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.nupkg')
+    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.nupkg', $ForceReinstall)
 }
 
 Function Expand-NsisInstaller {
@@ -62,12 +64,13 @@ Function Expand-NsisInstaller {
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
         [string] $ApplicationPath,
+        [switch] $ForceReinstall,
         [ValidateSet(32,64)]
         [Int16] $ForceApp
     )
     [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath,
     '$PLUGINSDIR\app-{0}.*' -f ($PSBoundParameters.ContainsKey('ForceApp') ?
-    ($ForceApp):([Environment]::Is64BitOperatingSystem ? '64':'32')))
+    ($ForceApp):([Environment]::Is64BitOperatingSystem ? '64':'32')), $ForceReinstall)
 }
 
 Filter Get-ExecutableType {
@@ -265,6 +268,7 @@ Function Import-CommonScript {
     Param(
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
+        [ValidateSet([CommonName])]
         [string] $Name
     )
     [RegCli]::GetCommonScript($Name, "$PSScriptRoot\common")
