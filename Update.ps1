@@ -12,38 +12,25 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\Prepros.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        @{
-            Uri = 'https://prepros.io/downloads/stable/windows'
-            Method  = 'HEAD'
-            MaximumRedirection = 0
-            SkipHttpErrorCheck = $True
-            ErrorAction = 'SilentlyContinue'
-            Verbose = $False
-        } | ForEach-Object { (Invoke-WebRequest @_).Headers.Location } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { [version] (([uri] $_).Segments?[-2] -replace '/$') }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'Prepros'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'prepros' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$InstallerDescription $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try { Get-DownloadInfo -From Prepros }
+                Catch { }
+            )
+            NameLocation = $NameLocation
+            SaveTo = $SaveTo
+            SoftwareName = 'Prepros'
+            InstallerType = 'Squirrel'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -79,7 +66,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    7.6.0.exe
+    prepros_7.6.0.exe
     UpdatePrepros.ps1
 
     Install Prepros to 'C:\ProgramData\Prepros' and save its setup installer to the current directory.
