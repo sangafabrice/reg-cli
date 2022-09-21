@@ -1,5 +1,5 @@
 {
-    "version": "0.0.4",
+    "version": "0.0.5",
     "releaseNotes": [
         "Remove Select-NonEmptyObject from script.",
         "Remove object selector."
