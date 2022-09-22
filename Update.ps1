@@ -11,7 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\GithubDesktop.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -22,7 +21,7 @@ Param (
                 Try { Get-DownloadInfo -From GithubDesktop }
                 Catch { }
             )
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\GithubDesktop.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Github Desktop'
             InstallerDescription = 'Simple collaboration from your desktop'
