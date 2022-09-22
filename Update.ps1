@@ -11,36 +11,25 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\SourceTree.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        (Invoke-WebRequest "https://www.sourcetreeapp.com/download-archives" -Verbose:$False).Links.href |
-        Where-Object { $_ -like '*.exe' } |
-        Select-Object @{
-            Name = 'Version'
-            Expression = {
-                [void] ($_ -match '(?<Version>(\d+\.)+\d+)\.exe$')
-                [version] $Matches.Version
-            }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } -First 1 | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'SourceTree'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-SquirrelInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-SquirrelShortcut $NameLocation
-        Set-BatchRedirect 'sourcetree' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$InstallerDescription $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try { Get-DownloadInfo -From SourceTree }
+                Catch { }
+            )
+            NameLocation = "$InstallLocation\SourceTree.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'SourceTree'
+            InstallerType = 'Squirrel'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -76,7 +65,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    3.4.9.exe
+    sourcetree_3.4.9.exe
     UpdateSourceTree.ps1
 
     Install SourceTree to 'C:\ProgramData\SourceTree' and save its setup installer to the current directory.

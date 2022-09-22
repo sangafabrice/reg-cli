@@ -1,0 +1,8 @@
+$DevDependencies = @{
+    ProgramName = 'SourceTree'
+    Description = 'The script installs or updates SourceTree on Windows.'
+    Guid = '2ce4bb1c-1ecf-4b6a-83fc-638475a03115'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/e2a60904b8e7ca30622e9a39358904bd9773c96c/icon.png'
+    Tags = @('sourcetree','nuget-package','update','git')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}
