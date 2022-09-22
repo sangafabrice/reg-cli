@@ -11,7 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Prepros.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -22,7 +21,7 @@ Param (
                 Try { Get-DownloadInfo -From Prepros }
                 Catch { }
             )
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\Prepros.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Prepros'
             InstallerType = 'Squirrel'
