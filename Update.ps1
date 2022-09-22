@@ -11,8 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\waterfox.exe"
-    Write-Verbose 'Retrieve install or update information...'
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -20,6 +18,7 @@ Param (
         @{
             UpdateInfo = $(
                 Try {
+                    Write-Verbose 'Retrieve install or update information...'
                     Get-DownloadInfo -PropertyList @{
                         RepositoryId = 'WaterfoxCo/Waterfox'
                         AssetPattern = 'Setup\.exe$'
@@ -27,7 +26,7 @@ Param (
                 }
                 Catch { }
             )
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\waterfox.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Waterfox'
             UseTimestamp = $True
