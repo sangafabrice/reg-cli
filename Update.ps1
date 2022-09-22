@@ -11,7 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\insomnia.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -22,7 +21,7 @@ Param (
                 Try { Get-DownloadInfo -From Insomnia }
                 Catch { }
             )
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\insomnia.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Insomnia'
             InstallerType = 'Squirrel'
