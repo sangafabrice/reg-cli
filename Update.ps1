@@ -11,7 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Figma.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -22,7 +21,7 @@ Param (
                 Try { Get-DownloadInfo -From Figma }
                 Catch { }
             )
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\Figma.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Figma Desktop'
             InstallerType = 'Squirrel'
