@@ -11,7 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\librewolf.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
         Try { Get-DownloadInfo -From Librewolf }
@@ -22,7 +21,7 @@ Param (
             Import-Module -PassThru -Force -Verbose:$False
         @{
             UpdateInfo = $UpdateInfo
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\librewolf.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Librewolf'
             UseTimestamp = $True
