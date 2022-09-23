@@ -11,31 +11,31 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\RunJS.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{ 
-            RepositoryId = 'lukehaas/RunJS'
-            AssetPattern = 'RunJS\-Setup\-(\d+\.)+exe$' 
-        } | Select-Object Version,@{
-            Name = 'Link'
-            Expression = { "$($_.Link.Url)" }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'The JavaScript and TypeScript playground for your desktop'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'runjs' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "RunJS $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{ 
+                        RepositoryId = 'lukehaas/RunJS'
+                        AssetPattern = 'RunJS\-Setup\-(\d+\.)+exe$' 
+                    }
+                }
+                Catch { }
+            )
+            NameLocation = "$InstallLocation\RunJS.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'RunJS'
+            InstallerDescription = 'The JavaScript and TypeScript playground for your desktop'
+            InstallerType = 'NSIS'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -71,7 +71,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    v2.5.1.exe
+    runjs_v2.6.0.exe
     UpdateRunJS.ps1
 
     Install RunJS to 'C:\ProgramData\RunJS' and save its setup installer to the current directory.
