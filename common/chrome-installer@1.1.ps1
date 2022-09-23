@@ -13,7 +13,7 @@ Param (
     [string] $Checksum,
     [string] $Extension = '.exe',
     [switch] $UsePrefix,
-    [ValidateSet('Chromium','Squirrel')]
+    [ValidateSet('Chromium','Squirrel','NSIS')]
     [string] $InstallerType = 'Chromium',
     [switch] $ForceReinstall
 )
@@ -26,6 +26,14 @@ DynamicParam {
         $ParamDictionary = [System.Management.Automation.RuntimeDefinedParameterDictionary]::New()
         $ParamDictionary.Add('TimestampType',[System.Management.Automation.RuntimeDefinedParameter]::New('TimestampType',[string],$AttributeCollection))
         $PSBoundParameters.TimestampType = 'DateTime'
+        $ParamDictionary
+    }
+    If ($InstallerType -ieq 'NSIS') {
+        $AttributeCollection = [System.Collections.ObjectModel.Collection[System.Attribute]]::New()
+        $AttributeCollection.Add([System.Management.Automation.ParameterAttribute] @{ Mandatory = $False })
+        $AttributeCollection.Add([System.Management.Automation.ValidateSetAttribute]::New(32,64))
+        $ParamDictionary = [System.Management.Automation.RuntimeDefinedParameterDictionary]::New()
+        $ParamDictionary.Add('NsisType',[System.Management.Automation.RuntimeDefinedParameter]::New('NsisType',[Int16],$AttributeCollection))
         $ParamDictionary
     }
 }
@@ -82,6 +90,11 @@ Process {
                     Verbose = $IsVerbose
                 } + ($ForceReinstall ? @{ ForceReinstall = $ForceReinstall }:@{})
                 Switch ($InstallerType) {
+                    'NSIS'  {
+                        If ($PSBoundParameters.ContainsKey('NsisType')) 
+                        { $ExpandArgument.ForceApp = $PSBoundParameters.NsisType }
+                        Expand-NsisInstaller @ExpandArgument
+                    }
                     'Squirrel'  { Expand-SquirrelInstaller @ExpandArgument }
                     Default { Expand-ChromiumInstaller @ExpandArgument }
                 }
