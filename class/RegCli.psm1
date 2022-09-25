@@ -246,7 +246,9 @@ Class RegCli {
                             $($UnzippedExeName.VersionInfo.FileVersionRaw -gt $Executable.VersionInfo.FileVersionRaw)
                         ) {
                             Write-Verbose 'Current install is outdated or not installed...'
-                            Compress-Archive $ExeDir -DestinationPath "${Env:TEMP}\$($ExeBaseName)_$(Get-Date -Format 'yyMMddHHmm').zip"
+                            $ExeArchive = "${Env:TEMP}\$($ExeBaseName)_$(Get-Date -Format 'yyMMddHHmm').zip"
+                            Try { Compress-Archive $ExeDir -DestinationPath $ExeArchive 2>&1 | Out-Null }
+                            Catch { . "$PSScriptRoot\7z.exe" a -tzip $ExeArchive "$ExeDir\*" 2>&1 | Out-Null }
                             Stop-Process -Name $($ExeBaseName) -Force -ErrorAction SilentlyContinue
                             Get-ChildItem $ExeDir -ErrorAction SilentlyContinue |
                             Remove-Item -Recurse
