@@ -70,7 +70,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    G4.1.5.exe
+    waterfox_G4.1.5.exe
     UpdateWaterfox.ps1
 
     Install Waterfox browser to 'C:\ProgramData\Waterfox' and save its setup installer to the current directory.
