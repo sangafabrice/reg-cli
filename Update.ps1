@@ -11,41 +11,27 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Messenger.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        'https://www.messenger.com/messenger/desktop/downloadV2/?platform=win' |
-        Select-Object @{
-            Name = 'Resource'
-            Expression = {
-                $ResponseHeader = (Invoke-WebRequest $_ -Method Head -Verbose:$False).Headers
-                [pscustomobject] @{
-                    Version = [datetime] "$($ResponseHeader.'Last-Modified')"
-                    Name = ($ResponseHeader.'Content-Disposition' -split '=')?[-1]
-                }
-            }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } | Select-Object Link -ExpandProperty Resource | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $SoftwareName = 'Messenger'
-    $InstallerDescription = "$SoftwareName by Facebook"
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'messenger' $NameLocation
-        If (!(Test-InstallOutdated -UseInstaller)) {
-            Write-Verbose "$SoftwareName $((Get-Item -LiteralPath (Get-InstallerPath) -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw) installation complete."
-        }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try { Get-DownloadInfo -From Messenger }
+                Catch { }
+            )
+            NameLocation = "$InstallLocation\Messenger.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'Messenger'
+            InstallerDescription = 'Messenger by Facebook'
+            InstallerType = 'NSIS'
+            CompareInstalls = $True
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -81,7 +67,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.196.1109.15.exe
+    messenger_2022.238.356.18.exe
     UpdateMessenger.ps1
 
     Install Messenger to 'C:\ProgramData\Messenger' and save its setup installer to the current directory.
