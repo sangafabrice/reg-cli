@@ -1,0 +1,8 @@
+$DevDependencies = @{
+    ProgramName = 'TuneIn'
+    Description = 'The script installs or updates TuneIn on Windows.'
+    Guid = '2101c000-655c-4422-a401-50180bf1b9c0'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/8bd3abda3086dcb50006c47c61995865dab05214/icon.png'
+    Tags = @('tunein','nuget-package','update','radio')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}
