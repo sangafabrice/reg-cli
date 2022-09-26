@@ -15,7 +15,8 @@ Param (
     [switch] $UsePrefix,
     [ValidateSet('Chromium','Squirrel','NSIS')]
     [string] $InstallerType = 'Chromium',
-    [switch] $ForceReinstall
+    [switch] $ForceReinstall,
+    [switch] $CompareInstalls
 )
 
 DynamicParam {
@@ -103,7 +104,7 @@ Process {
         }
         $VisualElementManifest.Where({ $_ }) |
         ForEach-Object { Set-ChromiumVisualElementsManifest "$($_.BaseNameLocation).VisualElementsManifest.xml" $_.HexColor }
-        If (!(Test-InstallOutdated -CompareInstalls:$UseTimestamp)) {
+        If (!(Test-InstallOutdated -CompareInstalls:($CompareInstalls -or $UseTimestamp))) {
             Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete."
         }
     }
