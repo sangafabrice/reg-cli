@@ -62,7 +62,7 @@ Param (
     PS > Get-ChildItem 'C:\ProgramData\Tabby' | Select-Object Name -First 5
     Name
     ----
-    Tabbyes
+    locales
     resources
     chrome_100_percent.pak
     chrome_200_percent.pak
