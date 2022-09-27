@@ -11,32 +11,31 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Tabby.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            RepositoryId = 'Eugeny/tabby'
-            AssetPattern = "setup\-x64\.exe$"
-        } | Select-Object Version,@{
-            Name = 'Link'
-            Expression = { $_.Link.Url }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'A terminal for a modern age'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'Tabby' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "Tabby $(Get-InstallerVersion) installation complete." }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryId = 'Eugeny/tabby'
+                        AssetPattern = "setup\-x64\.exe$"
+                    }
+                }
+                Catch { }
+            )
+            NameLocation = "$InstallLocation\Tabby.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'Tabby'
+            InstallerDescription = 'A terminal for a modern age'
+            InstallerType = 'NSIS'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -72,7 +71,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    v1.0.183.exe
+    tabby_v1.0.183.exe
     UpdateTabby.ps1
 
     Install Tabby to 'C:\ProgramData\Tabby' and save its setup installer to the current directory.
