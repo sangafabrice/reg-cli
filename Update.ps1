@@ -11,31 +11,37 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\WordPress.com.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{ 
-            RepositoryId = 'Automattic/wp-desktop'
-            AssetPattern = 'wordpress\.com\-win32\-setup\-(\d+\.)+exe$' 
-        } | Select-Object Version,@{
-            Name = 'Link'
-            Expression = { "$($_.Link.Url)" }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
+    $UpdateInfo =
+        Try {
+            Write-Verbose 'Retrieve install or update information...'
+            Get-DownloadInfo -PropertyList @{ 
+                RepositoryId = 'Automattic/wp-desktop'
+                AssetPattern = 'wordpress\.com\-win32\-setup\-(\d+\.)+exe$' 
+            }
+        }
+        Catch { }
     $InstallerDescription = 'Desktop version of WordPress.com'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
+    $LocalVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)"
+    If (
+        ![string]::IsNullOrEmpty($UpdateInfo.Version) -and
+        $LocalVersion -like "$($UpdateInfo.Version -replace 'v')*"
+    ) { $UpdateInfo.Version = $LocalVersion }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'wordpresscom' $NameLocation
-        If (!(Test-InstallOutdated)) { Write-Verbose "$InstallerDescription $(Get-InstallerVersion) installation complete." }
-    } 
-    Catch { $_ }
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $UpdateInfo
+            NameLocation = "$InstallLocation\WordPress.com.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'WordPress.com'
+            InstallerDescription = $InstallerDescription
+            InstallerType = 'NSIS'
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
+    Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -71,7 +77,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    v1.13.0.exe
+    wordpress.com_v7.2.0.exe
     UpdateWordPressCom.ps1
 
     Install WordPress.com to 'C:\ProgramData\WordPress.com' and save its setup installer to the current directory.
