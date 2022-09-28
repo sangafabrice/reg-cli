@@ -11,34 +11,27 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Termius.exe"
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo = 
-        'https://termius.com/download/windows/Termius.exe' |
-        Select-Object @{
-            Name = 'Version'
-            Expression = { [datetime] "$((Invoke-WebRequest $_ -Method Head -Verbose:$False).Headers.'Last-Modified')" }
-        },@{
-            Name = 'Link'
-            Expression = { $_ }
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'Desktop SSH Client'
-    If (!$UpdateInfo) { $InstallerVersion = Get-SavedInstallerVersion $SaveTo $InstallerDescription }
     Try {
-        New-RegCliUpdate $NameLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        Expand-NsisInstaller (Get-InstallerPath) $NameLocation -Verbose:$VerbosePreferenceBool
-        Set-NsisShortcut $NameLocation
-        Set-BatchRedirect 'Termius' $NameLocation
-        If (!(Test-InstallOutdated -UseInstaller)) { 
-            Write-Verbose "Termius $((Get-Item -LiteralPath (Get-InstallerPath) -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw) installation complete." 
-        }
-    } 
+        $UpdateModule =
+            Import-CommonScript chrome-installer |
+            Import-Module -PassThru -Force -Verbose:$False
+        @{
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try { Get-DownloadInfo -From Termius }
+                Catch { }
+            )
+            NameLocation = "$InstallLocation\Termius.exe"
+            SaveTo = $SaveTo
+            SoftwareName = 'Termius'
+            InstallerDescription = 'Desktop SSH Client'
+            InstallerType = 'NSIS'
+            CompareInstalls = $True
+            Verbose = $VerbosePreference -ine 'SilentlyContinue'
+        } | ForEach-Object { Invoke-CommonScript @_ }
+    }
     Catch { }
+    Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
@@ -74,7 +67,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.214.641.28.exe
+    termius_2022.255.403.3.exe
     UpdateTermius.ps1
 
     Install Termius to 'C:\ProgramData\Termius' and save its setup installer to the current directory.
