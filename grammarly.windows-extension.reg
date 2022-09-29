@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\grammarly.windows-extension]
+@="URL: Grammarly Windows Extension Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\grammarly.windows-extension\shell\open\command]
+@="\"$($NameLocation -replace '\\','\\')\" \"redirect\" \"%1\""
+
