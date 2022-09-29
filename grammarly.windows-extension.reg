@@ -5,5 +5,5 @@ Windows Registry Editor Version 5.00
 "URL Protocol"=""
 
 [HKEY_CLASSES_ROOT\grammarly.windows-extension\shell\open\command]
-@="\"$($NameLocation -replace '\\\\','\' -replace '\\','\\')\" \"redirect\" \"%1\""
+@="\"$(($NameLocation -replace '\\\\','\') -replace '\\','\\')\" \"redirect\" \"%1\""
 
