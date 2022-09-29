@@ -12,6 +12,21 @@ Param (
 
 & {
     $NameLocation = "$InstallLocation\Grammarly.Desktop.exe"
+    $TempRegLocation = "${Env:TEMP}\grammarly.windows-extension.reg"
+    Try {
+        $HttpResponse = @{
+            Uri = 'https://raw.githubusercontent.com/sangafabrice/reg-cli' +
+                '/grammarly/grammarly.windows-extension.reg'
+            Verbose = $False
+        } | ForEach-Object { Invoke-WebRequest @_ }
+        $RegFileLocation = "$PSScriptRoot\grammarly-$(
+            ($HttpResponse.Headers.ETag -replace '"').Substring(0,8)
+        ).reg"
+        If (!(Test-Path $RegFileLocation)) {
+            $HttpResponse.Content | Out-String | Out-File $RegFileLocation
+        }
+    }
+    Catch { }
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -24,11 +39,22 @@ Param (
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Grammarly'
+            SoftwareName = 'Grammarly Desktop'
             InstallerDescription = 'Grammarly for Windows'
-            InstallerType = 'NSIS'
+            CompareInstalls = $True
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
+        If (Test-Path $NameLocation) {
+            Invoke-Expression "@`"`n$(Get-Content $RegFileLocation -Raw)`n`"@" |
+            Out-File $TempRegLocation
+            @{
+                FilePath = "${Env:Windir}\System32\Reg.exe"
+                ArgumentList = "Import $TempRegLocation"
+                WindowStyle = 'Hidden'
+                Wait = $True
+            } | ForEach-Object { Start-Process @_ }
+            Remove-Item $TempRegLocation -Force
+        }
     }
     Catch { }
     Finally { $UpdateModule | Remove-Module -Verbose:$False }
@@ -67,7 +93,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    2022.210.766.77.exe
+    grammarly_2022.266.750.77.exe
     UpdateGrammarly.ps1
 
     Install Grammarly to 'C:\ProgramData\Grammarly' and save its setup installer to the current directory.
