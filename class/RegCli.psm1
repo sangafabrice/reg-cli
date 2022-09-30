@@ -470,6 +470,12 @@ Class RegCli {
 
             $GetVersionInfo = & {
                 Switch ($InstallerChecksum.Length) {
+                    32 {
+                        Return {
+                            Param($Item)
+                            $InstallerChecksum -ieq (Get-FileHash $Item.FullName 'MD5').Hash 
+                        }
+                    }
                     40 {
                         Return {
                             Param($Item)
@@ -594,7 +600,7 @@ Class RegCli {
                     [string] $InstallerUrl,
                     [Parameter(ValueFromPipelineByPropertyName)]
                     [ValidateNotNullOrEmpty()]
-                    [ValidateScript({ $_.Length -in @(40, 64, 128) })]
+                    [ValidateScript({ $_.Length -in @(32, 40, 64, 128) })]
                     [Alias('Checksum')]
                     [string] $InstallerChecksum,
                     [Parameter(ValueFromPipelineByPropertyName)]
@@ -624,7 +630,7 @@ Class RegCli {
                     Where({ 
                         If ($IsChecksumPresent) {
                             $InstallerChecksum -ieq (Get-FileHash $_ $(
-                            Switch ($InstallerChecksum.Length) { 40 { 'SHA1' } 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
+                            Switch ($InstallerChecksum.Length) { 32 { 'MD5' } 40 { 'SHA1' } 64 { 'SHA256' } 128 { 'SHA512' } })).Hash 
                         } Else { (Get-AuthenticodeSignature $_).Status -ieq 'Valid' }
                     }) |
                     Select-Object @{
