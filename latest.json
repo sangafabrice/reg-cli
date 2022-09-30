@@ -1,6 +1,7 @@
 {
-    "version": "0.0.5",
+    "version": "1.0.1",
     "releaseNotes": [
-        "Remove Select-NonEmptyObject from script."
+        "Remove msi setup and download exe file.",
+        "The setup is now signed and safe."
     ]
 }

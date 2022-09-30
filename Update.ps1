@@ -34,7 +34,6 @@ Param (
                 BaseNameLocation = $BaseNameLocation
                 HexColor = '#5f6368'
             }
-            Extension = '.msi'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -66,7 +65,7 @@ Param (
     PS > Get-ChildItem C:\ProgramData\Yandex | Select-Object Name
     Name
     ----
-    22.7.0.1907
+    22.9.2.1495
     browser_proxy.exe
     browser.exe
     browser.VisualElementsManifest.xml
@@ -75,7 +74,7 @@ Param (
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    yandex_22.7.0.1907.msi
+    yandex_22.9.2.1495.exe
     UpdateYandex.ps1
 
     Install Yandex browser to 'C:\ProgramData\Yandex' and save its setup installer to the current directory.
