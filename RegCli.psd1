@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '6.2.3'
+ModuleVersion = '6.2.4'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -26,7 +26,8 @@ PrivateData = @{
         LicenseUri = 'https://github.com/sangafabrice/reg-cli/blob/main/LICENSE.md'
         ProjectUri = 'https://github.com/sangafabrice/reg-cli'
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
-        ReleaseNotes = 'Use 7zip as an alternative for compressing program directory.'
+        ReleaseNotes = 'Add MD5 algorithm for verifying setup integrity.
+Get NSIS machine type from the current install.'
     }
 }
 }

@@ -1,6 +1,7 @@
 {
-    "version": "6.2.3",
+    "version": "6.2.4",
     "releaseNotes": [
-        "Use 7zip as an alternative for compressing program directory."
+        "Add MD5 algorithm for verifying setup integrity.",
+        "Get NSIS machine type from the current install."
     ]
 }

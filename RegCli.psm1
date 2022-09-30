@@ -70,7 +70,8 @@ Function Expand-NsisInstaller {
     )
     [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath,
     '$PLUGINSDIR\app-{0}.*' -f ($PSBoundParameters.ContainsKey('ForceApp') ?
-    ($ForceApp):([Environment]::Is64BitOperatingSystem ? '64':'32')), $ForceReinstall)
+    ($ForceApp):([RegCli]::GetExeMachineType($ApplicationPath) -replace 'x' -replace '86','32')),
+    $ForceReinstall)
 }
 
 Filter Get-ExecutableType {
