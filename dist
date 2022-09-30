@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'PotPlayer'
     Description = 'The script installs or updates PotPlayer media player on Windows.'
     Guid = '0dff32be-6c4b-4ede-91c2-6908bbc34822'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/521b1ef6e7b3ff20e8f78e79b17bc0cd9b9b7865/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/995542bc7beec6b5d2849a9c819298c5b2437f29/icon.png'
     Tags = @('potplayer','nsis','update','media-player')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
