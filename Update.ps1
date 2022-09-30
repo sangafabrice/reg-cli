@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Local",
+    $InstallLocation = "${Env:ProgramData}\PotPlayer",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,6 +11,8 @@ Param (
 )
 
 & {
+    $Is64BitOS = [Environment]::Is64BitOperatingSystem
+    $NameLocation = "$InstallLocation\PotPlayer$(If($Is64BitOS){ '64' }).exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -18,15 +20,19 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Try { Get-DownloadInfo -From Local }
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        OSArch = $Is64BitOS ? 'x64':'x86'
+                    } -From PotPlayer
+                }
                 Catch { }
             )
-            NameLocation = "$InstallLocation\Local.exe"
+            NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Local'
-            InstallerDescription = 'Create local WordPress sites with ease.'
-            InstallerType = 'NSIS'
-            NsisType = 32
+            SoftwareName = 'PotPlayer'
+            InstallerDescription = 'PotPlayer Setup File'
+            ForceReinstall = $True
+            CompareInstalls = $True
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -36,39 +42,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Local software.
+    Updates PotPlayer software.
 .DESCRIPTION
-    The script installs or updates Local on Windows.
+    The script installs or updates PotPlayer on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Local".
+    It defaults to "%ProgramData%\PotPlayer".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Local' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\PotPlayer' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateLocal.ps1 -InstallLocation 'C:\ProgramData\Local' -SaveTo .
+    PS > .\UpdatePotPlayer.ps1 -InstallLocation 'C:\ProgramData\PotPlayer' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Local' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\PotPlayer' | Select-Object Name -First 5
     Name
     ----
-    locales
-    resources
-    swiftshader
-    chrome_100_percent.pak
-    chrome_200_percent.pak
+    $0
+    $PLUGINSDIR
+    AviSynth
+    Extension
+    History
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    local_6.4.3.exe
-    UpdateLocal.ps1
+    potplayer_2022.258.261.85.exe
+    UpdatePotPlayer.ps1
 
-    Install Local to 'C:\ProgramData\Local' and save its setup installer to the current directory.
+    Install PotPlayer to 'C:\ProgramData\PotPlayer' and save its setup installer to the current directory.
 #>
