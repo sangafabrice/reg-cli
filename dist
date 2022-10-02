@@ -1,8 +1,8 @@
 $DevDependencies = @{
-    ProgramName = 'Tor'
-    Description = 'The script installs or updates Tor browser on Windows.'
-    Guid = '5309d28a-8bf8-488b-a23f-35f7b0b84305'
+    ProgramName = 'Shotcut'
+    Description = 'The script installs or updates Shotcut browser on Windows.'
+    Guid = 'ad799219-8aae-405b-b552-e6401cb0f484'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/62138344689ed63f3c776a6c22b8eb85bd4723ca/icon.png'
-    Tags = @('tor','update','browser')
+    Tags = @('shotcut','update','browser')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }

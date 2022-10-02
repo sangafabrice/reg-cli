@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Tor",
+    $InstallLocation = "${Env:ProgramData}\Shotcut",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,14 +11,10 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\firefox.exe"
+    $NameLocation = "$InstallLocation\shotcut.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
-        Try {
-            Get-DownloadInfo -PropertyList @{
-                OSArch = Get-ExecutableType $NameLocation
-            } -From TorProject
-        }
+        Try { Get-DownloadInfo -From Shotcut }
         Catch { }
     Try {
         $UpdateModule =
@@ -28,8 +24,8 @@ Param (
             UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Tor'
-            InstallerDescription = 'CN="The Tor Project, Inc."'
+            SoftwareName = 'Shotcut'
+            InstallerDescription = 'CN="Meltytech, LLC"'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
@@ -42,39 +38,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Tor browser software.
+    Updates Shotcut media editor software.
 .DESCRIPTION
-    The script installs or updates Tor browser on Windows.
+    The script installs or updates Shotcut media editor on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Tor.
+    It defaults to %ProgramData%\Shotcut.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Tor -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Shotcut -ErrorAction SilentlyContinue
 
-    PS > .\UpdateTor.ps1 -InstallLocation C:\ProgramData\Tor -SaveTo .
+    PS > .\UpdateShotcut.ps1 -InstallLocation C:\ProgramData\Shotcut -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Tor | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\Shotcut | Select-Object Name -First 5
     Name
     ----
-    browser
-    defaults
-    fonts
-    TorBrowser
-    Accessible.tlb
+    lib
+    share
+    avcodec-59.dll
+    avdevice-59.dll
+    avfilter-8.dll
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    tor_11.5.2.exe
-    UpdateTor.ps1
+    shotcut_v22.09.23.exe
+    UpdateShotcut.ps1
 
-    Install Tor browser to 'C:\ProgramData\Tor' and save its setup installer to the current directory.
+    Install Shotcut browser to 'C:\ProgramData\Shotcut' and save its setup installer to the current directory.
 #>
