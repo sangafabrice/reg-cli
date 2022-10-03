@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'VLC'
     Description = 'The script installs or updates VideoLAN Client on Windows.'
     Guid = '5f45f54a-33bf-4f02-aaeb-f7dfe892168b'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/a833f49bfe6f82e5366e5ac6fb34ddda38d01b25/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/09c7b3283f1c089eb33450ee80511662572bcbdd/icon.png'
     Tags = @('vlc','update','media-player')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
