@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Shotcut",
+    $InstallLocation = "${Env:ProgramData}\VideoLAN",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,10 +11,14 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\shotcut.exe"
+    $NameLocation = "$InstallLocation\vlc.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
-        Try { Get-DownloadInfo -From Shotcut }
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                OSArch = Get-ExecutableType $NameLocation
+            } -From VideoLAN
+        }
         Catch { }
     Try {
         $UpdateModule =
@@ -24,8 +28,8 @@ Param (
             UpdateInfo = $UpdateInfo
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Shotcut'
-            InstallerDescription = 'CN="Meltytech, LLC"'
+            SoftwareName = 'VLC'
+            InstallerDescription = 'CN=VideoLAN'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
@@ -38,39 +42,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Shotcut media editor software.
+    Updates VLC media player software.
 .DESCRIPTION
-    The script installs or updates Shotcut media editor on Windows.
+    The script installs or updates VLC media editor on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Shotcut.
+    It defaults to %ProgramData%\VLC.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Shotcut -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\VLC -ErrorAction SilentlyContinue
 
-    PS > .\UpdateShotcut.ps1 -InstallLocation C:\ProgramData\Shotcut -SaveTo .
+    PS > .\UpdateVLC.ps1 -InstallLocation C:\ProgramData\VLC -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Shotcut | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\VLC | Select-Object Name -First 5
     Name
     ----
-    lib
-    share
-    avcodec-59.dll
-    avdevice-59.dll
-    avfilter-8.dll
+    $PLUGINSDIR
+    hrtfs
+    locale
+    lua
+    plugins
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    shotcut_v22.09.23.exe
-    UpdateShotcut.ps1
+    vlc_3.0.17.4.exe
+    UpdateVLC.ps1
 
-    Install Shotcut browser to 'C:\ProgramData\Shotcut' and save its setup installer to the current directory.
+    Install VLC browser to 'C:\ProgramData\VLC' and save its setup installer to the current directory.
 #>
