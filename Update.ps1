@@ -44,7 +44,7 @@ Param (
 .SYNOPSIS
     Updates VLC media player software.
 .DESCRIPTION
-    The script installs or updates VLC media editor on Windows.
+    The script installs or updates VLC media player on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
