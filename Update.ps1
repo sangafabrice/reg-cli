@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Local",
+    $InstallLocation = "${Env:ProgramData}\Hyper",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -18,15 +18,20 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Try { Get-DownloadInfo -From Local }
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryId='vercel/hyper'
+                        AssetPattern= '\.exe$'
+                    }
+                }
                 Catch { }
             )
-            NameLocation = "$InstallLocation\Local.exe"
+            NameLocation = "$InstallLocation\Hyper.exe"
             SaveTo = $SaveTo
-            SoftwareName = 'Local'
-            InstallerDescription = 'Create local WordPress sites with ease.'
+            SoftwareName = 'Hyper'
+            InstallerDescription = 'A terminal built on web technologies'
             InstallerType = 'NSIS'
-            NsisType = 32
+            NsisType = 64
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -36,39 +41,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Local software.
+    Updates Hyper software.
 .DESCRIPTION
-    The script installs or updates Local on Windows.
+    The script installs or updates Hyper terminal on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Local".
+    It defaults to "%ProgramData%\Hyper".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Local' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Hyper' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateLocal.ps1 -InstallLocation 'C:\ProgramData\Local' -SaveTo .
+    PS > .\UpdateHyper.ps1 -InstallLocation 'C:\ProgramData\Hyper' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Local' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Hyper' | Select-Object Name -First 5
     Name
     ----
     locales
     resources
-    swiftshader
     chrome_100_percent.pak
     chrome_200_percent.pak
+    d3dcompiler_47.dll
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    local_6.4.3.exe
-    UpdateLocal.ps1
+    hyper_v3.3.0.exe
+    UpdateHyper.ps1
 
-    Install Local to 'C:\ProgramData\Local' and save its setup installer to the current directory.
+    Install Hyper to 'C:\ProgramData\Hyper' and save its setup installer to the current directory.
 #>
