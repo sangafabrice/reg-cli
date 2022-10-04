@@ -1,8 +1,8 @@
 $DevDependencies = @{
     ProgramName = 'Shotcut'
-    Description = 'The script installs or updates Shotcut browser on Windows.'
+    Description = 'The script installs or updates Shotcut media editor on Windows.'
     Guid = 'ad799219-8aae-405b-b552-e6401cb0f484'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/a833f49bfe6f82e5366e5ac6fb34ddda38d01b25/icon.png'
-    Tags = @('shotcut','update','browser')
+    Tags = @('shotcut','update','media-editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }

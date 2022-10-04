@@ -11,7 +11,6 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\shotcut.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
         Try { Get-DownloadInfo -From Shotcut }
@@ -22,7 +21,7 @@ Param (
             Import-Module -PassThru -Force -Verbose:$False
         @{
             UpdateInfo = $UpdateInfo
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\shotcut.exe"
             SaveTo = $SaveTo
             SoftwareName = 'Shotcut'
             InstallerDescription = 'CN="Meltytech, LLC"'
