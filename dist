@@ -1,8 +1,8 @@
 $DevDependencies = @{
     ProgramName = 'Hyper'
     Description = 'The script installs or updates Hyper terminal on Windows.'
-    Guid = 'c68d19be-5946-4955-8a04-35f6944d7abb'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/521b1ef6e7b3ff20e8f78e79b17bc0cd9b9b7865/icon.png'
+    Guid = 'f0d106ac-2f56-44db-85e0-2a2884920a1d'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/93339253feca0fe1f01d1e5d3f4238fd54f3493b/icon.png'
     Tags = @('hyper','nsis','update','terminal')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
