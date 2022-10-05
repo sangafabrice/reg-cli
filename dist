@@ -1,5 +1,5 @@
 $DevDependencies = @{
-    ProgramName = 'Notepad++'
+    ProgramName = 'NotepadPlusPlus'
     Description = 'The script installs or updates Notepad++ editor on Windows.'
     Guid = '57ddf786-cfc4-4be3-8698-ac0c74a797f7'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/eb0b35f8afd40b834c8fbd59ebe52bce2f06f550/icon.png'
