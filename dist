@@ -2,7 +2,7 @@ $DevDependencies = @{
     ProgramName = 'Notepad++'
     Description = 'The script installs or updates Notepad++ editor on Windows.'
     Guid = '57ddf786-cfc4-4be3-8698-ac0c74a797f7'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/b97cb57de4fe760bf489c9706e0493ca13fe4247/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/eb0b35f8afd40b834c8fbd59ebe52bce2f06f550/icon.png'
     Tags = @('notepad++','nsis','update','editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
