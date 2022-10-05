@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Tabby",
+    $InstallLocation = "${Env:ProgramData}\Notepad++",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,6 +11,7 @@ Param (
 )
 
 & {
+    $NameLocation = "$InstallLocation\Notepad++.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -20,17 +21,15 @@ Param (
                 Write-Verbose 'Retrieve install or update information...'
                 Try {
                     Get-DownloadInfo -PropertyList @{
-                        RepositoryId = 'Eugeny/tabby'
-                        AssetPattern = "setup\-x64\.exe$"
-                    }
+                        OSArch = Get-ExecutableType $NameLocation
+                    } -From Notepad++
                 }
                 Catch { }
             )
-            NameLocation = "$InstallLocation\Tabby.exe"
+            NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Tabby'
-            InstallerDescription = 'A terminal for a modern age'
-            InstallerType = 'NSIS'
+            SoftwareName = 'Notepad++'
+            InstallerDescription = 'Notepad++ : a free (GNU) source code editor'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -40,39 +39,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Tabby software.
+    Updates Notepad++ software.
 .DESCRIPTION
-    The script installs or updates Tabby on Windows.
+    The script installs or updates Notepad++ editor on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Tabby".
+    It defaults to "%ProgramData%\Notepad++".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Tabby' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Notepad++' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateTabby.ps1 -InstallLocation 'C:\ProgramData\Tabby' -SaveTo .
+    PS > .\UpdateNotepad++.ps1 -InstallLocation 'C:\ProgramData\Notepad++' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Tabby' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Notepad++' | Select-Object Name -First 5
     Name
     ----
-    locales
-    resources
-    chrome_100_percent.pak
-    chrome_200_percent.pak
-    d3dcompiler_47.dll
+    $_14_
+    $_15_
+    $_17_
+    $PLUGINSDIR
+    autoCompletion
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    tabby_v1.0.183.exe
-    UpdateTabby.ps1
+    notepad++_v8.4.6.exe
+    UpdateNotepad++.ps1
 
-    Install Tabby to 'C:\ProgramData\Tabby' and save its setup installer to the current directory.
+    Install Notepad++ to 'C:\ProgramData\Notepad++' and save its setup installer to the current directory.
 #>
