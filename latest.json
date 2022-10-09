@@ -1,6 +1,6 @@
 {
-    "version": "1.1.2",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Get checksum by casting HTTP response object to string."
+        "Initialize SWI Prolog updater script."
     ]
 }

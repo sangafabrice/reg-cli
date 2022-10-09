@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:LOCALAPPDATA}\Microsoft\WindowsApps\youtube-dl.exe",
+    $InstallLocation = "${Env:ProgramData}\SWI-Prolog",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,70 +11,104 @@ Param (
 )
 
 & {
-    $VerbosePreferenceBool = $VerbosePreference -ine 'SilentlyContinue'
+    $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
+    $NameLocation = "$InstallLocation\bin\swipl.exe"
+    $SaveTo = "$SaveTo\SWI-Prolog"
+    $SoftwareName = "SWI Prolog"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
-        Get-DownloadInfo -PropertyList @{
-            RepositoryId = 'ytdl-org/youtube-dl'
-            AssetPattern = 'youtube-dl.exe$|SHA2-512SUMS$'
-        } | Select-NonEmptyObject
-    $InstallerVersion = $UpdateInfo.Version
-    $InstallerDescription = 'YouTube video downloader'
-    If (!$UpdateInfo) { $InstallerVersion = "$(Get-SavedInstallerVersion $SaveTo $InstallerDescription)" }
-    Else {
-        $GetURL = {
-            Param($Pattern)
-            "$($UpdateInfo.Link.Where({ $_.Url -like $Pattern }).Url)"
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                OSArch = Get-ExecutableType $NameLocation
+            } -From SWIProlog 
         }
-        $UpdateInfo = Add-Member -InputObject $UpdateInfo -MemberType NoteProperty -Name Checksum -Value "$(
-            ("$(Invoke-WebRequest (& $GetURL '*512SUMS') -Verbose:$False)" -split "`n" |
-            ConvertFrom-String).Where({$_.P2 -ieq 'youtube-dl.exe'}).P1
-        )" -Passthru
-        $UpdateInfo.Link = & $GetURL '*.exe'
-    }
+        Catch { }
+    New-Item $SaveTo -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+    $InstallerVersion = ($UpdateInfo ?? $(
+        (Get-ChildItem $SaveTo).Name.Where({ $_ }) |
+        ForEach-Object {
+            If ($_ -match '^swi_prolog_(?<Version>(\d+\.){2}\d+-\d+)\.exe$') {
+                [pscustomobject] @{
+                    RawVersion = [version] ($Matches.Version -replace '-','.')
+                    Version = $Matches.Version
+                }
+            }
+        } | Sort-Object RawVersion -Descending -Top 1
+    )).Version
     Try {
-        New-RegCliUpdate $InstallLocation $SaveTo $InstallerVersion $InstallerDescription |
-        Import-Module -Verbose:$False -Force
-        $UpdateInfo | Start-InstallerDownload -Verbose:$VerbosePreferenceBool
-        Remove-InstallerOutdated -Verbose:$VerbosePreferenceBool
-        $TestInstall = $False
-        Set-ConsoleSymlink ([ref] $TestInstall)
-        If ($TestInstall) { Write-Verbose "$InstallerDescription $InstallerVersion installation complete." }
+        $UpdateModule =
+            @{
+                Path = $InstallLocation
+                SaveTo = $SaveTo
+                Version = $InstallerVersion
+                Description = $SoftwareName
+                SoftwareName = $SoftwareName
+            } | ForEach-Object { New-RegCliUpdate @_ }
+        & $UpdateModule {
+            Param($NameLocation)
+            Set-Variable NameLocation $NameLocation -Scope Script
+            Function Script:Get-ExecutableVersion {
+                [CmdletBinding()]
+                [OutputType([version])]
+                Param ()
+                Return ([version] ((Test-Path $NameLocation) ? 
+                "$(((. $NameLocation --version) -split ' ')[2]).1":$Null))
+            }
+                            
+        } $NameLocation
+        $UpdateModule | Import-Module -Verbose:$False -Force
+        $UpdateInfo.Where({ $_ }) | Start-InstallerDownload -Verbose:$IsVerbose
+        Remove-InstallerOutdated -Verbose:$IsVerbose
+        New-Item $InstallLocation -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+        $VERSION_PREINSTALL = Get-ExecutableVersion
+        If ($VERSION_PREINSTALL -lt (Get-InstallerVersion)) {
+            Compress-Archive $InstallLocation -DestinationPath "${Env:TEMP}\SWIProlog_$(Get-Date -Format 'yyMMddHHmm').zip" 2>&1 | Out-Null
+            Get-ChildItem $InstallLocation -ErrorAction SilentlyContinue |
+            Remove-Item -Recurse
+            Expand-Installer (Get-InstallerPath) $InstallLocation
+        }
+        Set-ChromiumShortcut ($NameLocation -replace '.exe','-win.exe') $SoftwareName
+        If ($VERSION_PREINSTALL -le (Get-ExecutableVersion)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
     } 
-    Catch { }
+    Catch { $_ }
+    Finally { $UpdateModule.Where({ $_ }) | Remove-Module -Verbose:$False }
 }
 
 <#
 .SYNOPSIS
-    Updates Youtube video downloader command line tool.
+    Updates SWI Prolog for programming logic.
 .DESCRIPTION
-    The script installs or updates Youtube video downloader command line tool on Windows.
+    The script installs or updates SWI Prolog for programming logic on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the console app.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %LOCALAPPDATA%\Microsoft\WindowsApps\youtube-dl.exe.
+    It defaults to %ProgramData%\SWI-Prolog.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\YoutubeDl -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\SWI-Prolog -ErrorAction SilentlyContinue
 
-    PS > .\UpdateYoutubeDl.ps1 -InstallLocation C:\ProgramData\YoutubeDl\youtube-dl.exe -SaveTo .
+    PS > .\UpdateSWIProlog.ps1 -InstallLocation C:\ProgramData\SWI-Prolog\ -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\YoutubeDl | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\SWI-Prolog\bin\ | Where-Object Name -Like 'swipl*' | Select-Object Name
     Name
     ----
-    youtube-dl.exe
+    swipl-ld.exe
+    swipl-win.exe
+    swipl.exe
+    swipl.home
 
-    PS > Get-ChildItem | Select-Object Name
+    PS > Get-ChildItem -Recurse | Select-Object Name
     Name
     ----
-    2021.12.17.exe
-    UpdateYoutubeDl.ps1
+    SWI-Prolog
+    UpdateSWIProlog.ps1
+    swi_prolog_8.4.3-1.exe
 
-    Install Youtube video downloader to 'C:\ProgramData\YoutubeDl' and save its setup installer to the current directory.
+    Install SWI Prolog to 'C:\ProgramData\SWI-Prolog' and save its setup installer to the current directory.
 #>

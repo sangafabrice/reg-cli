@@ -1,0 +1,7 @@
+$DevDependencies = @{
+    ProgramName = 'SWIProlog'
+    Guid = '100ac880-a0d3-4c2d-b81e-d962e3003fc2'
+    IconUri = ''
+    Tags = @('swi-prolog','cli','prolog','update')
+    RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
+}
