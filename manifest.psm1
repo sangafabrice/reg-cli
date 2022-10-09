@@ -25,7 +25,7 @@ Function New-UpdaterScript {
             Author = 'Fabrice Sanga'
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
-            Description = ''
+            Description = '*'
             RequiredModules = @(@{
                 ModuleName = $DIModule
                 ModuleVersion = "$((Find-Module $DIModule).Version)"
