@@ -58,7 +58,9 @@ Param (
         } $NameLocation
         $UpdateModule | Import-Module -Verbose:$False -Force
         $UpdateInfo.Where({ $_ }) | Start-InstallerDownload -Verbose:$IsVerbose
-        Remove-InstallerOutdated -Verbose:$IsVerbose
+        Write-Verbose 'Delete outdated installers...'
+        Get-ChildItem $SaveTo |
+        Remove-Item -Exclude (Get-Item (Get-InstallerPath)).Name
         New-Item $InstallLocation -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
         $VERSION_PREINSTALL = Get-ExecutableVersion
         If ($VERSION_PREINSTALL -lt (Get-InstallerVersion)) {
