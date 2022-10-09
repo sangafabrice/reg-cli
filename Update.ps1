@@ -70,7 +70,7 @@ Param (
         Set-ChromiumShortcut ($NameLocation -replace '.exe','-win.exe') $SoftwareName
         If ($VERSION_PREINSTALL -le (Get-ExecutableVersion)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
     } 
-    Catch { $_ }
+    Catch { }
     Finally { $UpdateModule.Where({ $_ }) | Remove-Module -Verbose:$False }
 }
 
