@@ -16,7 +16,8 @@ Param (
     [ValidateSet('Chromium','Squirrel','NSIS')]
     [string] $InstallerType = 'Chromium',
     [switch] $ForceReinstall,
-    [switch] $CompareInstalls
+    [switch] $CompareInstalls,
+    [string] $ShortcutName
 )
 
 DynamicParam {
@@ -99,7 +100,11 @@ Process {
                     'Squirrel'  { Expand-SquirrelInstaller @ExpandArgument }
                     Default { Expand-ChromiumInstaller @ExpandArgument }
                 }
-                Set-ChromiumShortcut $_
+                @{ Path = $_ } |
+                ForEach-Object {
+                    If ($PSBoundParameters.ContainsKey('ShortcutName')) { $_.Name = $ShortcutName }
+                    Set-ChromiumShortcut @_
+                }
             }
         }
         $VisualElementManifest.Where({ $_ }) |
