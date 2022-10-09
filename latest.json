@@ -1,7 +1,6 @@
 {
-    "version": "6.2.4",
+    "version": "6.2.5",
     "releaseNotes": [
-        "Add MD5 algorithm for verifying setup integrity.",
-        "Get NSIS machine type from the current install."
+        "Add changing the default shortcut name feature."
     ]
 }

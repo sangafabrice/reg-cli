@@ -126,9 +126,12 @@ Filter Set-ChromiumShortcut {
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
-        [string] $Path
+        [string] $Path,
+        [AllowNull()]
+        [string] $Name
     )
-    [RegCli]::SetChromiumShortcut($Path)
+    If (!$PSBoundParameters.ContainsKey('Name')) { $Name = $Null }
+    [RegCli]::SetChromiumShortcut($Path, $Name)
 }
 Set-Alias -Name Set-SquirrelShortcut -Value Set-ChromiumShortcut
 Set-Alias -Name Set-NsisShortcut -Value Set-ChromiumShortcut
