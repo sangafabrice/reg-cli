@@ -293,17 +293,22 @@ Class RegCli {
         }
     }
 
-    Static [void] SetChromiumShortcut([string] $ExecutablePath) {
+    Static [void] SetChromiumShortcut(
+        [string] $ExecutablePath,
+        [string] $ShortcutName
+    ) {
         # Create shortcut link to chromium app and save it to Start Menu
 
         $ExeItem = Get-Item -LiteralPath $ExecutablePath -ErrorAction SilentlyContinue
         (New-Object -ComObject 'WScript.Shell').
         CreateShortcut("${Env:ProgramData}\Microsoft\Windows\Start Menu\Programs\$(
-            $ExeItem.VersionInfo |
-            ForEach-Object {
-                $Description = $_.FileDescription
-                $Description ? ($Description):($_.ProductName)
-            }
+            [string]::IsNullOrEmpty($ShortcutName) ? (
+                $ExeItem.VersionInfo |
+                ForEach-Object {
+                    $Description = $_.FileDescription
+                    $Description ? ($Description):($_.ProductName)
+                }
+            ):$ShortcutName
         ).lnk") |
         ForEach-Object {
             $_.TargetPath = $ExeItem.FullName
