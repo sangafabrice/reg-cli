@@ -1,8 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'VLC'
-    Description = 'The script installs or updates VLC media player on Windows.'
-    Guid = '5f45f54a-33bf-4f02-aaeb-f7dfe892168b'
+    Guid = '4d5bbc88-60c6-4839-bf8d-e209d34fa42a'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/09c7b3283f1c089eb33450ee80511662572bcbdd/icon.png'
-    Tags = @('vlc','update','media-player')
+    Tags = @('codeblocks','nsis','update','ide','editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }

@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\VideoLAN",
+    $InstallLocation = "${Env:ProgramData}\CodeBlocks",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,14 +11,9 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\vlc.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
-        Try {
-            Get-DownloadInfo -PropertyList @{
-                OSArch = Get-ExecutableType $NameLocation
-            } -From VideoLAN
-        }
+        Try { Get-DownloadInfo -From CodeBlocks }
         Catch { }
     Try {
         $UpdateModule =
@@ -26,12 +21,12 @@ Param (
             Import-Module -PassThru -Force -Verbose:$False
         @{
             UpdateInfo = $UpdateInfo
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\codeblocks.exe"
             SaveTo = $SaveTo
-            SoftwareName = 'VLC'
-            InstallerDescription = 'CN=VideoLAN'
+            SoftwareName = 'CodeBlocks'
+            InstallerDescription = 'Code::Blocks cross-platform IDE'
+            ShortcutName = 'CodeBlocks IDE'
             UseTimestamp = $True
-            TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
@@ -65,15 +60,15 @@ Param (
     Name
     ----
     $PLUGINSDIR
-    hrtfs
-    locale
-    lua
-    plugins
+    MinGW
+    share
+    Addr2LineUI.exe
+    cb_console_runner.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    vlc_3.0.17.4.exe
+    codeblocks_20.3.exe
     UpdateVLC.ps1
 
     Install VLC browser to 'C:\ProgramData\VLC' and save its setup installer to the current directory.

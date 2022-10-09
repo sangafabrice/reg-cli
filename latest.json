@@ -1,6 +1,6 @@
 {
-    "version": "0.0.4",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Initialize VideoLAN Client updater script."
+        "Initialize CodeBlocks IDE updater script."
     ]
 }
