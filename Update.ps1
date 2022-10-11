@@ -13,7 +13,6 @@ Param (
 & {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
     $NameLocation = "$InstallLocation\bin\swipl.exe"
-    $SaveTo = "$SaveTo\SWI-Prolog"
     $SoftwareName = "SWI Prolog"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
@@ -23,7 +22,6 @@ Param (
             } -From SWIProlog 
         }
         Catch { }
-    New-Item $SaveTo -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
     $InstallerVersion = ($UpdateInfo ?? $(
         (Get-ChildItem $SaveTo).Name.Where({ $_ }) |
         ForEach-Object {
@@ -38,39 +36,35 @@ Param (
     Try {
         $UpdateModule =
             @{
-                Path = $InstallLocation
+                Path = $NameLocation
                 SaveTo = $SaveTo
                 Version = $InstallerVersion
                 Description = $SoftwareName
                 SoftwareName = $SoftwareName
             } | ForEach-Object { New-RegCliUpdate @_ }
         & $UpdateModule {
-            Param($NameLocation)
-            Set-Variable NameLocation $NameLocation -Scope Script
             Function Script:Get-ExecutableVersion {
                 [CmdletBinding()]
                 [OutputType([version])]
                 Param ()
-                Return ([version] ((Test-Path $NameLocation) ? 
-                "$(((. $NameLocation --version) -split ' ')[2]).1":$Null))
+                Return ([version] ((Test-Path $Script:InstallPath) ? 
+                "$(((. $Script:InstallPath --version) -split ' ')[2]).1":$Null))
             }
-                            
-        } $NameLocation
+            Remove-Variable -Name 'VERSION_PREINSTALL' -Force -Scope Script
+            Set-Variable -Name 'VERSION_PREINSTALL' -Value (Get-ExecutableVersion) -Option ReadOnly -Scope Script
+        }
         $UpdateModule | Import-Module -Verbose:$False -Force
         $UpdateInfo.Where({ $_ }) | Start-InstallerDownload -Verbose:$IsVerbose
-        Write-Verbose 'Delete outdated installers...'
-        Get-ChildItem $SaveTo |
-        Remove-Item -Exclude (Get-Item (Get-InstallerPath)).Name
+        Remove-InstallerOutdated -UsePrefix -Verbose:$IsVerbose
         New-Item $InstallLocation -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
-        $VERSION_PREINSTALL = Get-ExecutableVersion
-        If ($VERSION_PREINSTALL -lt (Get-InstallerVersion)) {
+        If ((Get-ExecutableVersion) -lt (Get-InstallerVersion)) {
             Compress-Archive $InstallLocation -DestinationPath "${Env:TEMP}\SWIProlog_$(Get-Date -Format 'yyMMddHHmm').zip" 2>&1 | Out-Null
             Get-ChildItem $InstallLocation -ErrorAction SilentlyContinue |
             Remove-Item -Recurse
             Expand-Installer (Get-InstallerPath) $InstallLocation
         }
         Set-ChromiumShortcut ($NameLocation -replace '.exe','-win.exe') $SoftwareName
-        If ($VERSION_PREINSTALL -le (Get-ExecutableVersion)) { Write-Verbose "$SoftwareName $InstallerVersion installation complete." }
+        If (!(Test-InstallOutdated -CompareInstalls)) { Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete." }
     } 
     Catch { }
     Finally { $UpdateModule.Where({ $_ }) | Remove-Module -Verbose:$False }
