@@ -1,6 +1,8 @@
 {
-    "version": "0.0.3",
+    "version": "0.1.0",
     "releaseNotes": [
-        "Initialize SWI Prolog updater script."
+        "Remove $SaveTo directory creation.",
+        "Simplify outdated installer removal.",
+        "Get VERSION_PREINSTALL and InstallerPath in the dynamic module context."
     ]
 }
