@@ -13,7 +13,7 @@ Param (
     [string] $Checksum,
     [string] $Extension = '.exe',
     [switch] $UsePrefix,
-    [ValidateSet('Chromium','Squirrel','NSIS')]
+    [ValidateSet('Chromium','Squirrel','NSIS','Basic')]
     [string] $InstallerType = 'Chromium',
     [switch] $ForceReinstall,
     [switch] $CompareInstalls,
@@ -97,6 +97,7 @@ Process {
                         { $ExpandArgument.ForceApp = $PSBoundParameters.NsisType }
                         Expand-NsisInstaller @ExpandArgument
                     }
+                    'Basic' { Expand-BasicInstaller @ExpandArgument }
                     'Squirrel'  { Expand-SquirrelInstaller @ExpandArgument }
                     Default { Expand-ChromiumInstaller @ExpandArgument }
                 }
