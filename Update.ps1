@@ -57,13 +57,15 @@ Param (
 
     PS > .\UpdateDarktable.ps1 -InstallLocation C:\ProgramData\Darktable -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Darktable | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\Darktable\bin\ | Where-Object Name -Like 'darktable*' | Select-Object Name
     Name
     ----
-    bin
-    lib
-    share
-    Uninstall.exe
+    darktable-chart.exe
+    darktable-cli.exe
+    darktable-cltest.exe
+    darktable-generate-cache.exe
+    darktable-rs-identify.exe
+    darktable.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
