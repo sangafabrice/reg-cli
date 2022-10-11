@@ -1,6 +1,7 @@
 {
-    "version": "6.2.5",
+    "version": "6.3.0",
     "releaseNotes": [
-        "Add changing the default shortcut name feature."
+        "Add Expand-BasicInstaller to move the archive after version comparison.",
+        "Change variable VERSION_PREINSTALL from constant to read-only."
     ]
 }

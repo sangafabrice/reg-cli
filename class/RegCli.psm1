@@ -205,6 +205,16 @@ Class RegCli {
         [string] $ArchivePattern,
         [bool] $ForceReinstall
     ) {
+        [RegCli]::ExpandTypeInstaller($InstallerPath, $ExecutablePath, $ArchivePattern, $ForceReinstall, $False)
+    }
+
+    Static [void] ExpandTypeInstaller(
+        [string] $InstallerPath,
+        [string] $ExecutablePath,
+        [string] $ArchivePattern,
+        [bool] $ForceReinstall,
+        [bool] $MoveAll
+    ) {
         # Extracts files from a specified Type installer $InstallerPath
         # to the directory in which the application $ExecutablePath is located.
         # Precondition : 
@@ -212,7 +222,7 @@ Class RegCli {
         # 2. $ExecutablePath may or may not exist.
 
         $ExeName = $ExeBaseName = $ExeDir = $Null
-        ,@($ExecutablePath -split '\\') |
+        ,@(($ExecutablePath -split '\\').Where({ $_ })) |
         ForEach-Object {
             $ExeName = $_[-1]
             $ExeBaseName = & {
@@ -220,7 +230,8 @@ Class RegCli {
                 $Matches.BaseName
             }
             $Count = $_.Count
-            $ExeDir = $(If ($Count -gt 1) { $_[0..($Count - 2)] -join '\' } Else { $PWD })
+            $Depth = ([int] $MoveAll) + 1
+            $ExeDir = $(If ($Count -gt $Depth) { $_[0..($Count - 1 - $Depth)] -join '\' } Else { $PWD })
             Switch ($(Try { Get-Item -LiteralPath $InstallerPath } Catch { })) {
                 { $Null -ne $_ } {
                     [RegCli]::ExpandInstaller($_.FullName)
@@ -252,7 +263,8 @@ Class RegCli {
                             Stop-Process -Name $($ExeBaseName) -Force -ErrorAction SilentlyContinue
                             Get-ChildItem $ExeDir -ErrorAction SilentlyContinue |
                             Remove-Item -Recurse
-                            Move-Item "$($UnzippedExeName.Directory)\*" $ExeDir -ErrorAction SilentlyContinue
+                            If ($MoveAll) { Move-Item "$UnzipPath\*" $ExeDir -Exclude '$*' -ErrorAction SilentlyContinue }
+                            Else { Move-Item "$($UnzippedExeName.Directory)\*" $ExeDir -Exclude '$*' -ErrorAction SilentlyContinue }
                         } Else { Write-Verbose 'A newer or the same version is already installed.' }
                         Pop-Location
                         Remove-Item $UnzipPath -Recurse
@@ -437,7 +449,7 @@ Class RegCli {
                 (Get-Item -LiteralPath $InstallPath -ErrorAction SilentlyContinue).VersionInfo.FileVersionRaw
             }
 
-            Set-Variable -Name 'VERSION_PREINSTALL' -Value (Get-ExecutableVersion) -Option Constant
+            Set-Variable -Name 'VERSION_PREINSTALL' -Value (Get-ExecutableVersion) -Option ReadOnly
 
             $Version =
                 Switch ($VersionString) {
