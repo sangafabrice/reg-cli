@@ -1,7 +1,7 @@
 $DevDependencies = @{
-    ProgramName = 'CodeBlocks'
-    Guid = '4d5bbc88-60c6-4839-bf8d-e209d34fa42a'
+    ProgramName = 'Darktable'
+    Guid = '5808279a-8944-425c-857b-6bbec0e4b173'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/f8141f41f1e8d1eb4dd31bc8b27557694f6f3147/icon.png'
-    Tags = @('codeblocks','nsis','update','ide','editor')
+    Tags = @('darktable','nsis','update','photo','editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }

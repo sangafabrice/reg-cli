@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\CodeBlocks",
+    $InstallLocation = "${Env:ProgramData}\Darktable",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -13,7 +13,7 @@ Param (
 & {
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
-        Try { Get-DownloadInfo -From CodeBlocks }
+        Try { Get-DownloadInfo -From Darktable }
         Catch { }
     Try {
         $UpdateModule =
@@ -21,13 +21,14 @@ Param (
             Import-Module -PassThru -Force -Verbose:$False
         @{
             UpdateInfo = $UpdateInfo
-            NameLocation = "$InstallLocation\codeblocks.exe"
+            NameLocation = "$InstallLocation\bin\darktable.exe"
             SaveTo = $SaveTo
-            SoftwareName = 'CodeBlocks'
-            InstallerDescription = 'Code::Blocks cross-platform IDE'
-            ShortcutName = 'CodeBlocks IDE'
+            SoftwareName = 'Darktable'
+            ShortcutName = 'Darktable Photo Workflow'
             UseTimestamp = $True
             Checksum = $UpdateInfo.Checksum
+            UsePrefix = $True
+            InstallerType = 'Basic'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -37,39 +38,38 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates VLC media player software.
+    Updates Darktable photo editor software.
 .DESCRIPTION
-    The script installs or updates VLC media player on Windows.
+    The script installs or updates Darktable photo editor on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\VLC.
+    It defaults to %ProgramData%\Darktable.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\VLC -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Darktable -ErrorAction SilentlyContinue
 
-    PS > .\UpdateVLC.ps1 -InstallLocation C:\ProgramData\VLC -SaveTo .
+    PS > .\UpdateDarktable.ps1 -InstallLocation C:\ProgramData\Darktable -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\VLC | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\Darktable | Select-Object Name -First 5
     Name
     ----
-    $PLUGINSDIR
-    MinGW
+    bin
+    lib
     share
-    Addr2LineUI.exe
-    cb_console_runner.exe
+    Uninstall.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    codeblocks_20.3.exe
-    UpdateVLC.ps1
+    darktable_release-4.0.1.exe
+    UpdateDarktable.ps1
 
-    Install VLC browser to 'C:\ProgramData\VLC' and save its setup installer to the current directory.
+    Install Darktable to 'C:\ProgramData\Darktable' and save its setup installer to the current directory.
 #>
