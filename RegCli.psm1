@@ -18,6 +18,23 @@ Function Expand-Installer {
     [RegCli]::ExpandInstaller($Path, $Destination)
 }
 
+Function Expand-BasicInstaller {
+    [CmdletBinding(PositionalBinding=$True)]
+    [OutputType([System.Void])]
+    Param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidateFileSystem($_) })]
+        [string] $Path,
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ [ValidationUtility]::ValidatePathString($_) })]
+        [string] $ApplicationPath,
+        [switch] $ForceReinstall
+    )
+    [RegCli]::ExpandTypeInstaller($Path, $ApplicationPath, '*.___', $ForceReinstall, $True)
+}
+
 Function Expand-ChromiumInstaller {
     [CmdletBinding(PositionalBinding=$True)]
     [OutputType([System.Void])]
