@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'Inkscape'
     Guid = 'd2d964df-28b1-4f1d-8a8f-22b2400bf428'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/c80cd49695a91f9769f6f5ca4c5d3de9861b035a/icon.png'
-    Tags = @('inkscape','nsis','update','photo','editor')
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/998eee1f8ab2ac9f402c53bfad5997774ccd16fb/icon.png'
+    Tags = @('inkscape','nsis','update','svg','editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
