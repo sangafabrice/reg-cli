@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '6.3.0'
+ModuleVersion = '6.3.1'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -28,7 +28,8 @@ PrivateData = @{
         ProjectUri = 'https://github.com/sangafabrice/reg-cli'
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
         ReleaseNotes = 'Add Expand-BasicInstaller to move the archive after version comparison.
-Change variable VERSION_PREINSTALL from constant to read-only.'
+Change variable VERSION_PREINSTALL from constant to read-only.
+Add shortcut names conversion to title case.'
     }
 }
 }
