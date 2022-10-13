@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\WhatsApp",
+    $InstallLocation = "${Env:ProgramData}\Wireshark",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,7 +11,8 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\WhatsApp.exe"
+    $NameLocation = "$InstallLocation\Wireshark.exe"
+    $MachineType = Get-ExecutableType $NameLocation
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -19,59 +20,58 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Try {
-                    Get-DownloadInfo -PropertyList @{
-                        OSArch = Get-ExecutableType $NameLocation
-                    } -From WhatsApp
-                }
+                Try { Get-DownloadInfo -PropertyList @{ OSArch = $MachineType } -From Wireshark }
                 Catch { }
             )
+            InstallLocation = $InstallLocation
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'WhatsApp'
-            InstallerType = 'Squirrel'
+            SoftwareName = 'Wireshark'
+            InstallerDescription = "Wireshark installer for $($MachineType -replace 'x' -replace '86','32')-bit Windows"
+            InstallerType = 'BasicNSIS'
+            CompareInstalls = $True
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Catch { }
+    Catch { $_ }
     Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
 <#
 .SYNOPSIS
-    Updates WhatsApp software.
+    Updates Wireshark software.
 .DESCRIPTION
-    The script installs or updates WhatsApp on Windows.
+    The script installs or updates Wireshark on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\WhatsApp".
+    It defaults to "%ProgramData%\Wireshark".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\WhatsApp' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Wireshark' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateWhatsApp.ps1 -InstallLocation 'C:\ProgramData\WhatsApp' -SaveTo .
+    PS > .\UpdateWireshark.ps1 -InstallLocation 'C:\ProgramData\Wireshark' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\WhatsApp' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Wireshark' | Select-Object Name -First 5
     Name
     ----
-    locales
-    resources
-    whatsapp_ExecutionStub.exe
-    whatsapp.exe
-    chrome_100_percent.pak
+    diameter
+    dtds
+    extcap
+    iconengines
+    imageformats
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    whatsapp_2.2232.8.exe
-    UpdateWhatsApp.ps1
+    UpdateWireshark.ps1
+    wireshark_4.0.0.exe
 
-    Install WhatsApp to 'C:\ProgramData\WhatsApp' and save its setup installer to the current directory.
+    Install Wireshark to 'C:\ProgramData\Wireshark' and save its setup installer to the current directory.
 #>

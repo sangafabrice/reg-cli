@@ -1,6 +1,6 @@
 {
-    "version": "0.0.3",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Update powershell gallery logo icon."
+        "Initialize Wireshark updater script."
     ]
 }
