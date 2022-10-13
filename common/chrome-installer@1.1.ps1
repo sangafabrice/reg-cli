@@ -13,11 +13,12 @@ Param (
     [string] $Checksum,
     [string] $Extension = '.exe',
     [switch] $UsePrefix,
-    [ValidateSet('Chromium','Squirrel','NSIS','Basic')]
+    [ValidateSet('Chromium','Squirrel','NSIS','Basic','BasicNSIS')]
     [string] $InstallerType = 'Chromium',
     [switch] $ForceReinstall,
     [switch] $CompareInstalls,
-    [string] $ShortcutName
+    [string] $ShortcutName,
+    [string] $InstallLocation
 )
 
 DynamicParam {
@@ -96,6 +97,16 @@ Process {
                         If ($PSBoundParameters.ContainsKey('NsisType')) 
                         { $ExpandArgument.ForceApp = $PSBoundParameters.NsisType }
                         Expand-NsisInstaller @ExpandArgument
+                    }
+                    'BasicNSIS'  {
+                        @{
+                            FilePath = Get-InstallerPath
+                            ArgumentList = @(
+                                '/S'
+                                "/D=$InstallLocation"
+                            )
+                            Wait = $True
+                        } | ForEach-Object { Start-Process @_ }
                     }
                     'Basic' { Expand-BasicInstaller @ExpandArgument }
                     'Squirrel'  { Expand-SquirrelInstaller @ExpandArgument }
