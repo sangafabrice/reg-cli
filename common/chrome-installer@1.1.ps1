@@ -101,10 +101,7 @@ Process {
                     'BasicNSIS'  {
                         @{
                             FilePath = Get-InstallerPath
-                            ArgumentList = @(
-                                '/S'
-                                "/D=$InstallLocation"
-                            )
+                            ArgumentList = '/S',"/D=$InstallLocation"
                             Wait = $True
                         } | ForEach-Object { Start-Process @_ }
                     }
