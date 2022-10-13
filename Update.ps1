@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Darktable",
+    $InstallLocation = "${Env:ProgramData}\Inkscape",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,22 +11,24 @@ Param (
 )
 
 & {
-    Write-Verbose 'Retrieve install or update information...'
-    $UpdateInfo =
-        Try { Get-DownloadInfo -From Darktable }
-        Catch { }
+    $NameLocation = "$InstallLocation\bin\inkscape.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
         @{
-            UpdateInfo = $UpdateInfo
-            NameLocation = "$InstallLocation\bin\darktable.exe"
+            UpdateInfo = $(
+                Write-Verbose 'Retrieve install or update information...'
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        OSArch = Get-ExecutableType $NameLocation
+                    } -From Inkscape
+                }
+                Catch { }
+            )
+            NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Darktable'
-            ShortcutName = 'Darktable Photo Workflow'
-            UseTimestamp = $True
-            Checksum = $UpdateInfo.Checksum
+            SoftwareName = 'Inkscape'
             UsePrefix = $True
             InstallerType = 'Basic'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
@@ -38,40 +40,38 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Darktable photo editor software.
+    Updates Inkscape vector graphics editor software.
 .DESCRIPTION
-    The script installs or updates Darktable photo editor on Windows.
+    The script installs or updates Inkscape vector graphics editor on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Darktable.
+    It defaults to %ProgramData%\Inkscape.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Darktable -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Inkscape -ErrorAction SilentlyContinue
 
-    PS > .\UpdateDarktable.ps1 -InstallLocation C:\ProgramData\Darktable -SaveTo .
+    PS > .\UpdateInkscape.ps1 -InstallLocation C:\ProgramData\Inkscape -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Darktable\bin\ | Where-Object Name -Like 'darktable*' | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\Inkscape\bin\ | Where-Object Name -Like 'ink*' | Select-Object Name
     Name
     ----
-    darktable-chart.exe
-    darktable-cli.exe
-    darktable-cltest.exe
-    darktable-generate-cache.exe
-    darktable-rs-identify.exe
-    darktable.exe
+    inkscape.com
+    inkscape.exe
+    inkview.com
+    inkview.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    darktable_release-4.0.1.exe
-    UpdateDarktable.ps1
+    inkscape_1.2.1.exe
+    UpdateInkscape.ps1
 
-    Install Darktable to 'C:\ProgramData\Darktable' and save its setup installer to the current directory.
+    Install Inkscape to 'C:\ProgramData\Inkscape' and save its setup installer to the current directory.
 #>
