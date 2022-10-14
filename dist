@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'Krita'
     Guid = '92609713-2eab-4c4e-b0bc-fc9b9f90136b'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/7ac9be17daab08722b8335cfffe1d72e3806cdf0/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/c3fd097258816175baeb2e92bd776d781a77fd1b/icon.png'
     Tags = @('krita','nsis','update','image-editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
