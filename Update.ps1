@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Blisk",
+    $InstallLocation = "${Env:ProgramData}\OBS-Studio",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -18,17 +18,20 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Try { Get-DownloadInfo -From Blisk }
+                Try {
+                    Get-DownloadInfo -PropertyList @{
+                        RepositoryId = 'obsproject/obs-studio'
+                        AssetPattern = 'Full\-Installer\-x64\.exe$'
+                    }
+                }
                 Catch { }
             )
-            NameLocation = "$InstallLocation\blisk.exe"
+            InstallLocation = $InstallLocation
+            NameLocation = "$InstallLocation\bin\64bit\obs64.exe"
             SaveTo = $SaveTo
-            SoftwareName = 'Blisk'
-            InstallerDescription = 'Blisk Installer'
-            VisualElementManifest = @{
-                BaseNameLocation = "$InstallLocation\chrome"
-                HexColor = '#5F6368'
-            }
+            SoftwareName = 'OBS Studio'
+            InstallerDescription = 'OBS Studio Installer'
+            InstallerType = 'BasicNSIS'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -38,38 +41,48 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Blisk browser software.
+    Updates OBS Studio software.
 .DESCRIPTION
-    The script installs or updates Blisk browser on Windows.
+    The script installs or updates OBS Studio on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Blisk.
+    It defaults to %ProgramData%\OBS-Studio.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Blisk -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\OBS-Studio -ErrorAction SilentlyContinue
 
-    PS > .\UpdateBlisk.ps1 -InstallLocation C:\ProgramData\Blisk -SaveTo .
+    PS > .\UpdateOBSStudio.ps1 -InstallLocation C:\ProgramData\OBS-Studio -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Blisk | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\OBS-Studio\bin\64bit | Where-Object Name -Like 'obs*' | Select-Object Name
     Name
     ----
-    19.0.60.43
-    blisk.exe
-    chrome.VisualElementsManifest.xml
-    chrome_proxy.exe
+    obs-amf-test.exe
+    obs-amf-test.pdb
+    obs-ffmpeg-mux.exe
+    obs-ffmpeg-mux.pdb
+    obs-frontend-api.dll
+    obs-frontend-api.pdb
+    obs-scripting.dll
+    obs-scripting.pdb
+    obs.dll
+    obs.pdb
+    obs64.exe
+    obs64.pdb
+    obsglad.dll
+    obsglad.pdb
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    blisk_19.0.60.43.exe
-    UpdateBlisk.ps1
+    obs_studio_28.0.3.exe
+    UpdateOBSStudio.ps1
 
-    Install Blisk browser to 'C:\ProgramData\Blisk' and save its setup installer to the current directory.
+    Install OBS Studio to 'C:\ProgramData\OBS-Studio' and save its setup installer to the current directory.
 #>
