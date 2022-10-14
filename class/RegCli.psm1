@@ -676,7 +676,10 @@ Class RegCli {
                 Try {
                     If ([string]::IsNullOrEmpty($VersionString)) { Throw }
                     $Installer = Get-Item (Get-InstallerPath) -ErrorAction Stop
-                    $DescriptionCopy = !$UsePrefix ? [RegCli]::GetInstallerDescription($Installer):$InstallerPrefix
+                    $DescriptionCopy = !$UsePrefix ? $(
+                        $InstallerDescription.Contains('*') ?
+                        ${InstallerDescription}:[RegCli]::GetInstallerDescription($Installer)
+                    ):$InstallerPrefix
                     Write-Verbose 'Delete outdated installers...'
                     Get-ChildItem $Installer.Directory |
                     Select-SavedInstaller -Description $DescriptionCopy |
