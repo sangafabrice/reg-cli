@@ -1,8 +1,9 @@
 {
-    "version": "6.3.1",
+    "version": "6.3.2",
     "releaseNotes": [
         "Add Expand-BasicInstaller to move the archive after version comparison.",
         "Change variable VERSION_PREINSTALL from constant to read-only.",
-        "Add shortcut names conversion to title case."
+        "Add shortcut names conversion to title case.",
+        "Add installer description selection."
     ]
 }
