@@ -1,7 +1,7 @@
 $DevDependencies = @{
-    ProgramName = 'Wireshark'
-    Guid = 'f17ad193-53ef-48fb-9685-fffe9d32f334'
+    ProgramName = 'Krita'
+    Guid = '92609713-2eab-4c4e-b0bc-fc9b9f90136b'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/7ac9be17daab08722b8335cfffe1d72e3806cdf0/icon.png'
-    Tags = @('wireshark','nsis','update','network-analyzer')
+    Tags = @('krita','nsis','update','image-editor')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }

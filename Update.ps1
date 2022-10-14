@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Wireshark",
+    $InstallLocation = "${Env:ProgramData}\Krita",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,7 +11,7 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Wireshark.exe"
+    $NameLocation = "$InstallLocation\bin\Krita.exe"
     $MachineType = Get-ExecutableType $NameLocation
     Try {
         $UpdateModule =
@@ -20,16 +20,15 @@ Param (
         @{
             UpdateInfo = $(
                 Write-Verbose 'Retrieve install or update information...'
-                Try { Get-DownloadInfo -PropertyList @{ OSArch = $MachineType } -From Wireshark }
+                Try { Get-DownloadInfo -PropertyList @{ OSArch = $MachineType } -From Krita }
                 Catch { }
             )
             InstallLocation = $InstallLocation
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Wireshark'
-            InstallerDescription = "Wireshark installer for $($MachineType -replace 'x' -replace '86','32')-bit Windows"
+            SoftwareName = 'Krita'
+            InstallerDescription = "Krita ($MachineType) * Setup"
             InstallerType = 'BasicNSIS'
-            CompareInstalls = $True
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -39,39 +38,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Wireshark software.
+    Updates Krita software.
 .DESCRIPTION
-    The script installs or updates Wireshark on Windows.
+    The script installs or updates Krita image editor on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Wireshark".
+    It defaults to "%ProgramData%\Krita".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Wireshark' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\Krita\bin' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateWireshark.ps1 -InstallLocation 'C:\ProgramData\Wireshark' -SaveTo .
+    PS > .\UpdateKrita.ps1 -InstallLocation 'C:\ProgramData\Krita\bin' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Wireshark' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\Krita\bin' | Where-Object Name -Like 'krita*' | Select-Object Name
     Name
     ----
-    diameter
-    dtds
-    extcap
-    iconengines
-    imageformats
+    krita.com
+    krita.dll
+    krita.exe
+    kritarunner.com
+    kritarunner.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    UpdateWireshark.ps1
-    wireshark_4.0.0.exe
+    krita_5.1.1.exe
+    UpdateKrita.ps1
 
-    Install Wireshark to 'C:\ProgramData\Wireshark' and save its setup installer to the current directory.
+    Install Krita to 'C:\ProgramData\Krita\bin' and save its setup installer to the current directory.
 #>
