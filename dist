@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'OBSStudio'
     Guid = '83aaba0b-e315-4397-8b40-74012f9f6e1a'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/58d15da2c7da327f3561e3c86884582d7e0db854/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/301db0958c4848f4708a6f735884e7974e1fbf19/icon.png'
     Tags = @('obs-studio','nsis','update','video-recording','live-streaming')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
