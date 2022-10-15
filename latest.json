@@ -1,8 +1,6 @@
 {
-    "version": "0.1.0",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Remove $SaveTo directory creation.",
-        "Simplify outdated installer removal.",
-        "Get VERSION_PREINSTALL and InstallerPath in the dynamic module context."
+        "Initialize umbrello updater script based on SWI Prolog script."
     ]
 }

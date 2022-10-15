@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\SWI-Prolog",
+    $InstallLocation = "${Env:ProgramData}\Umbrello",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -12,20 +12,20 @@ Param (
 
 & {
     $IsVerbose = $VerbosePreference -ine 'SilentlyContinue'
-    $NameLocation = "$InstallLocation\bin\swipl.exe"
-    $SoftwareName = "SWI Prolog"
+    $NameLocation = "$InstallLocation\bin\umbrello.exe"
+    $SoftwareName = "Umbrello"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo = 
         Try {
             Get-DownloadInfo -PropertyList @{
                 OSArch = Get-ExecutableType $NameLocation
-            } -From SWIProlog 
+            } -From Umbrello 
         }
         Catch { }
     $InstallerVersion = ($UpdateInfo ?? $(
         (Get-ChildItem $SaveTo).Name.Where({ $_ }) |
         ForEach-Object {
-            If ($_ -match '^swi_prolog_(?<Version>(\d+\.){2}\d+-\d+)\.exe$') {
+            If ($_ -match '^umbrello_(?<Version>(\d+\.){2}\d+-\d+)\.exe$') {
                 [pscustomobject] @{
                     RawVersion = [version] ($Matches.Version -replace '-','.')
                     Version = $Matches.Version
@@ -48,7 +48,7 @@ Param (
                 [OutputType([version])]
                 Param ()
                 Return ([version] ((Test-Path $Script:InstallPath) ? 
-                "$(((. $Script:InstallPath --version) -split ' ')[2]).1":$Null))
+                (Invoke-Expression "((. $Script:InstallPath --version | Where-Object { `$_ -like 'Umbrello*'}) -replace ' ' -split ':')[-1]"):$Null))
             }
             Remove-Variable -Name 'VERSION_PREINSTALL' -Force -Scope Script
             Set-Variable -Name 'VERSION_PREINSTALL' -Value (Get-ExecutableVersion) -Option ReadOnly -Scope Script
@@ -58,12 +58,12 @@ Param (
         Remove-InstallerOutdated -UsePrefix -Verbose:$IsVerbose
         New-Item $InstallLocation -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
         If ((Get-ExecutableVersion) -lt (Get-InstallerVersion)) {
-            Compress-Archive $InstallLocation -DestinationPath "${Env:TEMP}\SWIProlog_$(Get-Date -Format 'yyMMddHHmm').zip" 2>&1 | Out-Null
+            Compress-Archive $InstallLocation -DestinationPath "${Env:TEMP}\Umbrello_$(Get-Date -Format 'yyMMddHHmm').zip" 2>&1 | Out-Null
             Get-ChildItem $InstallLocation -ErrorAction SilentlyContinue |
             Remove-Item -Recurse
             Expand-Installer (Get-InstallerPath) $InstallLocation
         }
-        Set-ChromiumShortcut ($NameLocation -replace '.exe','-win.exe') $SoftwareName
+        Set-ChromiumShortcut $NameLocation $SoftwareName
         If (!(Test-InstallOutdated -CompareInstalls)) { Write-Verbose "$SoftwareName $(Get-ExecutableVersion) installation complete." }
     } 
     Catch { }
@@ -72,39 +72,35 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates SWI Prolog for programming logic.
+    Updates Umbrello UML Modeller.
 .DESCRIPTION
-    The script installs or updates SWI Prolog for programming logic on Windows.
+    The script installs or updates Umbrello UML Modeller on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the console app.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\SWI-Prolog.
+    It defaults to %ProgramData%\Umbrello.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\SWI-Prolog -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\Umbrello -ErrorAction SilentlyContinue
 
-    PS > .\UpdateSWIProlog.ps1 -InstallLocation C:\ProgramData\SWI-Prolog\ -SaveTo .
+    PS > .\UpdateUmbrello.ps1 -InstallLocation C:\ProgramData\Umbrello\ -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\SWI-Prolog\bin\ | Where-Object Name -Like 'swipl*' | Select-Object Name
+    PS > Get-ChildItem C:\ProgramData\Umbrello\bin\ | Where-Object Name -Like 'umbrello*' | Select-Object Name
     Name
     ----
-    swipl-ld.exe
-    swipl-win.exe
-    swipl.exe
-    swipl.home
+    umbrello.exe
 
     PS > Get-ChildItem -Recurse | Select-Object Name
     Name
     ----
-    SWI-Prolog
-    UpdateSWIProlog.ps1
-    swi_prolog_8.4.3-1.exe
+    umbrello_2.32.0.exe
+    UpdateUmbrello.ps1
 
-    Install SWI Prolog to 'C:\ProgramData\SWI-Prolog' and save its setup installer to the current directory.
+    Install Umbrello to 'C:\ProgramData\Umbrello' and save its setup installer to the current directory.
 #>
