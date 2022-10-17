@@ -1,7 +1,7 @@
 $DevDependencies = @{
-    ProgramName = 'Wireshark'
-    Guid = 'f17ad193-53ef-48fb-9685-fffe9d32f334'
+    ProgramName = 'TeamViewer'
+    Guid = 'bce02dea-f24b-484b-abbc-9cda18d94364'
     IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/7ac9be17daab08722b8335cfffe1d72e3806cdf0/icon.png'
-    Tags = @('wireshark','nsis','update','network-analyzer')
+    Tags = @('teamviewer','nsis','update','remote-access')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
