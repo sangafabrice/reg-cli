@@ -1,6 +1,6 @@
 @{
 RootModule = 'RegCli.psm1'
-ModuleVersion = '6.3.2'
+ModuleVersion = '6.3.3'
 GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
@@ -30,7 +30,8 @@ PrivateData = @{
         ReleaseNotes = 'Add Expand-BasicInstaller to move the archive after version comparison.
 Change variable VERSION_PREINSTALL from constant to read-only.
 Add shortcut names conversion to title case.
-Add installer description selection.'
+Add installer description selection.
+Fix signature subject unselected when file description is empty.'
     }
 }
 }

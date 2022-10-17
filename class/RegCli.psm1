@@ -83,17 +83,19 @@ Class RegCli {
 
         Return (
             $InstallerItem | ForEach-Object {
-                $(
-                    Switch (@($_.Extension,$_)) {
-                        '.msi'  {
-                            [void] $Switch.MoveNext()
-                            [RegCli]::GetMsiDBRecord($Switch.Current.FullName, 'ProductName')
+                (
+                    $(
+                        Switch (@($_.Extension,$_)) {
+                            '.msi'  {
+                                [void] $Switch.MoveNext()
+                                [RegCli]::GetMsiDBRecord($Switch.Current.FullName, 'ProductName')
+                            }
+                            Default {
+                                [void] $Switch.MoveNext()
+                                $Switch.Current.VersionInfo.FileDescription
+                            }
                         }
-                        Default {
-                            [void] $Switch.MoveNext()
-                            $Switch.Current.VersionInfo.FileDescription
-                        }
-                    }
+                    ) | ForEach-Object { $_ ? ${_}:$Null }
                 ) ?? (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject ?? $_.BaseName
             }
         )
