@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'FileZillaClient'
     Guid = 'bce02dea-f24b-484b-abbc-9cda18d94364'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/ceea0a6e97daff7ee1d85feb75d1f6d5617ef5ae/icon.svg'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/d6ef99edba1991d71f9170d871066f7baccf041a/icon.png'
     Tags = @('fileZilla-ftp-client','nsis','update','ftp-client')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
