@@ -1,6 +1,6 @@
 {
     "version": "0.0.1",
     "releaseNotes": [
-        "Initialize FileZilla FTP Client updater script."
+        "Initialize FileZilla Server updater script."
     ]
 }

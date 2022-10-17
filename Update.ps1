@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\FileZillaClient",
+    $InstallLocation = "${Env:ProgramData}\FileZillaServer",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,7 +11,7 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\filezilla.exe"
+    $NameLocation = "$InstallLocation\filezilla-server-gui.exe"
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
@@ -21,15 +21,15 @@ Param (
                 Write-Verbose 'Retrieve install or update information...'
                 Try {
                     Get-DownloadInfo -PropertyList @{
-                        Type = 'client'
-                        OSArch = Get-ExecutableType $NameLocation
+                        Type = 'server'
+                        OSArch = 'x64'
                     } -From FileZilla 
                 }
                 Catch { }
             )
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'FileZilla FTP Client'
+            SoftwareName = 'FileZilla Server'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -39,39 +39,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates FileZilla FTP Client software.
+    Updates FileZilla Server software.
 .DESCRIPTION
-    The script installs or updates FileZilla FTP Client on Windows.
+    The script installs or updates FileZilla Server on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\FileZillaClient".
+    It defaults to "%ProgramData%\FileZillaServer".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\FileZillaClient' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\FileZillaServer' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateFileZillaClient.ps1 -InstallLocation 'C:\ProgramData\FileZillaClient' -SaveTo .
+    PS > .\UpdateFileZillaServer.ps1 -InstallLocation 'C:\ProgramData\FileZillaServer' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\FileZillaClient' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\FileZillaServer' | Select-Object Name -First 5
     Name
     ----
-    docs
-    locales
-    resources
-    AUTHORS
-    filezilla.exe
+    COPYING
+    filezilla-server-config-converter.exe
+    filezilla-server-crypt.exe
+    filezilla-server-gui.exe
+    filezilla-server-impersonator.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    filezilla_ftp_client_3.61.0.exe
-    UpdateFileZillaClient.ps1
+    filezilla_server_1.5.1.exe
+    UpdateFileZillaServer.ps1
 
-    Install FileZilla FTP Client to 'C:\ProgramData\FileZillaClient' and save its setup installer to the current directory.
+    Install FileZilla Server to 'C:\ProgramData\FileZillaServer' and save its setup installer to the current directory.
 #>
