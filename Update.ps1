@@ -61,20 +61,20 @@ Param (
 
     PS > .\UpdateTeamViewer.ps1 -InstallLocation 'C:\ProgramData\TeamViewer' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\TeamViewer' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\TeamViewer' | Where-Object Name -Like 'TeamViewer*' | Select-Object Name -First 5
     Name
     ----
-    diameter
-    dtds
-    extcap
-    iconengines
-    imageformats
+    TeamViewer_Desktop.exe
+    TeamViewer_Note.exe
+    TeamViewer_Resource_ar.dll
+    TeamViewer_Resource_bg.dll
+    TeamViewer_Resource_cs.dll
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
+    teamviewer_15.34.4.exe
     UpdateTeamViewer.ps1
-    TeamViewer_4.0.0.exe
 
     Install TeamViewer to 'C:\ProgramData\TeamViewer' and save its setup installer to the current directory.
 #>
