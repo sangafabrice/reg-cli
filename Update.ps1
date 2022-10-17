@@ -33,7 +33,7 @@ Param (
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
-    Catch { $_ }
+    Catch { }
     Finally { $UpdateModule | Remove-Module -Verbose:$False }
 }
 
