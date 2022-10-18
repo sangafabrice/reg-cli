@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Tor",
+    $InstallLocation = "${Env:ProgramData}\HandBrake",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,14 +11,9 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\firefox.exe"
     Write-Verbose 'Retrieve install or update information...'
     $UpdateInfo =
-        Try {
-            Get-DownloadInfo -PropertyList @{
-                OSArch = Get-ExecutableType $NameLocation
-            } -From TorProject
-        }
+        Try { Get-DownloadInfo -From Handbrake }
         Catch { }
     Try {
         $UpdateModule =
@@ -26,10 +21,10 @@ Param (
             Import-Module -PassThru -Force -Verbose:$False
         @{
             UpdateInfo = $UpdateInfo
-            NameLocation = $NameLocation
+            NameLocation = "$InstallLocation\HandBrake.exe"
             SaveTo = $SaveTo
-            SoftwareName = 'Tor'
-            InstallerDescription = 'CN="The Tor Project, Inc."'
+            SoftwareName = 'HandBrake'
+            InstallerDescription = 'E=sr55.hb@outlook.com, CN="Open Source Developer, Scott Rae"'
             UseTimestamp = $True
             TimestampType = 'SigningTime'
             Checksum = $UpdateInfo.Checksum
@@ -42,39 +37,39 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Tor browser software.
+    Updates HandBrake transcoder for digital video software.
 .DESCRIPTION
-    The script installs or updates Tor browser on Windows.
+    The script installs or updates HandBrake transcoder for digital video on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to %ProgramData%\Tor.
+    It defaults to %ProgramData%\HandBrake.
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem C:\ProgramData\Tor -ErrorAction SilentlyContinue
+    Get-ChildItem C:\ProgramData\HandBrake -ErrorAction SilentlyContinue
 
-    PS > .\UpdateTor.ps1 -InstallLocation C:\ProgramData\Tor -SaveTo .
+    PS > .\UpdateHandBrake.ps1 -InstallLocation C:\ProgramData\HandBrake -SaveTo .
 
-    PS > Get-ChildItem C:\ProgramData\Tor | Select-Object Name -First 5
+    PS > Get-ChildItem C:\ProgramData\HandBrake | Select-Object Name -First 5
     Name
     ----
-    browser
-    defaults
-    fonts
-    TorBrowser
-    Accessible.tlb
+    doc
+    HandBrake.exe
+    HandBrake.Worker.exe
+    hb.dll
+    portable.ini.template
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    tor_11.5.2.exe
-    UpdateTor.ps1
+    handbrake_1.5.1.exe
+    UpdateHandBrake.ps1
 
-    Install Tor browser to 'C:\ProgramData\Tor' and save its setup installer to the current directory.
+    Install HandBrake to 'C:\ProgramData\HandBrake' and save its setup installer to the current directory.
 #>
