@@ -1,7 +1,7 @@
 $DevDependencies = @{
     ProgramName = 'HandBrake'
     Guid = '8ca3a88f-e5e7-4aa6-9b4c-3f289ec6ed6b'
-    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/62138344689ed63f3c776a6c22b8eb85bd4723ca/icon.png'
+    IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/45556a1df167e66e4cb6fe375e2f5da6fc744da2/icon.png'
     Tags = @('handbrake','update','video-converter')
     RemoteRepo = (git ls-remote --get-url) -replace '\.git$'
 }
