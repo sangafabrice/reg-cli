@@ -1,6 +1,6 @@
 {
-    "version": "0.0.2",
+    "version": "0.0.1",
     "releaseNotes": [
-        "Initialize Wireshark updater script."
+        "Initialize GhostScript updater script."
     ]
 }

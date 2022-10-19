@@ -3,7 +3,7 @@ Param (
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallLocation $_ $PSScriptRoot })]
     [string]
-    $InstallLocation = "${Env:ProgramData}\Wireshark",
+    $InstallLocation = "${Env:ProgramData}\GhostScript",
     [ValidateNotNullOrEmpty()]
     [ValidateScript({ Test-InstallerLocation $_ })]
     [string]
@@ -11,25 +11,32 @@ Param (
 )
 
 & {
-    $NameLocation = "$InstallLocation\Wireshark.exe"
-    $MachineType = Get-ExecutableType $NameLocation
+    $NameLocation = "$InstallLocation\bin\gswin64.exe"
+    Write-Verbose 'Retrieve install or update information...'
+    $UpdateInfo =
+        Try {
+            Get-DownloadInfo -PropertyList @{
+                OSArch = Get-ExecutableType $NameLocation
+            } -From GhostScript
+        }
+        Catch { }
     Try {
         $UpdateModule =
             Import-CommonScript chrome-installer |
             Import-Module -PassThru -Force -Verbose:$False
         @{
-            UpdateInfo = $(
-                Write-Verbose 'Retrieve install or update information...'
-                Try { Get-DownloadInfo -PropertyList @{ OSArch = $MachineType } -From Wireshark }
-                Catch { }
-            )
+            UpdateInfo = $UpdateInfo
             InstallLocation = $InstallLocation
             NameLocation = $NameLocation
             SaveTo = $SaveTo
-            SoftwareName = 'Wireshark'
-            InstallerDescription = "Wireshark installer for $($MachineType -replace 'x' -replace '86','32')-bit Windows"
-            InstallerType = 'BasicNSIS'
+            SoftwareName = 'GhostScript'
+            ShortcutName = 'GhostScript'
+            InstallerDescription = 'CN="Artifex Software, Inc."'
+            UseTimestamp = $True
+            TimestampType = 'SigningTime'
+            Checksum = $UpdateInfo.Checksum
             CompareInstalls = $True
+            InstallerType = 'BasicNSIS'
             Verbose = $VerbosePreference -ine 'SilentlyContinue'
         } | ForEach-Object { Invoke-CommonScript @_ }
     }
@@ -39,39 +46,38 @@ Param (
 
 <#
 .SYNOPSIS
-    Updates Wireshark software.
+    Updates GhostScript interpreter software.
 .DESCRIPTION
-    The script installs or updates Wireshark on Windows.
+    The script installs or updates GhostScript interpreter on Windows.
 .NOTES
     Required: at least Powershell Core 7.
 .PARAMETER InstallLocation
     Path to the installation directory.
     It is restricted to file system paths.
     It does not necessary exists.
-    It defaults to "%ProgramData%\Wireshark".
+    It defaults to "%ProgramData%\GhostScript".
 .PARAMETER SaveTo
     Path to the directory of the downloaded installer.
     It is an existing file system path.
     It defaults to the script directory.
 .EXAMPLE
-    Get-ChildItem 'C:\ProgramData\Wireshark' -ErrorAction SilentlyContinue
+    Get-ChildItem 'C:\ProgramData\GhostScript' -ErrorAction SilentlyContinue
 
-    PS > .\UpdateWireshark.ps1 -InstallLocation 'C:\ProgramData\Wireshark' -SaveTo .
+    PS > .\UpdateGhostScript.ps1 -InstallLocation 'C:\ProgramData\GhostScript' -SaveTo .
 
-    PS > Get-ChildItem 'C:\ProgramData\Wireshark' | Select-Object Name -First 5
+    PS > Get-ChildItem 'C:\ProgramData\GhostScript\bin' | Select-Object Name
     Name
     ----
-    diameter
-    dtds
-    extcap
-    iconengines
-    imageformats
+    gsdll64.dll
+    gsdll64.lib
+    gswin64.exe
+    gswin64c.exe
 
     PS > Get-ChildItem | Select-Object Name
     Name
     ----
-    UpdateWireshark.ps1
-    wireshark_4.0.0.exe
+    ghostscript_10.0.0.exe
+    UpdateGhostScript.ps1
 
-    Install Wireshark to 'C:\ProgramData\Wireshark' and save its setup installer to the current directory.
+    Install GhostScript to 'C:\ProgramData\GhostScript' and save its setup installer to the current directory.
 #>
