@@ -51,7 +51,7 @@ This module performs operations of identifying the latest version of an installe
             Tags = @('Update','Chromium','NSIS','InnoSetup','Squirrel','RegCli')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = $GithubRepo
-            IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
+            IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/f5c95295edb894ff09e41f5b8923ea8ac1d4133a/icon.svg'
             ReleaseNotes = $_.releaseNotes -join "`n"
         }
     } | ForEach-Object {
