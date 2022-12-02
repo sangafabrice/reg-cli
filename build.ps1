@@ -27,7 +27,7 @@ Filter New-RCManifest {
             Author = 'Fabrice Sanga'
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
-            Description = 'Set of helper functions for updating applications.'
+            Description = 'This module provides a set of helper functions for updating applications.'
             PowerShellVersion = '7.0'
             PowerShellHostVersion = '7.0'
             FunctionsToExport = @(
@@ -41,11 +41,10 @@ Filter New-RCManifest {
                 ForEach-Object { ($_ -split ' ')[2] }
             )
             FileList = @(
-                "en-US\$ModuleName-help.xml","$ModuleName.psm1","$ModuleName.psd1",
-                "class\$ModuleName.psm1",'class\ValidationUtility.psm1',
-                'class\SigningTimeGetter.psm1','class\GetMsiDBRecord.vbs'
-            )
-            Tags = @('Update','Chromium','RegCli')
+				Get-ChildItem $PSScriptRoot -Recurse -Include '*.ps?1' -Exclude 'build_minify.psm1' |
+				ForEach-Object { $($_.FullName -replace ($PSScriptRoot -replace '\\','\\'),'.') }
+			)
+            Tags = @('Update','Chromium','NSIS','InnoSetup','Squirrel','RegCli')
             LicenseUri = "$GithubRepo/blob/main/LICENSE.md"
             ProjectUri = $GithubRepo
             IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'

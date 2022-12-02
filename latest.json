@@ -1,10 +1,15 @@
 {
-    "version": "6.3.3",
+    "version": "7.0.0",
     "releaseNotes": [
-        "Add Expand-BasicInstaller to move the archive after version comparison.",
-        "Change variable VERSION_PREINSTALL from constant to read-only.",
-        "Add shortcut names conversion to title case.",
-        "Add installer description selection.",
-        "Fix signature subject unselected when file description is empty."
+        "· Major refactoring of the code base.",
+        "· Organize the code base into pseudo-namespaces built upon the file system and module import.",
+        "· Add option to keep outdated installers using the boolean variable.",
+		"· Add option to remove outdated install directory content from the disk.",
+        "· Minify the code base to reduce the load of the module.",
+        "· Add innosetup extractor for handling this type of installer.",
+		"· Convert common script to a function: Start-RCUpdate.",
+		"· Convert Help document to comment-based help documents.",
+		"· Move SigningTimeGetter module and 7zip and InnoExtract download code to GitHub.",
+        "→ Follow me and like this project on GitHub.com."
     ]
 }
