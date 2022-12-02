@@ -10,6 +10,6 @@
 		"· Convert common script to a function: Start-RCUpdate.",
 		"· Convert Help document to comment-based help documents.",
 		"· Move SigningTimeGetter module and 7zip and InnoExtract download code to GitHub.",
-        "→ Follow me and like this project on GitHub.com."
+		"· Remove msi installer handling."
     ]
 }

@@ -12,6 +12,7 @@ Class Tester {
         # The path does not necessary exist.
         # $OneParameterBlock is scriptblock that accepts one parameter that is the executable path
         # and returns the version of the software or returns $null when the path does not exist.
+		
         $VERSION_PREINSTALL = [Tester]::convertfrom_version((& $OneParameterBlock "$ExecutablePath"))
         Return {
             [CmdletBinding()]

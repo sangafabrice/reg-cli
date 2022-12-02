@@ -5,7 +5,8 @@ GUID = '9d980765-e8a9-4dd6-b7b0-9142a7a6e704'
 Author = 'Fabrice Sanga'
 CompanyName = 'sangafabrice'
 Copyright = '© 2022 SangaFabrice. All rights reserved.'
-Description = 'Set of helper functions for updating applications.'
+Description = 'This module performs operations of identifying the latest version of an installer, downloading it, and installing the embedded software. The installation of the software consists of expanding a self-extracting executable. This way allows more control of the software that is thus used as a portable application. The published module is a minified version of the code base to reduce its load time. The full code base is available on GitHub.com.
+→ To support this project, please visit and like: https://github.com/sangafabrice/reg-cli'
 PowerShellVersion = '7.0'
 PowerShellHostVersion = '7.0'
 FunctionsToExport = 'Get-ExecutableType','New-RCUpdate','Test-InstallerLocation', 
@@ -29,14 +30,14 @@ PrivateData = @{
         IconUri = 'https://rawcdn.githack.com/sangafabrice/reg-cli/5dd6cdfa8202fbd95eaa6fbf219f906a3b83d130/icon.png'
         ReleaseNotes = '· Major refactoring of the code base.
 · Organize the code base into pseudo-namespaces built upon the file system and module import.
-· Add option to keep outdated installers.
+· Add option to keep outdated installers using the boolean variable.
 · Add option to remove outdated install directory content from the disk.
 · Minify the code base to reduce the load of the module.
 · Add innosetup extractor for handling this type of installer.
 · Convert common script to a function: Start-RCUpdate.
-· Convert Help document to comment-based help douments.
+· Convert Help document to comment-based help documents.
 · Move SigningTimeGetter module and 7zip and InnoExtract download code to GitHub.
-→ Follow me and like this project on GitHub.com.'
+· Remove msi installer handling.'
     }
 }
 }

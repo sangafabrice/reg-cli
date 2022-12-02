@@ -27,7 +27,11 @@ Filter New-RCManifest {
             Author = 'Fabrice Sanga'
             CompanyName = 'sangafabrice'
             Copyright = "© $((Get-Date).Year) SangaFabrice. All rights reserved."
-            Description = 'This module provides a set of helper functions for updating applications.'
+            Description = @'
+This module performs operations of identifying the latest version of an installer, downloading it, and installing the embedded software. The installation of the software consists of expanding a self-extracting executable. This way allows more control of the software that is thus used as a portable application. The published module is a minified version of the code base to reduce its load time. The full code base is available on GitHub.com.
+
+→ To support this project, please visit and like: https://github.com/sangafabrice/reg-cli
+'@
             PowerShellVersion = '7.0'
             PowerShellHostVersion = '7.0'
             FunctionsToExport = @(
