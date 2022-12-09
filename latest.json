@@ -8,6 +8,8 @@
         "· Minify the code base to reduce the load of the module.",
         "· Add innosetup extractor for handling this type of installer.",
 		"· Convert common script to a function: Start-RCUpdate.",
+		"· Protect the module by testing whether the installation location does not modify the module.",
+		"· Add option to remove a list of file define in REG_CLI_FILES.",
 		"· Convert Help document to comment-based help documents.",
 		"· Move SigningTimeGetter module and 7zip and InnoExtract download code to GitHub.",
 		"· Remove msi installer handling."

@@ -105,7 +105,7 @@ Function Test-InstallerLocation {
         [ValidateNotNullOrEmpty()]
         [System.IO.DirectoryInfo] $Path
     )
-    [System.IO.Directory]::Exists($_)
+    [System.IO.Directory]::Exists($Path)
     <#
     .SYNOPSIS
         Returns true whether the installer directory exists.
@@ -129,13 +129,16 @@ Function Test-InstallLocation {
         [System.IO.DirectoryInfo] $Path,
         [System.IO.DirectoryInfo[]] $Exclude = @()
     )
-    $Path = [Extended.IO.Path]::GetFullPath($Path)
-    $Path -inotin (@($Exclude.ForEach{ Try { [Extended.IO.Path]::GetFullPath($_) } Catch { } }) + @((Get-ChildItem $PSScriptRoot -Directory -Recurse).ForEach{ $_.FullName })) -and !("$PSScriptRoot\".Contains("$Path\"))
+	[RegCli.Install.Utility]::TestInstallerLocation([Extended.IO.Path]::GetFullPath($Path), @(
+	ForEach ($Location in $Exclude) {
+		Try { [Extended.IO.Path]::GetFullPath($Location) }
+		Catch { (Get-Item $Location -ErrorAction SilentlyContinue).Where{ [System.IO.Directory]::Exists($_) } }
+	}))
     <#
     .SYNOPSIS
-        Returns true whether the installation directory is not excluded directory.
+        Returns true whether the installation directory is not an excluded directory.
     .DESCRIPTION
-        Test-InstallLocation determines whether the specified literal path is not an excluded directory. By default, the excluded folders are the recursive children of the RegCli directory or any of its parent directory. 
+        Test-InstallLocation determines whether the specified literal path is not an excluded directory or its parents. By default, the excluded folders are the recursive children of the RegCli directory or any of its parent directory. 
     .PARAMETER Path
         Specified the literal path to the installation directory.
     .PARAMETER Exclude

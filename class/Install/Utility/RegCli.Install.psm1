@@ -163,4 +163,60 @@ Class Utility {
             #>
         }.GetNewClosure()
     }
+
+	Static [bool] TestInstallerLocation([System.IO.DirectoryInfo] $InstallLocationPath, [System.IO.DirectoryInfo[]] $ExcludePathList) {
+		# Return false if the specified installation path is not an excluded path.
+		# An excluded path is defined by the main path and its parents.
+		# The installation path and the excluded path strings must not end with '\' or '/' characters.
+		
+		# Return false if the path is an excluded path or one of its parents.
+		ForEach ($Path in $ExcludePathList) { If ("$Path\".Contains("$InstallLocationPath\")) { Return $False } }
+		# Return true if the path does not exist.
+		If (![System.IO.Directory]::Exists($InstallLocationPath)) { Return $True }
+		# Return false if the installation path can make changes to the module directory and subdirectories.
+		# Get the module root folder from the Install Utility class module.
+		$ModuleRoot = "$(([System.IO.DirectoryInfo] $PSScriptRoot).Parent.Parent.Parent)"
+		# Initialize the event that is raised when a file within the modules directories is renamed.
+		# The handle assign a truth value to RenamedFlag if the file with the event name as its name is renamed.
+		$EvtName =
+		([System.IO.FileSystemWatcher] $ModuleRoot).ForEach{
+			$_.IncludeSubdirectories = $True
+			$_.NotifyFilter = 'FileName'
+			@{
+				InputObject = $_
+				EventName = 'Renamed'
+				Action = { $RenamedFlag = $RenamedFlag -or [System.IO.Path]::GetFileName(($Event.SourceArgs)[1].OldName) -like $FlagFileName }
+			} | ForEach-Object { (Register-ObjectEvent @_).Name }
+			$_.EnableRaisingEvents = $True
+		}
+		$EvtActionModule = (Get-EventSubscriber -SourceIdentifier "$EvtName").Action.Module
+		# Assign to FlagFileName the name of the event and build the FlagFileName and content.
+		& $EvtActionModule { Set-Variable 'FlagFileName' $args[0] -Scope Script -Option Constant } $EvtName
+		$NewNameSuffix = Get-Date -Format 'yyyMMddHHmmss'
+		$FlagFileContent = "${ModuleRoot}:${EvtName}:${NewNameSuffix}:$(Get-Random)"
+		# The list of modules directories and subdirectories which yields the list of FlagFile paths.
+		$FlagFileNames = @('','class','class\Install','class\Install\Tester','class\Install\Utility','class\Installer','class\Installer\Downloader','class\Installer\Expander','class\Installer\Selector').
+		ForEach{
+			$FlagFile = "$ModuleRoot\$_\$EvtName"
+			$Null = New-Item $FlagFile -ItemType File -Force
+			Set-Content $FlagFile $FlagFileContent
+			$FlagFile
+		}
+		# Get the hashcode of the flag file.
+		$FlagFileHash = (Get-FileHash $FlagFileNames[0] -Algorithm SHA512).Hash
+		# Try to change the flag file from installation location even if it is a junction.
+		# If a file is renamed then return false.
+		$Return = (Get-ChildItem $InstallLocationPath -Include $EvtName -Recurse).Where({
+			(Get-FileHash "$_" -Algorithm SHA512).Hash -ieq $FlagFileHash -and
+			$(
+				Rename-Item "$_" "$($_.Name)-$NewNameSuffix" -Force -ErrorAction SilentlyContinue
+				Rename-Item "$_-$NewNameSuffix" $_.Name -Force -ErrorAction SilentlyContinue
+				& $EvtActionModule { $RenamedFlag }
+			)
+		}, 'First').Count -eq 0
+		# Delete flag files and unregister event.
+		Remove-Item $FlagFileNames
+		Unregister-Event -SourceIdentifier "$EvtName" -ErrorAction SilentlyContinue
+		Return $Return
+	}
 }

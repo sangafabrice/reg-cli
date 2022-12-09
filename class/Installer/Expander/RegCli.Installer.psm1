@@ -136,19 +136,54 @@ Class Expander {
                 $ExeVersion = Get-SoftwareVersion "$ExecutablePath"
                 $UnzExeVersion = Get-SoftwareVersion $UnzippedExePath
                 If ($ForceReinstall ? $($UnzExeVersion -ge $ExeVersion):$($UnzExeVersion -gt $ExeVersion)) {
-                    # Archive the outdated or current install to the %TEMP% directory.
-					[string] $ProgramBackup.Value = "${Env:TEMP}\${ExeBaseName}_$(Get-Date -Format 'yyMMddHHmm').zip"
-                    $Null =  . "${Script:7Z_EXE}" a -tzip $ProgramBackup.Value "$ExeDir\*" 2>&1
-                    # Delete every file of the install root directory $ExeDir. Attempt to close any open executable
-                    # or module that the install directory contains. The goal is to ease file removal.
-                    (Get-Process).Where{ $_.Path -like "$ExeDir\*" }.ForEach{
-                        Try { taskkill.exe /F /PID $_.Id /T 2>&1 | Out-Null }
-                        Catch { Stop-Process $_ -Force -ErrorAction SilentlyContinue }
-                        Remove-Item $_.Path -Recurse -Force -ErrorAction SilentlyContinue
-                    }
-                    Get-ChildItem $ExeDir -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-                    # Move files from the unzipped directory to the installation directory.
-                    Move-Item "$(Get-InstallDirectory $UnzippedExePath $Depth)\*" $ExeDir -Exclude '$*' -ErrorAction SilentlyContinue
+					[System.IO.FileInfo] $ExeDirFiles = "$ExeDir\REG_CLI_FILES"
+					# If the list of files REG_CLI_FILES exists, then list them in $ExeDirContent
+					# Else list the files first, from the deepest to the lowest and
+					# list the directories second from the deepest to the lowest in the hierarchy
+					If ([System.IO.File]::Exists($ExeDirFiles) -and $ExeDirFiles.Length -gt 0) {
+						$ExeDirContent = Get-Item (Get-Content "$ExeDirFiles") -ErrorAction SilentlyContinue
+						$ExeList = $ExeDirContent.Where{ $_.Extension -ieq '.exe' }.ForEach{ "$_" }
+						${Function:Test-ProcessPath} = { $args[0] -iin $Script:ExeList }.GetNewClosure()
+					}
+					Else {
+						$InstallExeDirFiles = @(Get-ChildItem $ExeDir -Recurse -File -ErrorAction SilentlyContinue)
+						$InstallExeDirDirectories = @(Get-ChildItem $ExeDir -Recurse -Directory -ErrorAction SilentlyContinue)
+						Try {
+							[array]::Reverse($InstallExeDirFiles)
+							[array]::Reverse($InstallExeDirDirectories)
+						}
+						Catch { }
+						$ExeDirContent = $InstallExeDirFiles + $InstallExeDirDirectories
+						${Function:Test-ProcessPath} = { $args[0] -like "$Script:ExeDir\*" }.GetNewClosure()
+					}
+					# Check if the install directory is not empty.
+					If ($ExeDirContent.Where({ "$_" }, 'First')) {
+						# Archive the outdated or current install to the %TEMP% directory.
+						[string] $ProgramBackup.Value = "${Env:TEMP}\${ExeBaseName}_$(Get-Date -Format 'yyMMddHHmm').zip"
+						$Null =  . "${Script:7Z_EXE}" a -tzip $ProgramBackup.Value "$ExeDir\*" 2>&1
+						# Delete every file of the install root directory $ExeDir. Attempt to close any open executable
+						# or module that the install directory contains. The goal is to ease file removal.
+						(Get-Process).Where{ Test-ProcessPath $_.Path }.ForEach{
+							Try { taskkill.exe /F /PID $_.Id /T 2>&1 | Out-Null }
+							Catch { Stop-Process $_ -Force -ErrorAction SilentlyContinue }
+						}
+						ForEach ($File in $ExeDirContent) {
+							If ([System.IO.Directory]::Exists($File) -and @(Get-ChildItem $File).Count -gt 0) { Continue }
+							Remove-Item $File -ErrorAction SilentlyContinue
+						}
+					}
+                    # Save the list of files and directories in the install location.
+					$UnzippedExeDir = Get-InstallDirectory $UnzippedExePath $Depth
+					$UnzippedExeDirFiles =  @((Get-ChildItem $UnzippedExeDir -Name -Recurse -File -Exclude '$*').ForEach{ [Extended.IO.Path]::GetFullPath("$ExeDir\$_") })
+					$UnzippedExeDirDirectories =  @((Get-ChildItem $UnzippedExeDir -Name -Recurse -Directory).ForEach{ [Extended.IO.Path]::GetFullPath("$ExeDir\$_") })
+					Try {
+						[array]::Reverse($UnzippedExeDirFiles)
+						Try { [array]::Reverse($UnzippedExeDirDirectories) } Catch { }
+						Set-Content "$ExeDirFiles" ($UnzippedExeDirFiles + $UnzippedExeDirDirectories)
+					}
+					Catch { }
+					# Move files from the unzipped directory to the installation directory.
+                    Move-Item "$UnzippedExeDir\*" $ExeDir -Exclude '$*' -ErrorAction SilentlyContinue
                 }
                 Pop-Location
                 Remove-Item $UnzipPath -Recurse
