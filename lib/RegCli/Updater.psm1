@@ -1,13 +1,10 @@
 #Requires -Version 7.0
 #Requires -RunAsAdministrator
-using module '.\Extended.IO.psm1'
-using module '.\Extended.PS.psm1'
-using module '.\Install\Tester\RegCli.Install.psm1'
-using module '.\Install\Utility\RegCli.Install.psm1'
-using module '.\Installer\RegCli.psm1'
-using module '.\Installer\Selector\RegCli.Installer.psm1'
-using module '.\Installer\Downloader\RegCli.Installer.psm1'
-using module '.\Installer\Expander\RegCli.Installer.psm1'
+using module '.\PowerShell.Installer.AllowedList'
+using module '.\Installer\RegCli.Installer'
+using module '.\Installer\RegCli'
+using module '.\RegCli.Install'
+using module '.\System.Extended.IO'
 
 Class Updater {
     # Performs operations that consist of identifying an installer,
@@ -111,12 +108,12 @@ Class Updater {
         $InstallerPathList.Value = @()
         # The arguments of Select-InstallerInfo. 
         $__args__ = @{ Type = $InstallerCompareBy; FullList = $InstallerPathList; ErrorAction = 'SilentlyContinue' } + ($SoftwareChecksum ? @{ Checksum = $SoftwareChecksum }:@{ Latest = $True })
-        $InstallerPath = Get-ChildItem $InstallerDirectory | Select-InstallerInfo @__args__
+        $InstallerPath = Get-ChildItem $InstallerDirectory -File | Select-InstallerInfo @__args__
         If (!("$InstallerPath" -or "$SoftwareLatestVersion")) { Throw 'No installer was found.' }
         # If the path is an empty string or the latest installer locally is not the software latest version
         # add the constructed path with prefix and suffix to the list of paths.
         If ((!"$InstallerPath" -or $__args__.Latest) -and $InstallerPath.Version -lt $SoftwareLatestVersion) {
-            $InstallerPath = [RegCli.Installer]::New([Extended.IO.Path]::GetFullPath("$InstallerDirectory\$([Updater]::set_installer_prefix($SoftwareName))$([Updater]::set_installer_suffix($SoftwareLatestVersion))$InstallerExtension"), $SoftwareLatestVersion)
+            $InstallerPath = [RegCli.Installer]::New([System.Extended.IO.Path]::GetFullPath("$InstallerDirectory\$([Updater]::set_installer_prefix($SoftwareName))$([Updater]::set_installer_suffix($SoftwareLatestVersion))$InstallerExtension"), $SoftwareLatestVersion)
             $InstallerPathList.Value += "$InstallerPath"
         }
         Return $InstallerPath

@@ -1,8 +1,9 @@
 #Requires -Version 7.0
 #Requires -RunAsAdministrator
-using module '..\..\Extended.IO.psm1'
-using module '..\..\Extended.PS.psm1'
-using module '..\RegCli.psm1'
+using module '..\..\PowerShell.ValidationScript'
+using module '..\..\PowerShell.DynamicParameter'
+using module '..\..\PowerShell.Installer.AllowedList'
+using module '..\..\System.Extended.IO'
 
 Class Downloader {
     # Downloader is not meant to be instantiated and only declares static methods.
@@ -77,7 +78,7 @@ Class Downloader {
         
         Try {
             # Validate local installer name if it is a valid file system name
-            If ([Extended.IO.Path]::IsFileNameValid($InstallerName)) {
+            If ([System.Extended.IO.Path]::IsFileNameValid($InstallerName)) {
                 # Build path to local installer name in the Temp:\ directory and differentiated by date
                 $Result = "${Env:TEMP}\$([system.IO.Path]::GetFileNameWithoutExtension($InstallerName))_$(Get-Date -Format 'yyMMddHHmmss')$([system.IO.Path]::GetExtension($InstallerName))"
                 # Download from the specified URL to the installer path

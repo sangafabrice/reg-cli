@@ -1,7 +1,9 @@
 #Requires -Version 7.0
 #Requires -RunAsAdministrator
-using module '..\..\Extended.PS.psm1'
-using module '..\RegCli.psm1'
+using module '..\RegCli'
+using module '..\..\PowerShell.Installer.AllowedList'
+using module '..\..\PowerShell.ValidationScript'
+using module '..\..\PowerShell.DynamicParameter'
 
 Class Selector {
     # Selector is not meant to be instantiated and only declares static methods.
@@ -145,7 +147,7 @@ Class Selector {
                     Where-Object {
                         $Item.ForEach{
                             # The filtered item is a file system with allowed extensions file and must not be a symbolic link.
-                            $_.LinkType -ine 'SymbolicLink' -and $_.Extension -in [AllowedList]::GetExtensions() -and
+                            $_.LinkType -ine 'SymbolicLink' -and [ValidationScript]::Extension($_.Extension) -and
                             [Selector]::get_description($_, $Description.PropertyName) -like "$($Description.Value)*"
                         }
                     }
@@ -202,14 +204,19 @@ Class Selector {
                     'DateTime' { { $Item.LastWriteTime } }
                     # Get the scriptblock that returns the signing time date of the installer if defined.
                     'SigningTime' {
-                        Import-Module "$PSScriptRoot\SigningTimeGetter.psm1"
+                        $SignTimeModulePath = "$PSScriptRoot\SigningTimeGetter.psm1"
+                        If (![System.IO.File]::Exists($SignTimeModulePath)) {
+                            "$(Invoke-WebRequest 'https://gist.githubusercontent.com/sangafabrice/9f866c5035c8d74201b8a76406d2100e/raw/35d9aea933b0e0a27cc74625fa612f56e7a81ca5/SigningTimeGetter.psm1')" |
+                            Out-File $SignTimeModulePath
+                        }
+                        $SignTimeModule = Import-Module $SignTimeModulePath -PassThru
                         { Get-AuthenticodeSigningTime "$Item" }
                     }
                 }
             }
-            # Run the scriptblock assigned to Invoke-SwitchCase and return the installer object. 
+            # Run the scriptblock assigned to Invoke-SwitchCase and return the installer object.
             Process { (Invoke-SwitchCase).ForEach{ [Installer]::New("$Item", $_) } }
-            End { If ($Type -eq 'SigningTime') { Remove-Module SigningTimeGetter -ErrorAction SilentlyContinue } }
+            End { If ($Type -eq 'SigningTime') { Try { Remove-Module $SignTimeModule } Catch { } } }
             <#
             .SYNOPSIS
                 Selects installer version

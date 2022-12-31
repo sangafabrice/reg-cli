@@ -1,13 +1,13 @@
 #Requires -Version 7.0
 #Requires -RunAsAdministrator
-using module '..\..\Extended.IO.psm1'
+using module '..\System.Extended.IO'
 
 # The list of machine types.
 Enum MachineType { x64 = 64; x86 = 32 }
 
 Class Utility {
     # Utility is not meant to be instantiated and only declares static methods.
-    # It is a set of help methods to handle a specified software install executable.
+    # It is a set of help methods to handle a specified software executable.
 
     Static [MachineType] GetExeMachineType([System.IO.FileInfo] $ExecutablePath) {
         # Get the machine type of a file system executable specified by its path.
@@ -42,7 +42,7 @@ Class Utility {
             [CmdletBinding()]
             Param (
                 [ValidateNotNullOrEmpty()]
-                [ValidateScript({ [Extended.IO.Path]::IsFileNameValid($_) })]
+                [ValidateScript({ [System.Extended.IO.Path]::IsFileNameValid($_) })]
                 [string] $Name
             )
             Try {
@@ -120,7 +120,7 @@ Class Utility {
             [CmdletBinding()]
             Param(
                 [Parameter(Mandatory)]
-                [ValidateScript({ [Extended.IO.Path]::IsFileNameValid($_) })]
+                [ValidateScript({ [System.Extended.IO.Path]::IsFileNameValid($_) })]
                 [string] $Name,
                 [Parameter(Mandatory)]
                 [ValidateScript({ $_ -match '#[0-9A-F]{6}' })]
@@ -195,7 +195,7 @@ Class Utility {
 		$NewNameSuffix = Get-Date -Format 'yyyMMddHHmmss'
 		$FlagFileContent = "${ModuleRoot}:${EvtName}:${NewNameSuffix}:$(Get-Random)"
 		# The list of modules directories and subdirectories which yields the list of FlagFile paths.
-		$FlagFileNames = @('','class','class\Install','class\Install\Tester','class\Install\Utility','class\Installer','class\Installer\Downloader','class\Installer\Expander','class\Installer\Selector').
+		$FlagFileNames = @('','lib','lib\RegCli','lib\RegCli\Installer','lib\RegCli\PowerShell.DynamicParameter','lib\RegCli\PowerShell.Installer.AllowedList','lib\RegCli\PowerShell.ValidationScript','lib\RegCli\RegCli.Install','lib\RegCli\System.Extended.IO','lib\RegCli\Installer\RegCli','lib\RegCli\Installer\RegCli.Installer').
 		ForEach{
 			$FlagFile = "$ModuleRoot\$_\$EvtName"
 			$Null = New-Item $FlagFile -ItemType File -Force
@@ -206,7 +206,9 @@ Class Utility {
 		$FlagFileHash = (Get-FileHash $FlagFileNames[0] -Algorithm SHA512).Hash
 		# Try to change the flag file from installation location even if it is a junction.
 		# If a file is renamed then return false.
-		$Return = (Get-ChildItem $InstallLocationPath -Include $EvtName -Recurse).Where({
+        $Return = $False
+		$Return = (@($InstallLocationPath) + @(Get-ChildItem $InstallLocationPath -Directory -Recurse)).
+        Where{ [System.IO.File]::Exists("$_\$EvtName") }.ForEach{ [System.IO.FileInfo] "$_\$EvtName" }.Where({
 			(Get-FileHash "$_" -Algorithm SHA512).Hash -ieq $FlagFileHash -and
 			$(
 				Rename-Item "$_" "$($_.Name)-$NewNameSuffix" -Force -ErrorAction SilentlyContinue

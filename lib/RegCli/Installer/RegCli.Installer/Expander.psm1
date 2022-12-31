@@ -1,8 +1,8 @@
 #Requires -Version 7.0
 #Requires -RunAsAdministrator
-using module '..\..\Extended.IO.psm1'
-using module '..\..\Install\Utility\RegCli.Install.psm1'
-using module '..\RegCli.psm1'
+using module '..\..\PowerShell.Installer.AllowedList'
+using module '..\..\RegCli.Install'
+using module '..\..\System.Extended.IO'
 
 Set-Variable '7Z_DLL' "$PSScriptRoot\7z.dll" -Option Constant -ErrorAction SilentlyContinue
 Set-Variable '7Z_EXE' "$PSScriptRoot\7z.exe" -Option Constant -ErrorAction SilentlyContinue
@@ -146,14 +146,9 @@ Class Expander {
 						${Function:Test-ProcessPath} = { $args[0] -iin $Script:ExeList }.GetNewClosure()
 					}
 					Else {
-						$InstallExeDirFiles = @(Get-ChildItem $ExeDir -Recurse -File -ErrorAction SilentlyContinue)
 						$InstallExeDirDirectories = @(Get-ChildItem $ExeDir -Recurse -Directory -ErrorAction SilentlyContinue)
-						Try {
-							[array]::Reverse($InstallExeDirFiles)
-							[array]::Reverse($InstallExeDirDirectories)
-						}
-						Catch { }
-						$ExeDirContent = $InstallExeDirFiles + $InstallExeDirDirectories
+						Try { [array]::Reverse($InstallExeDirDirectories) } Catch { }
+						$ExeDirContent = @(Get-ChildItem $ExeDir -Recurse -File -ErrorAction SilentlyContinue) + $InstallExeDirDirectories
 						${Function:Test-ProcessPath} = { $args[0] -like "$Script:ExeDir\*" }.GetNewClosure()
 					}
 					# Check if the install directory is not empty.
@@ -174,12 +169,10 @@ Class Expander {
 					}
                     # Save the list of files and directories in the install location.
 					$UnzippedExeDir = Get-InstallDirectory $UnzippedExePath $Depth
-					$UnzippedExeDirFiles =  @((Get-ChildItem $UnzippedExeDir -Name -Recurse -File -Exclude '$*').ForEach{ [Extended.IO.Path]::GetFullPath("$ExeDir\$_") })
-					$UnzippedExeDirDirectories =  @((Get-ChildItem $UnzippedExeDir -Name -Recurse -Directory).ForEach{ [Extended.IO.Path]::GetFullPath("$ExeDir\$_") })
+					$UnzippedExeDirDirectories =  @((Get-ChildItem $UnzippedExeDir -Name -Recurse -Directory).ForEach{ [System.Extended.IO.Path]::GetFullPath("$ExeDir\$_") })
 					Try {
-						[array]::Reverse($UnzippedExeDirFiles)
 						Try { [array]::Reverse($UnzippedExeDirDirectories) } Catch { }
-						Set-Content "$ExeDirFiles" ($UnzippedExeDirFiles + $UnzippedExeDirDirectories)
+						Set-Content "$ExeDirFiles" (@((Get-ChildItem $UnzippedExeDir -Name -Recurse -File -Exclude '$*').ForEach{ [System.Extended.IO.Path]::GetFullPath("$ExeDir\$_") }) + $UnzippedExeDirDirectories)
 					}
 					Catch { }
 					# Move files from the unzipped directory to the installation directory.

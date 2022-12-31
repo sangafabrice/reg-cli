@@ -3,22 +3,22 @@
 
 Class Tester {
     # Tester is not meant to be instantiated and only declares static methods.
-    # It is a set of help methods to handle a specified software install executable.
+    # It is a set of help methods to test whether an installed software is updated.
 
-    Static [scriptblock] Create([System.IO.FileInfo] $ExecutablePath, [scriptblock] $OneParameterBlock) {
+    Static [scriptblock] Create([System.IO.FileInfo] $ExecutablePath, [scriptblock] $GetExecutableVersion) {
         # Get the scriptblock that tests whether the app is updated after installation.
         # $VERSION_PREINSTALL is the version of the application before installation or updating.
         # $ExecutablePath is the path to the executable that opens the software to update.
         # The path does not necessary exist.
-        # $OneParameterBlock is scriptblock that accepts one parameter that is the executable path
+        # $GetExecutableVersion is scriptblock that accepts one parameter that is the executable path
         # and returns the version of the software or returns $null when the path does not exist.
 		
-        $VERSION_PREINSTALL = [Tester]::convertfrom_version((& $OneParameterBlock "$ExecutablePath"))
+        $VERSION_PREINSTALL = [Tester]::convertfrom_version((& $GetExecutableVersion "$ExecutablePath"))
         Return {
             [CmdletBinding()]
             [OutputType([bool])]
             Param ()
-            Return [Tester]::convertfrom_version((& ($Script:OneParameterBlock) "$Script:ExecutablePath")) -gt $Script:VERSION_PREINSTALL
+            Return [Tester]::convertfrom_version((& ($Script:GetExecutableVersion) "$Script:ExecutablePath")) -gt $Script:VERSION_PREINSTALL
             <#
             .SYNOPSIS
                 Tests if software is sucessfully updated.

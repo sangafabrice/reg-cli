@@ -1,9 +1,10 @@
 #Requires -Version 7.0
 #Requires -RunAsAdministrator
-using module '.\class\Extended.IO.psm1'
-using module '.\class\Install\Utility\RegCli.Install.psm1'
-using module '.\class\Installer\RegCli.psm1'
-using module '.\class\RegCli.psm1'
+using module 'lib\RegCli\RegCli.Install'
+using module 'lib\RegCli\System.Extended.IO'
+using module 'lib\RegCli\PowerShell.ValidationScript'
+using module 'lib\RegCli\PowerShell.Installer.AllowedList'
+using module 'lib\RegCli'
 
 #Region : The list of RegCli basic functions. 
 Filter Get-ExecutableType {
@@ -12,10 +13,10 @@ Filter Get-ExecutableType {
     Param(
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [Extended.IO.Path]::IsPathValid($_) })]
+        [ValidateScript({ [System.Extended.IO.Path]::IsPathValid($_) })]
         [System.IO.FileInfo] $Path
     )
-    [RegCli.Install.Utility]::GetExeMachineType([Extended.IO.Path]::GetFullPath($Path))
+    [RegCli.Install.Utility]::GetExeMachineType([System.Extended.IO.Path]::GetFullPath($Path))
     <#
     .SYNOPSIS
         Gets the machine type of a binary file.
@@ -37,11 +38,11 @@ Function New-RCUpdate {
     Param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [Extended.IO.Path]::IsPathValid($_) })]
+        [ValidateScript({ [System.Extended.IO.Path]::IsPathValid($_) })]
         [System.IO.FileInfo] $Path,
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [Extended.IO.Path]::IsFileNameValid($_) })]
+        [ValidateScript({ [System.Extended.IO.Path]::IsFileNameValid($_) })]
         [string] $Name,
         [ValidateNotNullOrEmpty()]
         [scriptblock] $Scriptblock = { ([System.IO.FileInfo] $args[0]).VersionInfo.FileVersionRaw },
@@ -60,7 +61,7 @@ Function New-RCUpdate {
         [ValidateScript({ [ValidationScript]::Extension($_) })]
         [psobject] $Extension = '.exe'
     )
-    [RegCli.Updater]::Create([Extended.IO.Path]::GetFullPath($Path), $Name, $Scriptblock, $Version, $Checksum, $SaveTo, $Description, $CompareBy, $Type, $Extension)
+    [RegCli.Updater]::Create([System.Extended.IO.Path]::GetFullPath($Path), $Name, $Scriptblock, $Version, $Checksum, $SaveTo, $Description, $CompareBy, $Type, $Extension)
     <#
     .SYNOPSIS
         Returns a set of functions to help updating a software.
@@ -108,7 +109,7 @@ Function Test-InstallerLocation {
     [System.IO.Directory]::Exists($Path)
     <#
     .SYNOPSIS
-        Returns true whether the installer directory exists.
+        Returns true if the installer directory exists.
     .DESCRIPTION
         Test-InstallerLocation determines whether the specified literal path exists.
     .PARAMETER Path
@@ -125,18 +126,18 @@ Function Test-InstallLocation {
     Param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [Extended.IO.Path]::IsPathValid($_) })]
+        [ValidateScript({ [System.Extended.IO.Path]::IsPathValid($_) })]
         [System.IO.DirectoryInfo] $Path,
         [System.IO.DirectoryInfo[]] $Exclude = @()
     )
-	[RegCli.Install.Utility]::TestInstallerLocation([Extended.IO.Path]::GetFullPath($Path), @(
+	[RegCli.Install.Utility]::TestInstallerLocation([System.Extended.IO.Path]::GetFullPath($Path), @(
 	ForEach ($Location in $Exclude) {
-		Try { [Extended.IO.Path]::GetFullPath($Location) }
+		Try { [System.Extended.IO.Path]::GetFullPath($Location) }
 		Catch { (Get-Item $Location -ErrorAction SilentlyContinue).Where{ [System.IO.Directory]::Exists($_) } }
 	}))
     <#
     .SYNOPSIS
-        Returns true whether the installation directory is not an excluded directory.
+        Returns true if the installation directory is not an excluded directory.
     .DESCRIPTION
         Test-InstallLocation determines whether the specified literal path is not an excluded directory or its parents. By default, the excluded folders are the recursive children of the RegCli directory or any of its parent directory. 
     .PARAMETER Path
@@ -144,10 +145,10 @@ Function Test-InstallLocation {
     .PARAMETER Exclude
         Specifies an extended list of literal paths that should be excluded as installation directory.
     .EXAMPLE
-        Test-InstallLocation -Path 'C:\PowerShell\RegCli\class\' -Exclude 'C:\PowerShell\RegCli\class*'
+        Test-InstallLocation -Path 'C:\PowerShell\RegCli\lib\' -Exclude 'C:\PowerShell\RegCli\class*'
         False
     .EXAMPLE
-        Test-InstallLocation -Path 'C:\PowerShell\RegCli_1\class\' -Exclude 'C:\PowerShell\RegCli\class*'
+        Test-InstallLocation -Path 'C:\PowerShell\RegCli_1\lib\' -Exclude 'C:\PowerShell\RegCli\class*'
         True
     #>
 }
@@ -158,10 +159,10 @@ Function Test-InstallProcess {
     Param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({ [Extended.IO.Path]::IsPathValid($_) })]
+        [ValidateScript({ [System.Extended.IO.Path]::IsPathValid($_) })]
         [System.IO.DirectoryInfo] $Path
     )
-    ForEach ($Process in (Get-Process)) { If ($Process.Path -like "$([Extended.IO.Path]::GetFullPath($Path))\*") { Return $True } }
+    ForEach ($Process in (Get-Process)) { If ($Process.Path -like "$([System.Extended.IO.Path]::GetFullPath($Path))\*") { Return $True } }
     Return $False
     <#
     .SYNOPSIS
@@ -186,12 +187,7 @@ Function Test-InstallProcess {
 #EndRegion
 
 #Region : The main function common to every installation.
-Add-Type @'
-public enum RegCliOption {
-	Remove_Outdated_Installer,
-	Remove_Outdated_Backup
-}
-'@
+Add-Type 'public enum RegCliOption { Remove_Outdated_Installer, Remove_Outdated_Backup, Skip_InstallDir_Validation }'
 
 Function Start-RCUpdate {
     [CmdletBinding()]
@@ -200,6 +196,7 @@ Function Start-RCUpdate {
         [AllowNull()]
         [PSCustomObject] $Info
     )
+    $Info
     $Info
 }
 #EndRegion

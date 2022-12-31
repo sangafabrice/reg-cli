@@ -1,0 +1,55 @@
+{
+  "folders": [
+    {
+      "name": "DIST",
+      "path": "../dist"
+    },
+    {
+      "name": "MANIFEST",
+      "path": "../manifest"
+    },
+    {
+      "name": "MODULE",
+      "path": "../module"
+    },
+    {
+      "name": "TEST",
+      "path": "../test"
+    },
+    {
+      "name": "REGCLI",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.defaultLanguage": "ps1",
+    "gitlens.views.repositories.includeWorkingTree": true,
+    "gitlens.views.repositories.showWorktrees": true,
+    "gitlens.worktrees.defaultLocation": "./",
+    "gitlens.views.worktrees.files.layout": "auto",
+    "powershell.cwd": "W:/Batch/download-info/silent-install/RegCli",
+    "files.exclude": {
+      "**/.DS_Store": false,
+      "**/.hg": false,
+      "**/.svn": false,
+      "**/CVS": false,
+      "**/Thumbs.db": false,
+      "common": true
+    },
+    "editor.guides.bracketPairs": "active",
+    "powershell.codeFormatting.autoCorrectAliases": false
+  },
+  "extensions": {
+    "recommendations": [
+      "mhutchie.git-graph",
+      "equinusocio.moxer-icons",
+      "emilijanmb.sublime-text-4-theme",
+      "ionutvmi.reg",
+      "eamodio.gitlens",
+      "wayou.vscode-todo-highlight",
+      "jock.svg",
+      "adpyke.codesnap",
+      "ms-vscode.powershell"
+    ]
+  }
+}
